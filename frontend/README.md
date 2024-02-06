@@ -1,43 +1,30 @@
-<div align="center">
-  <h2 align="center">PURIS Frontend</h2>
-  The frontend of the Catena-X Predictive Unit Real-Time Information Service (PURIS)
-</div>
+# React + TypeScript + Vite
 
-## Table of Contents
-- [Prerequirements](#prerequirements)
-- [Getting Started](#getting-started)
-- [License](#license)
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
+Currently, two official plugins are available:
 
-## Prerequirements
-The following things are needed to start PURIS:
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-- `npm` or an equivalent Docker setup
-- A running PURIS backend instance
+## Expanding the ESLint configuration
 
-## Getting Started
+If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
 
-See the [installation instructions](INSTALL.md) for information on how to start the application.
+- Configure the top-level `parserOptions` property like this:
 
-## License
-The project is licensed under the [Apache License Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).
-For details on the licensing terms, see the `LICENSE` file.
+```js
+export default {
+  // other rules...
+  parserOptions: {
+    ecmaVersion: 'latest',
+    sourceType: 'module',
+    project: ['./tsconfig.json', './tsconfig.node.json'],
+    tsconfigRootDir: __dirname,
+  },
+}
+```
 
-## Notice for Docker Image
-This application provides container images for demonstration purposes.
-
-Eclipse Tractus-X product(s) installed within the image:
-
-- GitHub: https://github.com/eclipse-tractusx/puris
-- Project home: https://projects.eclipse.org/projects/automotive.tractusx
-- Dockerfile Frontend: https://github.com/eclipse-tractusx/puris/blob/main/frontend/Dockerfile
-- Project license: [Apache License, Version 2.0](https://github.com/eclipse-tractusx/puris/blob/main/frontend/LICENSE)
-
-**Used Base Image [Frontend]**
-- `node:lts-alpine`
-- DockerHub: https://hub.docker.com/_/node/
-- GitHub project: https://github.com/nodejs/docker-node
-
-As with all Docker images, these likely also contain other software which may be under other licenses (such as Bash, etc from the base distribution, along with any direct or indirect dependencies of the primary software being contained).
-
-As for any pre-built image usage, it is the image user's responsibility to ensure that any use of this image complies with any relevant licenses for all software contained within.
+- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
+- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
+- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
