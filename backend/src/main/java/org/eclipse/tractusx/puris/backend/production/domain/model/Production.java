@@ -32,6 +32,7 @@ import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Material;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Partner;
 
 import java.util.Date;
+import java.util.Objects;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -91,6 +92,16 @@ public class Production {
         final Production that = (Production) o;
         return this.getMaterial().getOwnMaterialNumber().equals(that.getMaterial().getOwnMaterialNumber()) &&
                 this.getPartner().getUuid().equals(that.getPartner().getUuid()) &&
-                this.getEstimatedTimeOfCompletion().equals(that.getEstimatedTimeOfCompletion());
+                this.getEstimatedTimeOfCompletion().equals(that.getEstimatedTimeOfCompletion()) &&
+                (
+                    this.getCustomerOrderNumber().equals(that.getCustomerOrderNumber()) && 
+                    this.getCustomerOrderPositionNumber().equals(that.getCustomerOrderPositionNumber()) &&
+                    this.getSupplierOrderNumber().equals(that.getSupplierOrderNumber())
+                );
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(partner, material, quantity, measurementUnit, productionSiteBpns, estimatedTimeOfCompletion, customerOrderNumber, customerOrderPositionNumber, supplierOrderNumber);
     }
 }

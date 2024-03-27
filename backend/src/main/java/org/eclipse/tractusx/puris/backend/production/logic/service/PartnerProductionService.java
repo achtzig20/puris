@@ -85,8 +85,20 @@ public class PartnerProductionService {
     }
 
     public boolean validate(PartnerProduction production) {
-        return production.getQuantity() > 0 && production.getMeasurementUnit() != null
-                && production.getEstimatedTimeOfCompletion() != null && production.getMaterial() != null
-                && production.getProductionSiteBpns() != null;
+        return 
+            production.getQuantity() > 0 && 
+            production.getMeasurementUnit() != null && 
+            production.getEstimatedTimeOfCompletion() != null && 
+            production.getMaterial() != null &&
+            production.getProductionSiteBpns() != null &&
+            ((
+                production.getCustomerOrderNumber() != null && 
+                production.getCustomerOrderPositionNumber() != null &&
+                production.getSupplierOrderNumber() != null
+            ) || (
+                production.getCustomerOrderNumber() == null && 
+                production.getCustomerOrderPositionNumber() == null &&
+                production.getSupplierOrderNumber() == null
+            ));
     }
 }
