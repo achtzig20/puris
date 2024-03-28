@@ -30,6 +30,10 @@ import { Stack, Typography, capitalize } from '@mui/material';
 import { Delivery } from '@models/types/data/delivery';
 import { DeliveryInformationModal } from './DeliveryInformationModal';
 import { getPartnerType } from '../util/helpers';
+import { Production } from '@models/types/data/production';
+import { PlannedProductionModal } from './PlannedProductionModal';
+import { useProduction } from '../hooks/useProduction';
+import { usePartnerProduction } from '../hooks/usePartnerProduction';
 
 const NUMBER_OF_DAYS = 42;
 
@@ -39,12 +43,32 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
     const [selectedPartnerSites, setSelectedPartnerSites] = useState<Site[] | null>(null);
     const { stocks } = useStocks(type === 'customer' ? 'material' : 'product');
     const { partnerStocks } = usePartnerStocks(type === 'customer' ? 'material' : 'product', selectedMaterial?.ownMaterialNumber ?? null);
-    const [open, setOpen] = useState(false);
+    const [deliveryDialogOpen, setDeliveryDialogOpen] = useState(false);
+    const [productionDialogOpen, setProductionDialogOpen] = useState(false);
     const [delivery, setDelivery] = useState<Delivery | null>(null);
+    const [production, setProduction] = useState<Partial<Production> | null>(null);
+    const { productions, refreshProduction } = useProduction(selectedMaterial?.ownMaterialNumber ?? null, selectedSite?.bpns ?? null);
+    const { partnerProductions } = usePartnerProduction(selectedMaterial?.ownMaterialNumber ?? null);
+
     const openDeliveryDialog = (d: Delivery) => {
         setDelivery(d);
-        setOpen(true);
+        setDeliveryDialogOpen(true);
+        setDeliveryDialogOpen(true);
     };
+    const openProductionDialog = (p: Partial<Production>) => {
+        p.material ??= {
+            materialFlag: true,
+            productFlag: false,
+            materialNumberSupplier: selectedMaterial?.ownMaterialNumber ?? '',
+            materialNumberCustomer: null,
+            materialNumberCx: null,
+            name: selectedMaterial?.description ?? '',
+        };
+        p.measurementUnit ??= 'unit:piece';
+        setProduction(p);
+        setProductionDialogOpen(true);
+    };
+
     const handleMaterialSelect = (material: MaterialDescriptor | null) => {
         setSelectedMaterial(material);
         setSelectedSite(null);
@@ -65,13 +89,19 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                 <Typography variant="h5" component="h2" marginBottom={0}>
                     Our Stock Information {selectedMaterial && selectedSite && <>for {selectedMaterial.description}</>}
                 </Typography>
-                {selectedSite ? (
+                {selectedSite && selectedMaterial ? (
                     type === 'supplier' ? (
                         <ProductionTable
                             numberOfDays={NUMBER_OF_DAYS}
                             stocks={stocks}
                             site={selectedSite}
+                            editable
+                            editable
                             onDeliveryClick={openDeliveryDialog}
+                            onProductionClick={openProductionDialog}
+                            productions={productions}
+                            onProductionClick={openProductionDialog}
+                            productions={productions}
                         />
                     ) : (
                         <DemandTable
@@ -104,6 +134,8 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                                         stocks={partnerStocks}
                                         site={ps}
                                         onDeliveryClick={openDeliveryDialog}
+                                        onProductionClick={openProductionDialog}
+                                        productions={partnerProductions?.filter((p) => p.productionSiteBpns === ps.bpns) ?? []}
                                     />
                                 )
                             )
@@ -113,7 +145,8 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                     </>
                 )}
             </Stack>
-            <DeliveryInformationModal open={open} onClose={() => setOpen(false)} delivery={delivery} />
+            <DeliveryInformationModal open={deliveryDialogOpen} onClose={() => setDeliveryDialogOpen(false)} delivery={delivery} />
+            <PlannedProductionModal open={productionDialogOpen} onClose={() => setProductionDialogOpen(false)} onSave={() => { refreshProduction(); setProductionDialogOpen(false); }} production={production} />
         </>
     );
 };

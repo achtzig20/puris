@@ -18,10 +18,10 @@ under the License.
 SPDX-License-Identifier: Apache-2.0
 */
 
-import { Info } from '@mui/icons-material';
+import { Edit, Info } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
 
-export const createDateColumnHeaders = (numberOfDays: number) => {
+export const createDateColumnHeaders = (numberOfDays: number, editable = false) => {
     return Object.keys(Array.from({ length: numberOfDays })).map((_, index) => {
         const date = new Date();
         date.setDate(date.getDate() + index);
@@ -29,10 +29,26 @@ export const createDateColumnHeaders = (numberOfDays: number) => {
             field: `${index}`,
             headerName: date.toLocaleDateString('en-US', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' }),
             width: 180,
-            renderCell: (data: { value?: number } & { row: {id: number | string }}) => {
+            renderCell: (data: { value?: number } & { row: { id: number | string } }) => {
                 return (
-                    <Box display='flex' textAlign='center' alignItems='center' justifyContent='center' width='100%' height='100%' color={data.value !== undefined && data.value < 0 ? 'red' : undefined}>
-                        {(data.row.id === 'delivery' || data.row.id === 'shipment') && data.value !== 0 ? <Button variant='text'>{data.value} <Info sx={{fontSize: '1.25rem'}}></Info></Button> : data.value} 
+                    <Box
+                        display="flex"
+                        textAlign="center"
+                        alignItems="center"
+                        justifyContent="center"
+                        width="100%"
+                        height="100%"
+                        color={data.value !== undefined && data.value < 0 ? 'red' : undefined}
+                    >
+                        {(data.row.id === 'delivery' || data.row.id === 'shipment' || data.row.id === 'plannedProduction') &&
+                        data.value !== 0 ? (
+                            <Button variant="text">
+                                {data.value}
+                                {editable ? <Edit sx={{ fontSize: '1.25rem' }}></Edit> : <Info sx={{ fontSize: '1.25rem' }}></Info>}
+                            </Button>
+                        ) : (
+                            data.value
+                        )}
                     </Box>
                 );
             },
@@ -42,4 +58,3 @@ export const createDateColumnHeaders = (numberOfDays: number) => {
 };
 
 export const getPartnerType = (type: 'customer' | 'supplier') => (type === 'customer' ? 'supplier' : 'customer');
-
