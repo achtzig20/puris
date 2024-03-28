@@ -96,10 +96,7 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                             stocks={stocks}
                             site={selectedSite}
                             editable
-                            editable
                             onDeliveryClick={openDeliveryDialog}
-                            onProductionClick={openProductionDialog}
-                            productions={productions}
                             onProductionClick={openProductionDialog}
                             productions={productions}
                         />
