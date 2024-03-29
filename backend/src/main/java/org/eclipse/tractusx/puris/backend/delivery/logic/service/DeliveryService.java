@@ -22,6 +22,72 @@
 
 package org.eclipse.tractusx.puris.backend.delivery.logic.service;
 
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Function;
+
+import org.eclipse.tractusx.puris.backend.delivery.domain.model.OwnDelivery;
+import org.eclipse.tractusx.puris.backend.delivery.domain.repository.DeliveryRepository;
+import org.springframework.stereotype.Service;
+
+@Service
 public class DeliveryService {
-    
+    public final DeliveryRepository repository;
+
+    protected final Function<OwnDelivery, Boolean> validator;
+
+    public DeliveryService(DeliveryRepository repository) {
+        this.repository = repository;
+        this.validator = this::validate;
+    }
+
+    public final List<OwnDelivery> findAll() {
+        return repository.findAll();
+    }
+
+    public final List<OwnDelivery> findAllByReportedId(UUID reportedId) {
+        return repository.findAll().stream().filter(delivery -> delivery.getPartner().getUuid().equals(reportedId))
+            .toList();
+    }
+
+    public final OwnDelivery findById(UUID id) {
+        return repository.findById(id).orElse(null);
+    }
+
+    public final OwnDelivery create(OwnDelivery delivery) {
+        if (delivery.getUuid() != null && repository.findById(delivery.getUuid()).isPresent()) {
+            return null;
+        }
+        if (!validator.apply(delivery)) {
+            return null;
+        }
+        return repository.save(delivery);
+    }
+
+    public final List<OwnDelivery> createAll(List<OwnDelivery> deliveries) {
+        if (deliveries.stream().anyMatch(delivery -> !validator.apply(delivery))) {
+            return null;
+        }
+        if (repository.findAll().stream()
+                .anyMatch(existing -> deliveries.stream().anyMatch(delivery -> delivery.equals(existing)))) {
+            return null;
+        }
+        return repository.saveAll(deliveries);
+    }
+
+    public final OwnDelivery update(OwnDelivery delivery) {
+        if (delivery.getUuid() == null || repository.findById(delivery.getUuid()).isEmpty()) {
+            return null;
+        }
+        return repository.save(delivery);
+    }
+
+    public final void delete(UUID id) {
+        repository.deleteById(id);
+    }
+
+    public boolean validate(OwnDelivery delivery) {
+        return delivery.getQuantity() > 0 && delivery.getMeasurementUnit() != null
+                && delivery.getMaterial() != null;
+    }
 }

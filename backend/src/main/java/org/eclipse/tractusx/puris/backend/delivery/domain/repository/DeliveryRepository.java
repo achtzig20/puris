@@ -22,6 +22,11 @@
 
 package org.eclipse.tractusx.puris.backend.delivery.domain.repository;
 
-public class DeliveryRepository {
+import java.util.UUID;
+
+import org.eclipse.tractusx.puris.backend.delivery.domain.model.OwnDelivery;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface DeliveryRepository extends JpaRepository<OwnDelivery, UUID> {
     
 }
