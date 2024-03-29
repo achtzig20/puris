@@ -22,15 +22,11 @@
 
 package org.eclipse.tractusx.puris.backend.delivery.logic.dto;
 
-import java.io.Serializable;
-import java.util.List;
+import java.util.Date;
 import java.util.UUID;
 
 import org.eclipse.tractusx.puris.backend.common.util.PatternStore;
-import org.eclipse.tractusx.puris.backend.masterdata.logic.dto.MaterialDto;
-import org.eclipse.tractusx.puris.backend.masterdata.logic.dto.PartnerDto;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -41,29 +37,11 @@ import lombok.ToString;
 @Setter
 @NoArgsConstructor
 @ToString
-public class DeliveryDto implements Serializable {
+public class TransitEventDto {
     private UUID uuid;
 
-    private PartnerDto partner;
-    @Valid
-    private MaterialDto material;
-
-    private double quantity;
-//    private ItemUnitEnumeration measurementUnit;
-
-    // Order Position Reference
-    @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
-    private String supplierOrderId;
-    @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
-    private String customerOrderId;
-    @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
-    private String customerOrderPositionId;
+    private Date dateTimeOfEvent;
 
     @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
-    private String trackingNumber;
-
-    @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
-    private String incoterm;
-
-    private List<TransitEventDto> transitEvents;
+    private String eventType;
 }
