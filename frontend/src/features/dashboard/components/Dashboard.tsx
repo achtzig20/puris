@@ -142,8 +142,18 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                     </>
                 )}
             </Stack>
-            <DeliveryInformationModal open={deliveryDialogOpen} onClose={() => setDeliveryDialogOpen(false)} delivery={delivery} />
-            <PlannedProductionModal open={productionDialogOpen} onClose={() => setProductionDialogOpen(false)} onSave={() => { refreshProduction(); setProductionDialogOpen(false); }} production={production} />
+            <DeliveryInformationModal
+                open={deliveryDialogOpen}
+                onClose={() => setDeliveryDialogOpen(false)}
+                delivery={delivery}
+            />
+            <PlannedProductionModal
+                open={productionDialogOpen}
+                onClose={() => setProductionDialogOpen(false)}
+                onSave={() => { refreshProduction();
+                setProductionDialogOpen(false); }}
+                production={production}
+            />
         </>
     );
 };
