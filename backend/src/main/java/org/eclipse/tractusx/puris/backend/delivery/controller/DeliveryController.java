@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 import org.eclipse.tractusx.puris.backend.delivery.domain.model.Delivery;
 import org.eclipse.tractusx.puris.backend.delivery.domain.model.OwnDelivery;
 import org.eclipse.tractusx.puris.backend.delivery.logic.dto.DeliveryDto;
-import org.eclipse.tractusx.puris.backend.delivery.logic.service.DeliveryService;
+import org.eclipse.tractusx.puris.backend.delivery.logic.service.OwnDeliveryService;
 import org.eclipse.tractusx.puris.backend.delivery.logic.service.ReportedDeliveryService;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Material;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Partner;
@@ -64,7 +64,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DeliveryController {
     @Autowired
-    private DeliveryService deliveryService;
+    private OwnDeliveryService deliveryService;
 
     @Autowired
     private ReportedDeliveryService reportedDeliveryService;
@@ -183,30 +183,19 @@ public class DeliveryController {
     @GetMapping("partner")
     @ResponseBody
     @Operation(summary = "Get all deliveries of partners for a material",
-        description = "Get all deliveries of partners for a material number. Optionally the partners can be filtered by their bpnl and the production site can be filtered by its bpns.")
-    public List<DeliveryDto> getAllDeliveriesForPartner(String materialNumber, Optional<String> bpnl,
-            Optional<String> site) {
-        if (bpnl.isEmpty()) {
-            if (site.isEmpty()) {
-                return reportedDeliveryService.findAll().stream()
-                        .filter(delivery -> delivery.getMaterial().getOwnMaterialNumber().equals(materialNumber))
-                        .map(this::convertToDto)
-                        .collect(Collectors.toList());
-            }
-            return reportedDeliveryService.findAll().stream()
-                    .filter(delivery -> delivery.getMaterial().getOwnMaterialNumber().equals(materialNumber) && delivery.getProductionSiteBpns().equals(site.get()))
-                    .map(this::convertToDto).collect(Collectors.toList());
-        }
+        description = "Get all deliveries of partners for a material number. Optionally the partners can be filtered by their bpnl.")
+    public List<DeliveryDto> getAllDeliveriesForPartner(String materialNumber, Optional<String> bpnl) {
+        return reportedDeliveryService.findAllByFilters(Optional.of(materialNumber), bpnl)
+                .stream().map(this::convertToDto).collect(Collectors.toList());
+    }
 
-        Partner partner = partnerService.findByBpnl(bpnl.get());
-        if (partner == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Partner does not exist.");
-        }
-        return reportedDeliveryService.findAllByReportedId(partner.getUuid()).stream()
-                .filter(prod -> prod.getMaterial().getOwnMaterialNumber().equals(materialNumber)
-                        && (site.isEmpty() || prod.getProductionSiteBpns().equals(site.get())))
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+    @GetMapping("reported")
+    @ResponseBody
+    @Operation(summary = "Get all deliveries that partners have reported",
+        description = "Get all deliveries that partners have reported.")
+    public List<DeliveryDto> getAllReportedDeliveries() {
+        return reportedDeliveryService.findAll()
+            .stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
     private OwnDelivery convertToEntity(DeliveryDto dto) {
@@ -233,7 +222,8 @@ public class DeliveryController {
         dto.getMaterial().setMaterialNumberCx(entity.getMaterial().getMaterialNumberCx());
         dto.getMaterial().setMaterialNumberSupplier(entity.getMaterial().getOwnMaterialNumber());
 
-        var materialPartnerRelation = mprService.find(entity.getMaterial().getOwnMaterialNumber(), entity.getPartner().getUuid());
+        var materialPartnerRelation = mprService.find(entity.getMaterial().getOwnMaterialNumber(),
+                entity.getPartner().getUuid());
         dto.getMaterial().setMaterialNumberCustomer(materialPartnerRelation.getPartnerMaterialNumber());
 
         return dto;

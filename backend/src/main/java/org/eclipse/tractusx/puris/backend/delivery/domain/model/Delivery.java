@@ -28,11 +28,13 @@ import jakarta.validation.constraints.Pattern;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import org.eclipse.tractusx.puris.backend.common.domain.model.measurement.ItemUnitEnumeration;
 import org.eclipse.tractusx.puris.backend.common.util.PatternStore;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Material;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Partner;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -60,23 +62,22 @@ public class Delivery {
     @NotNull
     protected Material material;
 
+    private double quantity;
+    private ItemUnitEnumeration measurementUnit;
+
     // Order Position Reference
     @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
-    private String supplierOrderId;
+    private String supplierOrderNumber;
     @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
-    private String customerOrderId;
+    private String customerOrderNumber;
     @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
-    private String customerOrderPositionId;
+    private String customerOrderPositionNumber;
 
     @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
     private String trackingNumber;
 
     @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
     private String incoterm;
-
-    // measurementUnit class created -> wait for Rene's PR to be merged
-    private double quantity;
-//  private ItemUnitEnumeration measurementUnit;
 
     @NotNull
     private List<TransitEvent> transitEvents;
@@ -107,7 +108,24 @@ public class Delivery {
 
         final Delivery that = (Delivery) o;
         return this.getMaterial().getOwnMaterialNumber().equals(that.getMaterial().getOwnMaterialNumber()) &&
-                this.getPartner().getUuid().equals(that.getPartner().getUuid());
+                this.getPartner().getUuid().equals(that.getPartner().getUuid()) &&
+                this.getTrackingNumber().equals(that.getTrackingNumber()) &&
+                this.getIncoterm().equals(that.getIncoterm()) &&
+                (
+                    Objects.equals(this.getCustomerOrderNumber(), that.getCustomerOrderNumber()) && 
+                    Objects.equals(this.getCustomerOrderPositionNumber(), that.getCustomerOrderPositionNumber()) &&
+                    Objects.equals(this.getSupplierOrderNumber(), that.getSupplierOrderNumber())
+                );
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+            partner, material, quantity, measurementUnit,
+            customerOrderNumber, customerOrderPositionNumber, supplierOrderNumber,
+            trackingNumber, incoterm,
+            destinationBpns, destinationBpna, originBpns, originBpna
+        );
     }
 
     // endpoint /reported -> deliveries that partners have reported

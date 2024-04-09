@@ -26,6 +26,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
 
+import org.eclipse.tractusx.puris.backend.common.domain.model.measurement.ItemUnitEnumeration;
 import org.eclipse.tractusx.puris.backend.common.util.PatternStore;
 import org.eclipse.tractusx.puris.backend.masterdata.logic.dto.MaterialDto;
 import org.eclipse.tractusx.puris.backend.masterdata.logic.dto.PartnerDto;
@@ -49,7 +50,7 @@ public class DeliveryDto implements Serializable {
     private MaterialDto material;
 
     private double quantity;
-//    private ItemUnitEnumeration measurementUnit;
+    private ItemUnitEnumeration measurementUnit;
 
     // Order Position Reference
     @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
