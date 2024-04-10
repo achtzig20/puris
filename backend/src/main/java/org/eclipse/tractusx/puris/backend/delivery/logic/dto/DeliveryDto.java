@@ -66,5 +66,5 @@ public class DeliveryDto implements Serializable {
     @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
     private String incoterm;
 
-    private List<TransitEventDto> transitEvents;
+    // private List<TransitEventDto> transitEvents;
 }

@@ -6,7 +6,6 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import org.eclipse.tractusx.puris.backend.delivery.domain.model.OwnDelivery;
 import org.eclipse.tractusx.puris.backend.delivery.domain.model.ReportedDelivery;
 import org.eclipse.tractusx.puris.backend.masterdata.logic.service.PartnerService;
 import org.eclipse.tractusx.puris.backend.delivery.domain.repository.ReportedDeliveryRepository;
@@ -42,10 +41,10 @@ public class ReportedDeliveryService {
 
     public final List<ReportedDelivery> findAllByFilters(Optional<String> ownMaterialNumber, Optional<String> bpnl) {
         Stream<ReportedDelivery> stream = repository.findAll().stream();
-        if (ownMaterialNumber != null) {
+        if (ownMaterialNumber.isPresent()) {
             stream = stream.filter(production -> production.getMaterial().getOwnMaterialNumber().equals(ownMaterialNumber.get()));
         }
-        if (bpnl != null) {
+        if (bpnl.isPresent()) {
             stream = stream.filter(production -> production.getPartner().getBpnl().equals(bpnl.get()));
         }
         return stream.toList();

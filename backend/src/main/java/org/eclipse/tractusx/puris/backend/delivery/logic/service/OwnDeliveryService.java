@@ -81,7 +81,6 @@ public class OwnDeliveryService {
 
     public final OwnDelivery create(OwnDelivery delivery) {
         if (!validator.apply(delivery)) {
-            
             throw new IllegalArgumentException("Invalid delivery");
         }
         if (delivery.getUuid() != null && repository.findById(delivery.getUuid()).isPresent()) {

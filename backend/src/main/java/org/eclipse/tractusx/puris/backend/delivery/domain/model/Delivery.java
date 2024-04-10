@@ -23,6 +23,7 @@
 package org.eclipse.tractusx.puris.backend.delivery.domain.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.*;
@@ -79,8 +80,8 @@ public class Delivery {
     @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
     private String incoterm;
 
-    @NotNull
-    private List<TransitEvent> transitEvents;
+    // @OneToMany(cascade = CascadeType.ALL)
+    // private List<TransitEvent> transitEvents;
 
     // Transit Location
     @Pattern(regexp = PatternStore.BPNS_STRING)

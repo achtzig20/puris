@@ -108,7 +108,7 @@ public class DeliveryController {
             @ApiResponse(responseCode = "500", description = "Internal Server Error.")
     })
     @ResponseStatus(HttpStatus.CREATED)
-    public DeliveryDto createProduction(@RequestBody DeliveryDto deliveryDto) {
+    public DeliveryDto createDelivery(@RequestBody DeliveryDto deliveryDto) {
         if (!validator.validate(deliveryDto).isEmpty()) {
             log.warn("Rejected invalid message body");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
@@ -131,7 +131,7 @@ public class DeliveryController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Delivery is invalid.");
         }
         List<OwnDelivery> existingDeliveries = deliveryService.findAll();
-        log.info("finding existing production");
+        log.info("finding existing delivery");
         boolean deliveryExists = existingDeliveries.stream()
                 .anyMatch(d -> delivery.equals(d));
         if (deliveryExists) {
@@ -172,7 +172,7 @@ public class DeliveryController {
             @ApiResponse(responseCode = "500", description = "Internal Server Error.")
     })
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteProduction(@PathVariable UUID id) {
+    public void deleteDelivery(@PathVariable UUID id) {
         OwnDelivery delivery = deliveryService.findById(id);
         if (delivery == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Delivery does not exist.");

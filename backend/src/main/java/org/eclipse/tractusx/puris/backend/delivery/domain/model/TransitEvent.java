@@ -25,7 +25,6 @@ package org.eclipse.tractusx.puris.backend.delivery.domain.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Pattern;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
 
 import org.eclipse.tractusx.puris.backend.common.util.PatternStore;
 
@@ -36,14 +35,16 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
-@SuperBuilder
-@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 @Entity
 @ToString
 public class TransitEvent {
     @Id
     @GeneratedValue
     protected UUID uuid;
+
+    @ManyToOne
+    @JoinColumn(name = "delivery_uuid")
+    private Delivery delivery;
 
     private Date dateTimeOfEvent;
 

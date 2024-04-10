@@ -27,6 +27,7 @@ import java.util.UUID;
 
 import org.eclipse.tractusx.puris.backend.common.util.PatternStore;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -39,6 +40,8 @@ import lombok.ToString;
 @ToString
 public class TransitEventDto {
     private UUID uuid;
+
+    private DeliveryDto delivery;
 
     private Date dateTimeOfEvent;
 
