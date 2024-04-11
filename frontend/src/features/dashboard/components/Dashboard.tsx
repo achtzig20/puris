@@ -30,6 +30,8 @@ import { Stack, Typography, capitalize } from '@mui/material';
 import { Delivery } from '@models/types/data/delivery';
 import { DeliveryInformationModal } from './DeliveryInformationModal';
 import { getPartnerType } from '../util/helpers';
+import { Demand } from '@models/types/data/demand';
+import { DemandCategoryModal } from './DemandCategoryModal';
 
 const NUMBER_OF_DAYS = 42;
 
@@ -41,10 +43,20 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
     const { partnerStocks } = usePartnerStocks(type === 'customer' ? 'material' : 'product', selectedMaterial?.ownMaterialNumber ?? null);
     const [open, setOpen] = useState(false);
     const [delivery, setDelivery] = useState<Delivery | null>(null);
+    const [demand, setDemand] = useState<Partial<Demand> | null>(null);
+    const [demandDialogOpen, setDemandDialogOpen] = useState(false);
+
     const openDeliveryDialog = (d: Delivery) => {
         setDelivery(d);
         setOpen(true);
     };
+
+    const openDemandDialog = (d: Partial<Demand>) => {
+        d.measurementUnit ??= 'unit:piece';
+        setDemand(d);
+        setDemandDialogOpen(true);
+    };
+
     const handleMaterialSelect = (material: MaterialDescriptor | null) => {
         setSelectedMaterial(material);
         setSelectedSite(null);
@@ -79,6 +91,7 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                             stocks={stocks}
                             site={selectedSite}
                             onDeliveryClick={openDeliveryDialog}
+                            onDemandClick={openDemandDialog}
                         />
                     )
                 ) : (
@@ -97,6 +110,7 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                                         stocks={partnerStocks}
                                         site={ps}
                                         onDeliveryClick={openDeliveryDialog}
+                                        onDemandClick={openDemandDialog}
                                     />
                                 ) : (
                                     <ProductionTable
@@ -114,6 +128,15 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                 )}
             </Stack>
             <DeliveryInformationModal open={open} onClose={() => setOpen(false)} delivery={delivery} />
+            <DemandCategoryModal
+                open={demandDialogOpen}
+                onClose={() => setDemandDialogOpen(false)}
+                onSave={() => {
+                    //refreshDemand();
+                    setDemandDialogOpen(false);
+                }}
+                demand={demand}
+            />
         </>
     );
 };

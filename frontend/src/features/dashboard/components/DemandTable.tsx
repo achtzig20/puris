@@ -22,8 +22,10 @@ import { TableWithRowHeader } from '@components/TableWithRowHeader';
 import { Stock } from '@models/types/data/stock';
 import { Site } from '@models/types/edc/site';
 import { createDateColumnHeaders } from '../util/helpers';
-import { Box, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import { Delivery } from '@models/types/data/delivery';
+import { Add } from '@mui/icons-material';
+import { Demand } from '@models/types/data/demand';
 
 const createDemandRows = (numberOfDays: number, stocks: Stock[], site: Site) => {
     const demands = { ...Object.keys(Array.from({ length: numberOfDays })).reduce((acc, _, index) => ({ ...acc, [index]: 30 }), {}) };
@@ -60,9 +62,15 @@ const createDemandRows = (numberOfDays: number, stocks: Stock[], site: Site) => 
     ];
 };
 
-type DemandTableProps = { numberOfDays: number; stocks: Stock[] | null; site: Site; onDeliveryClick: (delivery: Delivery) => void };
+type DemandTableProps = {
+    numberOfDays: number;
+    stocks: Stock[] | null;
+    site: Site;
+    onDeliveryClick: (delivery: Delivery) => void;
+    onDemandClick: (demand: Partial<Demand>) => void
+};
 
-export const DemandTable = ({ numberOfDays, stocks, site, onDeliveryClick }: DemandTableProps) => {
+export const DemandTable = ({ numberOfDays, stocks, site, onDeliveryClick, onDemandClick }: DemandTableProps) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleDeliveryClick = (cellData: any) => {
         if (cellData.id !== 'delivery') return;
@@ -77,12 +85,19 @@ export const DemandTable = ({ numberOfDays, stocks, site, onDeliveryClick }: Dem
                 bpns: site?.bpns,
             },
         });
+        const material = stocks?.length ? stocks[0].material : undefined;
+        onDemandClick({
+            quantity: parseFloat(cellData.value),
+            ownMaterialNumber: material?.materialNumberCustomer,
+            demandLocationBpns: site.bpns,
+        });
     };
     return (
         <>
             <Box display="flex" justifyContent="start" width="100%" gap="0.5rem" marginBlock="0.5rem" paddingLeft=".5rem">
                 <Typography variant="caption1" component="h3" fontWeight={600}> Site: </Typography>
                 {site.name} ({site.bpns})
+                <Button variant='contained' onClick={() => onDemandClick({demandLocationBpns: site.bpns})} sx={{marginLeft: 'auto'}}> <Add></Add> Create Demand </Button>
             </Box>
             <TableWithRowHeader
                 title=""
