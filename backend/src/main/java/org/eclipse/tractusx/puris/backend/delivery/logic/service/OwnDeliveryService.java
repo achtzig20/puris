@@ -55,22 +55,22 @@ public class OwnDeliveryService {
     }
 
     public final List<OwnDelivery> findAllByBpnl(String bpnl) {
-        return repository.findAll().stream().filter(production -> production.getPartner().getBpnl().equals(bpnl))
+        return repository.findAll().stream().filter(delivery -> delivery.getPartner().getBpnl().equals(bpnl))
                 .toList();
     }
 
     public final List<OwnDelivery> findAllByOwnMaterialNumber(String ownMaterialNumber) {
-        return repository.findAll().stream().filter(production -> production.getMaterial().getOwnMaterialNumber().equals(ownMaterialNumber))
+        return repository.findAll().stream().filter(delivery -> delivery.getMaterial().getOwnMaterialNumber().equals(ownMaterialNumber))
                 .toList();
     }
 
     public final List<OwnDelivery> findAllByFilters(Optional<String> ownMaterialNumber, Optional<String> bpnl) {
         Stream<OwnDelivery> stream = repository.findAll().stream();
-        if (ownMaterialNumber != null) {
-            stream = stream.filter(production -> production.getMaterial().getOwnMaterialNumber().equals(ownMaterialNumber.get()));
+        if (ownMaterialNumber.isPresent()) {
+            stream = stream.filter(delivery -> delivery.getMaterial().getOwnMaterialNumber().equals(ownMaterialNumber.get()));
         }
-        if (bpnl != null) {
-            stream = stream.filter(production -> production.getPartner().getBpnl().equals(bpnl.get()));
+        if (bpnl.isPresent()) {
+            stream = stream.filter(delivery -> delivery.getPartner().getBpnl().equals(bpnl.get()));
         }
         return stream.toList();
     }
@@ -120,7 +120,9 @@ public class OwnDeliveryService {
             delivery.getPartner() != null &&
             delivery.getTrackingNumber() != null &&
             delivery.getIncoterm() != null &&
+            !(delivery.isHasDeparted() == false && delivery.isHasArrived() == true) &&
             !delivery.getPartner().equals(ownPartnerEntity) &&
+            !ownPartnerEntity.getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getOriginBpns())) &&
             ((
                 delivery.getCustomerOrderNumber() != null && 
                 delivery.getCustomerOrderPositionNumber() != null &&

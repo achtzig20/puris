@@ -27,6 +27,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.management.openmbean.KeyAlreadyExistsException;
+
 import org.eclipse.tractusx.puris.backend.delivery.domain.model.Delivery;
 import org.eclipse.tractusx.puris.backend.delivery.domain.model.OwnDelivery;
 import org.eclipse.tractusx.puris.backend.delivery.logic.dto.DeliveryDto;
@@ -34,8 +36,6 @@ import org.eclipse.tractusx.puris.backend.delivery.logic.service.OwnDeliveryServ
 import org.eclipse.tractusx.puris.backend.delivery.logic.service.ReportedDeliveryService;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Material;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Partner;
-import org.eclipse.tractusx.puris.backend.masterdata.logic.dto.PartnerDto;
-import org.eclipse.tractusx.puris.backend.masterdata.logic.service.MaterialPartnerRelationService;
 import org.eclipse.tractusx.puris.backend.masterdata.logic.service.MaterialService;
 import org.eclipse.tractusx.puris.backend.masterdata.logic.service.PartnerService;
 import org.modelmapper.ModelMapper;
@@ -64,7 +64,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DeliveryController {
     @Autowired
-    private OwnDeliveryService deliveryService;
+    private OwnDeliveryService ownDeliveryService;
 
     @Autowired
     private ReportedDeliveryService reportedDeliveryService;
@@ -76,9 +76,6 @@ public class DeliveryController {
     private PartnerService partnerService;
 
     @Autowired
-    private MaterialPartnerRelationService mprService;
-
-    @Autowired
     private ModelMapper modelMapper;
 
     @Autowired
@@ -87,15 +84,10 @@ public class DeliveryController {
     @GetMapping()
     @ResponseBody
     @Operation(summary = "Get all planned deliveries for the given Material",
-        description = "Get all planned deliveries for the given material number. Optionally the delivery site can be filtered by its bpns.")
-    public List<DeliveryDto> getAllDeliveries(String materialNumber, Optional<String> site) {
-        if (site.isEmpty()) {
-            return deliveryService.findAll().stream().filter(delivery -> 
-                delivery.getMaterial().getOwnMaterialNumber().equals(materialNumber)).map(this::convertToDto).collect(Collectors.toList());
-        }
-        return deliveryService.findAll().stream()
-            .filter(delivery -> delivery.getMaterial().getOwnMaterialNumber().equals(materialNumber))
-            .map(this::convertToDto).collect(Collectors.toList());
+        description = "Get all planned deliveries for the given material number. Optionally the delivery can be filtered by its partner bpnl.")
+    public List<DeliveryDto> getAllDeliveries(String materialNumber, Optional<String> bpnl) {
+        return ownDeliveryService.findAllByFilters(Optional.of(materialNumber), bpnl)
+            .stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
     @PostMapping()
@@ -110,40 +102,27 @@ public class DeliveryController {
     @ResponseStatus(HttpStatus.CREATED)
     public DeliveryDto createDelivery(@RequestBody DeliveryDto deliveryDto) {
         if (!validator.validate(deliveryDto).isEmpty()) {
-            log.warn("Rejected invalid message body");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
-        if (deliveryDto.getUuid() != null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Delivery with this UUID already exists.");
-        }
-        if (deliveryDto.getMaterial().getMaterialNumberSupplier() == null ||
-                deliveryDto.getMaterial().getMaterialNumberSupplier().isEmpty()) {
+
+        if (deliveryDto.getOwnMaterialNumber() == null || deliveryDto.getOwnMaterialNumber().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Delivery Information misses material identification.");
         }
-        if (deliveryDto.getPartner().getBpnl() == null || deliveryDto.getPartner().getBpnl().isEmpty()) {
+
+        if (deliveryDto.getPartnerBpnl() == null || deliveryDto.getPartnerBpnl().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Delivery Information misses partner identification.");
         }
-        OwnDelivery delivery = convertToEntity(deliveryDto);
-        log.info("Delivery: " + delivery);
-        if (!deliveryService.validate(delivery)) {
+
+        try {
+            return convertToDto(ownDeliveryService.create(convertToEntity(deliveryDto)));
+        } catch (KeyAlreadyExistsException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Delivery already exists. Use PUT instead.");
+        } catch (IllegalArgumentException e) {
+            log.info("Delivery is invalid.");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Delivery is invalid.");
         }
-        List<OwnDelivery> existingDeliveries = deliveryService.findAll();
-        log.info("finding existing delivery");
-        boolean deliveryExists = existingDeliveries.stream()
-                .anyMatch(d -> delivery.equals(d));
-        if (deliveryExists) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Delivery already exists. Use PUT instead.");
-        }
-        OwnDelivery createdDelivery = deliveryService.create(delivery);
-        if (createdDelivery == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Delivery could not be created.");
-        }
-        log.info("Created delivery: " + createdDelivery);
-
-        return convertToDto(createdDelivery);
     }
 
     @PutMapping()
@@ -156,7 +135,7 @@ public class DeliveryController {
     })
     @ResponseStatus(HttpStatus.OK)
     public DeliveryDto updateDelivery(@RequestBody DeliveryDto dto) {
-        OwnDelivery updatedDelivery = deliveryService.update(convertToEntity(dto));
+        OwnDelivery updatedDelivery = ownDeliveryService.update(convertToEntity(dto));
         if (updatedDelivery == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Delivery does not exist.");
         }
@@ -173,11 +152,11 @@ public class DeliveryController {
     })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteDelivery(@PathVariable UUID id) {
-        OwnDelivery delivery = deliveryService.findById(id);
+        OwnDelivery delivery = ownDeliveryService.findById(id);
         if (delivery == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Delivery does not exist.");
         }
-        deliveryService.delete(id);
+        ownDeliveryService.delete(id);
     }
 
     @GetMapping("partner")
@@ -201,16 +180,15 @@ public class DeliveryController {
     private OwnDelivery convertToEntity(DeliveryDto dto) {
         OwnDelivery entity = modelMapper.map(dto, OwnDelivery.class);
 
-        Material material = materialService.findByOwnMaterialNumber(dto.getMaterial().getMaterialNumberSupplier());
+        Material material = materialService.findByOwnMaterialNumber(dto.getOwnMaterialNumber());
         entity.setMaterial(material);
 
-        PartnerDto partnerDto = dto.getPartner();
-        Partner existingPartner = partnerService.findByBpnl(partnerDto.getBpnl());
+        Partner existingPartner = partnerService.findByBpnl(dto.getPartnerBpnl());
 
         if (existingPartner == null) {
             throw new IllegalStateException(String.format(
                     "Partner for bpnl %s could not be found",
-                    partnerDto.getBpnl()));
+                    dto.getPartnerBpnl()));
         }
         entity.setPartner(existingPartner);
         return entity;
@@ -219,13 +197,10 @@ public class DeliveryController {
     private DeliveryDto convertToDto(Delivery entity) {
         DeliveryDto dto = modelMapper.map(entity, DeliveryDto.class);
 
-        dto.getMaterial().setMaterialNumberCx(entity.getMaterial().getMaterialNumberCx());
-        dto.getMaterial().setMaterialNumberSupplier(entity.getMaterial().getOwnMaterialNumber());
+        dto.setOwnMaterialNumber(entity.getMaterial().getOwnMaterialNumber());
 
-        var materialPartnerRelation = mprService.find(entity.getMaterial().getOwnMaterialNumber(),
-                entity.getPartner().getUuid());
-        dto.getMaterial().setMaterialNumberCustomer(materialPartnerRelation.getPartnerMaterialNumber());
-
+        dto.setPartnerBpnl(entity.getPartner().getBpnl());
+        
         return dto;
     }
 }

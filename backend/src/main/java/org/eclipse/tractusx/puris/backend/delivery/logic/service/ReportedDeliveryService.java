@@ -7,22 +7,17 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.eclipse.tractusx.puris.backend.delivery.domain.model.ReportedDelivery;
-import org.eclipse.tractusx.puris.backend.masterdata.logic.service.PartnerService;
 import org.eclipse.tractusx.puris.backend.delivery.domain.repository.ReportedDeliveryRepository;
-import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Partner;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ReportedDeliveryService {
     public final ReportedDeliveryRepository repository;
 
-    private final PartnerService partnerService;
-
     protected final Function<ReportedDelivery, Boolean> validator;
 
-    public ReportedDeliveryService(ReportedDeliveryRepository repository, PartnerService partnerService) {
+    public ReportedDeliveryService(ReportedDeliveryRepository repository) {
         this.repository = repository;
-        this.partnerService = partnerService;
         this.validator = this::validate;
     }
 
@@ -42,10 +37,10 @@ public class ReportedDeliveryService {
     public final List<ReportedDelivery> findAllByFilters(Optional<String> ownMaterialNumber, Optional<String> bpnl) {
         Stream<ReportedDelivery> stream = repository.findAll().stream();
         if (ownMaterialNumber.isPresent()) {
-            stream = stream.filter(production -> production.getMaterial().getOwnMaterialNumber().equals(ownMaterialNumber.get()));
+            stream = stream.filter(delivery -> delivery.getMaterial().getOwnMaterialNumber().equals(ownMaterialNumber.get()));
         }
         if (bpnl.isPresent()) {
-            stream = stream.filter(production -> production.getPartner().getBpnl().equals(bpnl.get()));
+            stream = stream.filter(delivery -> delivery.getPartner().getBpnl().equals(bpnl.get()));
         }
         return stream.toList();
     }
@@ -83,7 +78,6 @@ public class ReportedDeliveryService {
     }
 
     public boolean validate(ReportedDelivery delivery) {
-        Partner ownPartnerEntity = partnerService.getOwnPartnerEntity();
         return 
             delivery.getQuantity() > 0 && 
             delivery.getMeasurementUnit() != null &&
@@ -91,7 +85,8 @@ public class ReportedDeliveryService {
             delivery.getPartner() != null &&
             delivery.getTrackingNumber() != null &&
             delivery.getIncoterm() != null &&
-            !delivery.getPartner().equals(ownPartnerEntity) &&
+            !(delivery.isHasDeparted() == false && delivery.isHasArrived() == true) &&
+            !delivery.getPartner().getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getDestinationBpns())) &&
             ((
                 delivery.getCustomerOrderNumber() != null && 
                 delivery.getCustomerOrderPositionNumber() != null &&

@@ -23,7 +23,6 @@
 package org.eclipse.tractusx.puris.backend.delivery.domain.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.*;
@@ -34,7 +33,7 @@ import org.eclipse.tractusx.puris.backend.common.util.PatternStore;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Material;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Partner;
 
-import java.util.List;
+import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -46,7 +45,7 @@ import java.util.UUID;
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 @Entity
 @ToString
-public class Delivery {
+public abstract class Delivery {
     @Id
     @GeneratedValue
     protected UUID uuid;
@@ -66,6 +65,12 @@ public class Delivery {
     private double quantity;
     private ItemUnitEnumeration measurementUnit;
 
+    @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
+    private String trackingNumber;
+
+    @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
+    private String incoterm;
+
     // Order Position Reference
     @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
     private String supplierOrderNumber;
@@ -73,15 +78,6 @@ public class Delivery {
     private String customerOrderNumber;
     @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
     private String customerOrderPositionNumber;
-
-    @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
-    private String trackingNumber;
-
-    @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
-    private String incoterm;
-
-    // @OneToMany(cascade = CascadeType.ALL)
-    // private List<TransitEvent> transitEvents;
 
     // Transit Location
     @Pattern(regexp = PatternStore.BPNS_STRING)
@@ -92,6 +88,12 @@ public class Delivery {
     private String originBpns;
     @Pattern(regexp = PatternStore.BPNA_STRING)
     private String originBpna;
+
+    // Transit Event
+    private Date dateOfDeparture;
+    private Date dateOfArrival;
+    private boolean hasDeparted;
+    private boolean hasArrived;
 
     @ToString.Include
     private String material_ownMaterialNumber() {
@@ -123,11 +125,10 @@ public class Delivery {
     public int hashCode() {
         return Objects.hash(
             partner, material, quantity, measurementUnit,
-            customerOrderNumber, customerOrderPositionNumber, supplierOrderNumber,
             trackingNumber, incoterm,
-            destinationBpns, destinationBpna, originBpns, originBpna
+            supplierOrderNumber, customerOrderNumber, customerOrderPositionNumber,
+            destinationBpns, destinationBpna, originBpns, originBpna,
+            dateOfDeparture, dateOfArrival, hasDeparted, hasArrived
         );
     }
-
-    // endpoint /reported -> deliveries that partners have reported
 }

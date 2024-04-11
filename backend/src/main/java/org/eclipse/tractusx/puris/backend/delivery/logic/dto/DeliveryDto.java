@@ -23,15 +23,12 @@
 package org.eclipse.tractusx.puris.backend.delivery.logic.dto;
 
 import java.io.Serializable;
-import java.util.List;
+import java.util.Date;
 import java.util.UUID;
 
 import org.eclipse.tractusx.puris.backend.common.domain.model.measurement.ItemUnitEnumeration;
 import org.eclipse.tractusx.puris.backend.common.util.PatternStore;
-import org.eclipse.tractusx.puris.backend.masterdata.logic.dto.MaterialDto;
-import org.eclipse.tractusx.puris.backend.masterdata.logic.dto.PartnerDto;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -45,20 +42,11 @@ import lombok.ToString;
 public class DeliveryDto implements Serializable {
     private UUID uuid;
 
-    private PartnerDto partner;
-    @Valid
-    private MaterialDto material;
+    private String partnerBpnl;
+    private String ownMaterialNumber;
 
     private double quantity;
     private ItemUnitEnumeration measurementUnit;
-
-    // Order Position Reference
-    @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
-    private String supplierOrderId;
-    @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
-    private String customerOrderId;
-    @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
-    private String customerOrderPositionId;
 
     @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
     private String trackingNumber;
@@ -66,5 +54,27 @@ public class DeliveryDto implements Serializable {
     @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
     private String incoterm;
 
-    // private List<TransitEventDto> transitEvents;
+    // Order Position Reference
+    @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
+    private String supplierOrderNumber;
+    @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
+    private String customerOrderNumber;
+    @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
+    private String customerOrderPositionNumber;
+
+    // Transit Location
+    @Pattern(regexp = PatternStore.BPNS_STRING)
+    private String destinationBpns;
+    @Pattern(regexp = PatternStore.BPNA_STRING)
+    private String destinationBpna;
+    @Pattern(regexp = PatternStore.BPNS_STRING)
+    private String originBpns;
+    @Pattern(regexp = PatternStore.BPNA_STRING)
+    private String originBpna;
+
+    // Transit Event
+    private Date dateOfDeparture;
+    private Date dateOfArrival;
+    private boolean hasDeparted;
+    private boolean hasArrived;
 }
