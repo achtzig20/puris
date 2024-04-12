@@ -168,15 +168,6 @@ public class DeliveryController {
                 .stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
-    @GetMapping("reported")
-    @ResponseBody
-    @Operation(summary = "Get all deliveries that partners have reported",
-        description = "Get all deliveries that partners have reported.")
-    public List<DeliveryDto> getAllReportedDeliveries() {
-        return reportedDeliveryService.findAll()
-            .stream().map(this::convertToDto).collect(Collectors.toList());
-    }
-
     private OwnDelivery convertToEntity(DeliveryDto dto) {
         OwnDelivery entity = modelMapper.map(dto, OwnDelivery.class);
 
