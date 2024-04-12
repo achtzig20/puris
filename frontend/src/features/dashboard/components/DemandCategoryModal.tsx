@@ -52,7 +52,7 @@ type DemandCategoryModalProps = {
 export const DemandCategoryModal = (
     { open, onClose, onSave, demand }: DemandCategoryModalProps) => {
     const [temporaryDemand, setTemporaryDemand] = useState<Partial<Demand>>(demand ?? {});
-    const { partners } = usePartners('product', temporaryDemand?.ownMaterialNumber ?? null);
+    const { partners } = usePartners('material', temporaryDemand?.ownMaterialNumber ?? null);
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [formError, setFormError] = useState(false);
 
@@ -64,7 +64,7 @@ export const DemandCategoryModal = (
             || !temporaryDemand.demandCategoryCode
             || !temporaryDemand?.measurementUnit
             || !temporaryDemand?.partnerBpnl
-            || !temporaryDemand?.supplierSite
+            || !temporaryDemand?.supplierLocationBpns
             ) {
             setFormError(true);
             return;
@@ -202,29 +202,29 @@ export const DemandCategoryModal = (
                                             error={formError && !temporaryDemand?.partnerBpnl}
                                         />
                                 }
-                                onChange={(event, value) => setTemporaryDemand({ ...temporaryDemand, partnerBpnl: value ?? undefined })}
-                                value={temporaryDemand.partnerBpnl}
+                                onChange={(event, value) => setTemporaryDemand({ ...temporaryDemand, partnerBpnl: value?.bpnl ?? undefined })}
+                                value={partners?.find(s => s.bpnl === temporaryDemand.partnerBpnl)}
                                 isOptionEqualToValue={(option, value) => option?.uuid === value?.uuid}
                             />
                         </Grid>
                         <Grid item xs={6}>
                             <Autocomplete
-                                id="supplierSite"
-                                options={[]}
-                                //options={suppliers ?? []}
-                                getOptionLabel={(option) => option ?? ''}
+                                id="supplierLocationBpns"
+                                options={partners?.find(s => s.bpnl === temporaryDemand.partnerBpnl)?.sites ?? []}
+                                getOptionLabel={(option) => option.name ?? ''}
+                                disabled={!temporaryDemand?.partnerBpnl}
                                 renderInput={
                                     (params) =>
                                         <Input
                                             {...params}
                                             label="Supplier Site*"
                                             placeholder="Select a Site"
-                                            error={formError && !temporaryDemand?.supplierSite}
+                                            error={formError && !temporaryDemand?.supplierLocationBpns}
                                         />
                                 }
-                                onChange={(event, value) => setTemporaryDemand({ ...temporaryDemand, supplierSite: value ?? undefined })}
-                                value={temporaryDemand.supplierSite}
-                                isOptionEqualToValue={(option, value) => option === value}
+                                onChange={(event, value) => setTemporaryDemand({ ...temporaryDemand, supplierLocationBpns: value?.bpns ?? undefined })}
+                                value={partners?.find(s => s.bpnl === temporaryDemand.partnerBpnl)?.sites.find(s => s.bpns === temporaryDemand.supplierLocationBpns)}
+                                isOptionEqualToValue={(option, value) => option?.bpns === value.bpns}
                             />
                         </Grid>
                     </Grid>

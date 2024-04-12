@@ -94,10 +94,29 @@ export const DemandTable = ({ numberOfDays, stocks, site, onDeliveryClick, onDem
     };
     return (
         <>
-            <Box display="flex" justifyContent="start" width="100%" gap="0.5rem" marginBlock="0.5rem" paddingLeft=".5rem">
+            <Box
+                display="flex"
+                justifyContent="start"
+                width="100%" gap="0.5rem"
+                marginBlock="0.5rem"
+                paddingLeft=".5rem"
+            >
                 <Typography variant="caption1" component="h3" fontWeight={600}> Site: </Typography>
+
                 {site.name} ({site.bpns})
-                <Button variant='contained' onClick={() => onDemandClick({demandLocationBpns: site.bpns})} sx={{marginLeft: 'auto'}}> <Add></Add> Create Demand </Button>
+
+                <Button
+                    variant='contained'
+                    onClick={() => onDemandClick(
+                        {
+                            demandLocationBpns: site.bpns,
+                            ownMaterialNumber: stocks?.length ? stocks[0].material.materialNumberCustomer : null
+                        }
+                    )}
+                    sx={{marginLeft: 'auto'}}
+                >
+                    <Add></Add> Create Demand
+                </Button>
             </Box>
             <TableWithRowHeader
                 title=""
