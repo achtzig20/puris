@@ -21,15 +21,29 @@
 
 package org.eclipse.tractusx.puris.backend.delivery.domain.model;
 
-import jakarta.persistence.Entity;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import lombok.experimental.SuperBuilder;
+import com.fasterxml.jackson.annotation.JsonValue;
 
-@Entity
-@SuperBuilder
-@NoArgsConstructor
-@ToString(callSuper = true)
-public class ReportedDelivery extends Delivery {
-    
+public enum IncotermEnumeration {
+    EXW("EXW"),
+    FCA("FCA"),
+    FAS("FAS"),
+    FOB("FOB"),
+    CFR("CFR"),
+    CIF("CIF"),
+    DAP("DAP"),
+    DPU("DPU"),
+    CPT("CPT"),
+    CIP("CIP"),
+    DDP("DDP");
+
+    private String value;
+
+    IncotermEnumeration(String value) {
+        this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+        return value;
+    }
 }

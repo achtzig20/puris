@@ -1,8 +1,7 @@
 /*
- * Copyright (c) 2023 Volkswagen AG
- * Copyright (c) 2023 Fraunhofer-Gesellschaft zur Foerderung der angewandten Forschung e.V.
+ * Copyright (c) 2024 Volkswagen AG
  * (represented by Fraunhofer ISST)
- * Copyright (c) 2023 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -159,7 +158,7 @@ public class DeliveryController {
         ownDeliveryService.delete(id);
     }
 
-    @GetMapping("partner")
+    @GetMapping("reported")
     @ResponseBody
     @Operation(summary = "Get all deliveries of partners for a material",
         description = "Get all deliveries of partners for a material number. Optionally the partners can be filtered by their bpnl.")

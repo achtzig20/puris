@@ -1,8 +1,7 @@
 /*
- * Copyright (c) 2023 Volkswagen AG
- * Copyright (c) 2023 Fraunhofer-Gesellschaft zur Foerderung der angewandten Forschung e.V.
+ * Copyright (c) 2024 Volkswagen AG
  * (represented by Fraunhofer ISST)
- * Copyright (c) 2023 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -122,7 +121,7 @@ public class OwnDeliveryService {
             delivery.getIncoterm() != null &&
             !(delivery.isHasDeparted() == false && delivery.isHasArrived() == true) &&
             !delivery.getPartner().equals(ownPartnerEntity) &&
-            !ownPartnerEntity.getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getOriginBpns())) &&
+            !ownPartnerEntity.getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getDestinationBpns())) &&
             ((
                 delivery.getCustomerOrderNumber() != null && 
                 delivery.getCustomerOrderPositionNumber() != null &&

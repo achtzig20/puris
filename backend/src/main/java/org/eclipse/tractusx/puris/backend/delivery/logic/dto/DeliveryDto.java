@@ -1,8 +1,7 @@
 /*
- * Copyright (c) 2023 Volkswagen AG
- * Copyright (c) 2023 Fraunhofer-Gesellschaft zur Foerderung der angewandten Forschung e.V.
+ * Copyright (c) 2024 Volkswagen AG
  * (represented by Fraunhofer ISST)
- * Copyright (c) 2023 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -28,6 +27,7 @@ import java.util.UUID;
 
 import org.eclipse.tractusx.puris.backend.common.domain.model.measurement.ItemUnitEnumeration;
 import org.eclipse.tractusx.puris.backend.common.util.PatternStore;
+import org.eclipse.tractusx.puris.backend.delivery.domain.model.IncotermEnumeration;
 
 import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
@@ -51,8 +51,7 @@ public class DeliveryDto implements Serializable {
     @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
     private String trackingNumber;
 
-    @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
-    private String incoterm;
+    private IncotermEnumeration incoterm;
 
     // Order Position Reference
     @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
