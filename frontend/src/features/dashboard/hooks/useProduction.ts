@@ -17,7 +17,6 @@ under the License.
 
 SPDX-License-Identifier: Apache-2.0
 */
-
 import { useFetch } from '@hooks/useFetch'
 import { config } from '@models/constants/config'
 import { Production } from '@models/types/data/production';

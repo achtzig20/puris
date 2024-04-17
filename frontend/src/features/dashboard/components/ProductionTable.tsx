@@ -41,11 +41,9 @@ const createProductionRow = (numberOfDays: number, productions: Production[]) =>
         }, {}),
     };
 };
-
 const createShipmentRow = (numberOfDays: number) => {
     return { ...Object.keys(Array.from({ length: numberOfDays })).reduce((acc, _, index) => ({ ...acc, [index]: 0 }), {}), };
 }
-
 const createProductionTableRows = (numberOfDays: number, stocks: Stock[], productions: Production[], site: Site) => {
     const shipmentRow = createShipmentRow(numberOfDays);
     const productionRow = createProductionRow(numberOfDays, productions);
@@ -60,9 +58,7 @@ const createProductionTableRows = (numberOfDays: number, stocks: Stock[], produc
                         : acc[(index - 1) as keyof typeof acc] -
                           shipmentRow[(index -1) as keyof typeof shipmentRow] +
                           productionRow[(index - 1) as keyof typeof productionRow],
-            }),
-            {}
-        ),
+            }), {}),
     };
     return [
         { id: 'shipment', name: 'Outgoing Shipments', ...shipmentRow },
@@ -108,18 +104,8 @@ export const ProductionTable = ({ numberOfDays, stocks, site, productions, readO
     };
     return (
         <Stack spacing={2}>
-            <Box
-                display="flex"
-                justifyContent="start"
-                alignItems="center"
-                width="100%"
-                gap="0.5rem"
-                marginBlock="0.5rem"
-                paddingLeft=".5rem"
-            >
-                <Typography variant="caption1" component="h3" fontWeight={600}>
-                    Site:
-                </Typography>
+            <Box display="flex" justifyContent="start" alignItems="center" width="100%" gap="0.5rem" marginBlock="0.5rem" paddingLeft=".5rem">
+                <Typography variant="caption1" component="h3" fontWeight={600}> Site: </Typography>
                 {site.name} ({site.bpns})
                 {!readOnly && (
                     <Box marginLeft='auto' display='flex' gap='1rem'>
