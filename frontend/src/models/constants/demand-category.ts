@@ -24,7 +24,7 @@ export const DEMAND_CATEGORY = [
         "value": "Default"
     },
     {
-        "key": "A151",
+        "key": "A1S1",
         "value": "After-Sales"
     },
     {
