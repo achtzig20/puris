@@ -17,9 +17,9 @@ under the License.
 
 SPDX-License-Identifier: Apache-2.0
 */
-
 import { config } from '@models/constants/config';
 import { Production } from '@models/types/data/production';
+import { UUID } from 'crypto';
 
 export const postProductionRange = async (range: Partial<Production>[]) => {
   const res = await fetch(config.app.BACKEND_BASE_URL + config.app.ENDPOINT_PRODUCTION_RANGE, {
@@ -35,4 +35,17 @@ export const postProductionRange = async (range: Partial<Production>[]) => {
     throw error;
   }
   return res.json();
+}
+
+export const deleteProduction = async (id: UUID) => {
+  const res = await fetch(config.app.BACKEND_BASE_URL + config.app.ENDPOINT_PRODUCTION + `/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'X-API-KEY': config.app.BACKEND_API_KEY,
+    },
+  });
+  if(res.status >= 400) {
+    const error = await res.json();
+    throw error;
+  }
 }

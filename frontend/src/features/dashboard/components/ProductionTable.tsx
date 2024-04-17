@@ -22,22 +22,28 @@ import { TableWithRowHeader } from '@components/TableWithRowHeader';
 import { Stock } from '@models/types/data/stock';
 import { Site } from '@models/types/edc/site';
 import { createDateColumnHeaders } from '../util/helpers';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
 import { Delivery } from '@models/types/data/delivery';
 import { Production } from '@models/types/data/production';
 import { Add } from '@mui/icons-material';
 
 const createProductionRow = (numberOfDays: number, productions: Production[]) => {
-    return { ...Object.keys(Array.from({ length: numberOfDays })).reduce((acc, _, index) => {
-        const date = new Date();
-        date.setDate(date.getDate() + index);
-        const prod = productions.find((production) => new Date(`${new Date(production.estimatedTimeOfCompletion)}Z`).toDateString() === date.toDateString());
-        return { ...acc, [index]: prod?.quantity ?? 0 };
-    }, {})};
-}
+    return {
+        ...Object.keys(Array.from({ length: numberOfDays })).reduce((acc, _, index) => {
+            const date = new Date();
+            date.setDate(date.getDate() + index);
+            const prod = productions
+                .filter(
+                    (production) => new Date(`${new Date(production.estimatedTimeOfCompletion)}Z`).toDateString() === date.toDateString()
+                )
+                .reduce((sum, production) => sum + production.quantity, 0);
+            return { ...acc, [index]: prod };
+        }, {}),
+    };
+};
 
 const createShipmentRow = (numberOfDays: number) => {
-    return { ...Object.keys(Array.from({ length: numberOfDays })).reduce((acc, _, index) => ({ ...acc, [index]: index % 3 === 1 ? 90 : 0 }), {}), };
+    return { ...Object.keys(Array.from({ length: numberOfDays })).reduce((acc, _, index) => ({ ...acc, [index]: 0 }), {}), };
 }
 
 const createProductionTableRows = (numberOfDays: number, stocks: Stock[], productions: Production[], site: Site) => {
@@ -52,15 +58,15 @@ const createProductionTableRows = (numberOfDays: number, stocks: Stock[], produc
                     index === 0
                         ? stockQuantity
                         : acc[(index - 1) as keyof typeof acc] -
-                          shipmentRow[index as keyof typeof shipmentRow] +
+                          shipmentRow[(index -1) as keyof typeof shipmentRow] +
                           productionRow[(index - 1) as keyof typeof productionRow],
             }),
             {}
         ),
     };
     return [
-        { id: 'shipment', name: 'Shipments', ...shipmentRow },
-        { id: 'itemStock', name: 'Item Stock', ...stockRow },
+        { id: 'shipment', name: 'Outgoing Shipments', ...shipmentRow },
+        { id: 'itemStock', name: 'Projected Item Stock', ...stockRow },
         { id: 'plannedProduction', name: 'Planned Production', ...productionRow },
     ];
 };
@@ -69,16 +75,16 @@ type ProductionTableProps = {
     stocks: Stock[] | null; 
     site: Site; 
     productions: Production[] | null;
-    editable?: boolean;
+    readOnly: boolean;
     onDeliveryClick: (delivery: Delivery) => void
-    onProductionClick: (production: Partial<Production>) => void
+    onProductionClick: (production: Partial<Production>, mode: 'create' | 'edit') => void;
 };
 
-export const ProductionTable = ({ numberOfDays, stocks, site, productions, editable = false, onDeliveryClick, onProductionClick }: ProductionTableProps) => {
+export const ProductionTable = ({ numberOfDays, stocks, site, productions, readOnly, onDeliveryClick, onProductionClick, }: ProductionTableProps) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleCellClick = (cellData: any) => {
+        if (cellData.value === 0) return;
         if (cellData.id === 'shipment') {
-            if (cellData.value === 0) return;
             onDeliveryClick({
                 quantity: cellData.value,
                 etd: cellData.colDef.headerName,
@@ -93,31 +99,45 @@ export const ProductionTable = ({ numberOfDays, stocks, site, productions, edita
         if (cellData.id === 'plannedProduction') {
             const material = stocks?.length ? stocks[0].material : undefined;
             onProductionClick({
-                quantity: parseFloat(cellData.value),
-                material,
-                estimatedTimeOfCompletion: new Date(cellData.colDef.headerName),
-                productionSiteBpns: site.bpns,
-            });
+                    quantity: parseFloat(cellData.value),
+                    material,
+                    estimatedTimeOfCompletion: new Date(cellData.colDef.headerName),
+                    productionSiteBpns: site.bpns,
+                }, 'edit');
         }
     };
     return (
-        <>
-            <Box display="flex" justifyContent="start" alignItems='center' width="100%" gap="0.5rem" marginBlock="0.5rem" paddingLeft=".5rem">
+        <Stack spacing={2}>
+            <Box
+                display="flex"
+                justifyContent="start"
+                alignItems="center"
+                width="100%"
+                gap="0.5rem"
+                marginBlock="0.5rem"
+                paddingLeft=".5rem"
+            >
                 <Typography variant="caption1" component="h3" fontWeight={600}>
                     Site:
                 </Typography>
                 {site.name} ({site.bpns})
-                <Button variant='contained' onClick={() => onProductionClick({productionSiteBpns: site.bpns})} sx={{marginLeft: 'auto'}}> <Add></Add> Create Production </Button>
+                {!readOnly && (
+                    <Box marginLeft='auto' display='flex' gap='1rem'>
+                        <Button variant="contained" onClick={() => onProductionClick({ productionSiteBpns: site.bpns }, 'create')}>
+                            <Add></Add> Add Production
+                        </Button>
+                    </Box>
+                )}
             </Box>
             <TableWithRowHeader
                 title=""
                 noRowsMsg="Select a Site to show production data"
-                columns={createDateColumnHeaders(numberOfDays, editable)}
+                columns={createDateColumnHeaders(numberOfDays)}
                 onCellClick={handleCellClick}
                 rows={site ? createProductionTableRows(numberOfDays, stocks ?? [], productions ?? [], site) : []}
                 getRowId={(row) => row.id}
                 hideFooter={true}
             />
-        </>
+        </Stack>
     );
 };

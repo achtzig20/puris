@@ -17,19 +17,16 @@ under the License.
 
 SPDX-License-Identifier: Apache-2.0
 */
-import { UUID } from 'crypto';
-import { UnitOfMeasurementKey } from './uom';
-import { MaterialDetails } from './stock';
-import { BPNS } from '../edc/bpn';
-import { Partner } from '../edc/partner';
-import { OrderReference } from './order-reference';
+import { useFetch } from '@hooks/useFetch'
+import { config } from '@models/constants/config'
+import { Production } from '@models/types/data/production';
 
-export type Production = {
-  uuid?: UUID;
-  partner: Partner;
-  material: MaterialDetails;
-  quantity: number;
-  measurementUnit: UnitOfMeasurementKey;
-  productionSiteBpns: BPNS;
-  estimatedTimeOfCompletion: Date;
-} & OrderReference;
+export const useReportedProduction = (materialNumber: string | null) => {
+  const {data: reportedProductions, error: reportedProductionsError, isLoading: isLoadingReportedProductions, refresh: refreshProduction } = useFetch<Production[]>(materialNumber ? `${config.app.BACKEND_BASE_URL}${config.app.ENDPOINT_PRODUCTION}/reported?materialNumber=${materialNumber}` : undefined);
+  return {
+    reportedProductions,
+    reportedProductionsError,
+    isLoadingReportedProductions,
+    refreshProduction,
+  };
+}

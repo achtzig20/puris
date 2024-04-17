@@ -19,7 +19,7 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 export type Notification = {
-    title: string;
-    description: string;
-    severity: 'success' | 'error';
+  title: string;
+  description: string;
+  severity: 'success' | 'error';
 };

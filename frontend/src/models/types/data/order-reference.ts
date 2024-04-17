@@ -17,17 +17,8 @@ under the License.
 
 SPDX-License-Identifier: Apache-2.0
 */
-
-import { useFetch } from '@hooks/useFetch'
-import { config } from '@models/constants/config'
-import { Production } from '@models/types/data/production';
-
-export const usePartnerProduction = (materialNumber: string | null) => {
-  const {data: partnerProductions, error: partnerProductionsError, isLoading: isLoadingpartnerProductions, refresh: refreshProduction } = useFetch<Production[]>(materialNumber ? `${config.app.BACKEND_BASE_URL}${config.app.ENDPOINT_PRODUCTION}/reported?materialNumber=${materialNumber}` : undefined);
-  return {
-    partnerProductions,
-    partnerProductionsError,
-    isLoadingpartnerProductions,
-    refreshProduction,
-  };
+export type OrderReference = {
+  customerOrderNumber: string | null;
+  customerOrderPositionNumber: string | null;
+  supplierOrderNumber: string | null;
 }
