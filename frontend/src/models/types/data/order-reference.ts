@@ -17,26 +17,8 @@ under the License.
 
 SPDX-License-Identifier: Apache-2.0
 */
-
-import { UUID } from 'crypto';
-import { BPNA, BPNL, BPNS } from '../edc/bpn';
-import { UnitOfMeasurementKey } from './uom';
-import { OrderReference } from './order-reference';
-
-export type Delivery = {
-  uuid?: UUID;
-  ownMaterialNumber: string;
-  quantity: number;
-  measurementUnit: UnitOfMeasurementKey;
-  trackingNumber: string;
-  incoterm: string;
-  partnerBpnl: BPNL;
-  destinationBpns: BPNS;
-  destinationBpna?: BPNA;
-  originBpns: BPNS;
-  originBpna?: BPNA;
-  dateOfDeparture: Date;
-  dateOfArrival: Date;
-  hasDeparted?: boolean;
-  hasArrived?: boolean;
-} & OrderReference;
+export type OrderReference = {
+  customerOrderNumber: string | null;
+  customerOrderPositionNumber: string | null;
+  supplierOrderNumber: string | null;
+}

@@ -33,6 +33,7 @@ const app = {
     ENDPOINT_UPDATE_REPORTED_MATERIAL_STOCKS: import.meta.env.VITE_ENDPOINT_UPDATE_REPORTED_MATERIAL_STOCKS.trim() as string,
     ENDPOINT_UPDATE_REPORTED_PRODUCT_STOCKS: import.meta.env.VITE_ENDPOINT_UPDATE_REPORTED_PRODUCT_STOCKS.trim() as string,
     ENDPOINT_PARTNER_OWNSITES: import.meta.env.VITE_ENDPOINT_PARTNER_OWNSITES.trim() as string,
+    ENDPOINT_DELIVERY: import.meta.env.VITE_ENDPOINT_DELIVERY.trim() as string,
 };
 
 const auth = {

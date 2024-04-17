@@ -18,11 +18,17 @@ under the License.
 SPDX-License-Identifier: Apache-2.0
 */
 
+import { INCOTERMS } from '@models/constants/incoterms';
 import { UNITS_OF_MEASUREMENT } from '@models/constants/uom';
+import { OrderReference } from '@models/types/data/order-reference';
 import { UnitOfMeasurementKey } from '@models/types/data/uom';
 
 export const getUnitOfMeasurement = (unitOfMeasurementKey: UnitOfMeasurementKey) =>
     UNITS_OF_MEASUREMENT.find((uom) => uom.key === unitOfMeasurementKey)?.value;
+
+export const getIncoterm = (incoterm: string) => {
+    return INCOTERMS.find((i) => i.key === incoterm)?.value;
+}
 
 export const getCatalogOperator = (operatorId: string) => {
     switch (operatorId) {
@@ -37,7 +43,6 @@ export const getCatalogOperator = (operatorId: string) => {
 
 /***
  * Type predicate to check if a value is an array
- * 
  * Unlike Array.isArray, this predicate asserts the members of the array to be unknown rather than any
  */
 export const isArray = (value: unknown): value is unknown[] => Array.isArray(value);
@@ -61,3 +66,7 @@ export const isErrorResponse = (response: unknown): response is ErrorResponse =>
         typeof response[0].message === 'string'
     );
 };
+
+export const isValidOrderReference = (ref: Partial<OrderReference>) =>
+    (ref.customerOrderNumber !== undefined && ref.customerOrderPositionNumber !== undefined && ref.supplierOrderNumber !== undefined) ||
+    (ref.customerOrderNumber === undefined && ref.customerOrderPositionNumber === undefined && ref.supplierOrderNumber === undefined);

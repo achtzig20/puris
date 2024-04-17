@@ -22,16 +22,39 @@ import { TableWithRowHeader } from '@components/TableWithRowHeader';
 import { Stock } from '@models/types/data/stock';
 import { Site } from '@models/types/edc/site';
 import { createDateColumnHeaders } from '../util/helpers';
-import { Box, Typography } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
 import { Delivery } from '@models/types/data/delivery';
+import { Add } from '@mui/icons-material';
 
-const createProductionRows = (numberOfDays: number, stocks: Stock[], site: Site) => {
-    const shipments = {
-        ...Object.keys(Array.from({ length: numberOfDays })).reduce((acc, _, index) => ({ ...acc, [index]: index % 3 === 1 ? 90 : 0 }), {}),
+const createProductionRow = (numberOfDays: number) => {
+    return {
+        ...Object.keys(Array.from({ length: numberOfDays })).reduce((acc, _, index) => ({ ...acc, [index]: 0 }), {})
     };
-    const production = { ...Object.keys(Array.from({ length: numberOfDays })).reduce((acc, _, index) => ({ ...acc, [index]: 30 }), {}) };
+};
+
+const createShipmentRow = (numberOfDays: number, deliveries: Delivery[], site: Site) => {
+    return {
+        ...Object.keys(Array.from({ length: numberOfDays })).reduce((acc, _, index) => {
+            const date = new Date();
+            date.setDate(date.getDate() + index);
+            const d = deliveries
+                .filter((delivery) => new Date(`${new Date(delivery.dateOfDeparture!)}Z`).toDateString() === date.toDateString() && delivery.originBpns === site.bpns)
+                .reduce((sum, delivery) => sum + delivery.quantity!, 0);
+            return { ...acc, [index]: d };
+        }, {}),
+    };
+};
+
+const createProductionTableRows = (
+    numberOfDays: number,
+    stocks: Stock[],
+    deliveries: Delivery[],
+    site: Site
+) => {
+    const shipmentRow = createShipmentRow(numberOfDays, deliveries, site);
+    const productionRow = createProductionRow(numberOfDays);
     const stockQuantity = stocks.filter((stock) => stock.stockLocationBpns === site.bpns).reduce((acc, stock) => acc + stock.quantity, 0);
-    const allocatedStocks = {
+    const stockRow = {
         ...Object.keys(Array.from({ length: numberOfDays })).reduce(
             (acc, _, index) => ({
                 ...acc,
@@ -39,54 +62,85 @@ const createProductionRows = (numberOfDays: number, stocks: Stock[], site: Site)
                     index === 0
                         ? stockQuantity
                         : acc[(index - 1) as keyof typeof acc] -
-                          shipments[index as keyof typeof shipments] +
-                          production[(index - 1) as keyof typeof production],
+                          shipmentRow[(index -1) as keyof typeof shipmentRow] +
+                          productionRow[(index - 1) as keyof typeof productionRow],
             }),
             {}
         ),
     };
     return [
-        { id: 'shipment', name: 'Shipments', ...shipments },
-        { id: 'itemStock', name: 'Item Stock', ...allocatedStocks },
-        { id: 'plannedProduction', name: 'Planned Production', ...production },
+        { id: 'shipment', name: 'Outgoing Shipments', ...shipmentRow },
+        { id: 'itemStock', name: 'Projected Item Stock', ...stockRow },
+        { id: 'plannedProduction', name: 'Planned Production', ...productionRow },
     ];
 };
+type ProductionTableProps = {
+    numberOfDays: number;
+    stocks: Stock[];
+    site: Site;
+    deliveries: Delivery[];
+    readOnly?: boolean;
+    onDeliveryClick: (delivery: Partial<Delivery>, mode: 'create' | 'edit') => void;
+};
 
-type ProductionTableProps = { numberOfDays: number; stocks: Stock[] | null; site: Site, onDeliveryClick: (delivery: Delivery) => void };
-
-export const ProductionTable = ({ numberOfDays, stocks, site, onDeliveryClick }: ProductionTableProps) => {
+export const ProductionTable = ({
+    numberOfDays,
+    stocks,
+    site,
+    deliveries,
+    readOnly,
+    onDeliveryClick,
+}: ProductionTableProps) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleDeliveryClick = (cellData: any) => {
-        if (cellData.id !== 'shipment') return;
+    const handleCellClick = (cellData: any) => {
         if (cellData.value === 0) return;
-        onDeliveryClick({
-            quantity: cellData.value,
-            etd: cellData.colDef.headerName,
-            origin: {
-                bpns: site?.bpns,
-            },
-            destination: {
-                bpns: site?.bpns,
-            },
-        });
+        if (cellData.id === 'shipment') {
+            onDeliveryClick(
+                {
+                    quantity: cellData.value,
+                    dateOfDeparture: cellData.colDef.headerName,
+                    originBpns: site.bpns,
+                    destinationBpns: site.bpns,
+                },
+                'edit'
+            );
+        }
     };
     return (
-        <>
-            <Box display="flex" justifyContent="start" width="100%" gap="0.5rem" marginBlock="0.5rem" paddingLeft=".5rem">
+        <Stack spacing={2}>
+            <Box
+                display="flex"
+                justifyContent="start"
+                alignItems="center"
+                width="100%"
+                gap="0.5rem"
+                marginBlock="0.5rem"
+                paddingLeft=".5rem"
+            >
                 <Typography variant="caption1" component="h3" fontWeight={600}>
                     Site:{' '}
                 </Typography>{' '}
                 {site.name} ({site.bpns})
+                {!readOnly && (
+                    <Box marginLeft='auto' display='flex' gap='1rem'>
+                        <Button
+                            variant="contained"
+                            onClick={() => onDeliveryClick({ originBpns: site.bpns }, 'create')}
+                        >
+                            <Add></Add> Add Delivery
+                        </Button>
+                    </Box>
+                )}
             </Box>
             <TableWithRowHeader
                 title=""
                 noRowsMsg="Select a Site to show production data"
                 columns={createDateColumnHeaders(numberOfDays)}
-                onCellClick={handleDeliveryClick}
-                rows={site ? createProductionRows(numberOfDays, stocks ?? [], site) : []}
+                onCellClick={handleCellClick}
+                rows={site ? createProductionTableRows(numberOfDays, stocks, deliveries, site) : []}
                 getRowId={(row) => row.id}
                 hideFooter={true}
             />
-        </>
+        </Stack>
     );
 };
