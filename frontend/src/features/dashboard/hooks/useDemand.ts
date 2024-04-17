@@ -18,19 +18,17 @@ under the License.
 SPDX-License-Identifier: Apache-2.0
 */
 
-import { UUID } from 'crypto';
-import { UnitOfMeasurementKey } from './uom';
-import { BPNS } from '../edc/bpn';
-import { DemandCategoryCode } from './demand-category';
+import { useFetch } from '@hooks/useFetch'
+import { config } from '@models/constants/config'
+import { Demand } from '@models/types/data/demand';
+import { BPNS } from '@models/types/edc/bpn';
 
-export type Demand = {
-  uuid?: UUID;
-  ownMaterialNumber: string | null;
-  demandLocationBpns: BPNS;
-  partnerBpnl: string;
-  supplierLocationBpns: string;
-  quantity: number;
-  measurementUnit: UnitOfMeasurementKey;
-  day: Date | null;
-  demandCategoryCode: DemandCategoryCode;
+export const useDemand = (materialNumber: string | null, site: BPNS | null) => {
+  const {data: demands, error: demandsError, isLoading: isLoadingDemands, refresh: refreshDemand } = useFetch<Demand[]>(materialNumber && site ? `${config.app.BACKEND_BASE_URL}${config.app.ENDPOINT_DEMAND}?materialNumber=${materialNumber}&site=${site}` : undefined);
+  return {
+    demands,
+    demandsError,
+    isLoadingDemands,
+    refreshDemand,
+  };
 }

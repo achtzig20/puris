@@ -17,20 +17,11 @@ under the License.
 
 SPDX-License-Identifier: Apache-2.0
 */
+import { DEMAND_CATEGORY } from '../../constants/demand-category';
 
-import { UUID } from 'crypto';
-import { UnitOfMeasurementKey } from './uom';
-import { BPNS } from '../edc/bpn';
-import { DemandCategoryCode } from './demand-category';
+export type DemandCategoryCode = typeof DEMAND_CATEGORY[number]['key'];
 
-export type Demand = {
-  uuid?: UUID;
-  ownMaterialNumber: string | null;
-  demandLocationBpns: BPNS;
-  partnerBpnl: string;
-  supplierLocationBpns: string;
-  quantity: number;
-  measurementUnit: UnitOfMeasurementKey;
-  day: Date | null;
-  demandCategoryCode: DemandCategoryCode;
+export type DemandCategory = {
+    key: DemandCategoryCode;
+    value: string;
 }

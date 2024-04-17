@@ -20,6 +20,7 @@ SPDX-License-Identifier: Apache-2.0
 
 import { config } from '@models/constants/config';
 import { Demand } from '@models/types/data/demand';
+import { UUID } from 'crypto';
 
 export const postDemand = async (demand: Partial<Demand>) => {
   const res = await fetch(config.app.BACKEND_BASE_URL + config.app.ENDPOINT_DEMAND, {
@@ -35,4 +36,17 @@ export const postDemand = async (demand: Partial<Demand>) => {
     throw error;
   }
   return res.json();
+}
+
+export const deleteDemand = async (id: UUID) => {
+  const res = await fetch(config.app.BACKEND_BASE_URL + config.app.ENDPOINT_DEMAND + `/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'X-API-KEY': config.app.BACKEND_API_KEY,
+    },
+  });
+  if(res.status >= 400) {
+    const error = await res.json();
+    throw error;
+  }
 }
