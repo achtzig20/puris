@@ -33,7 +33,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class ReportedDeliveryService {
-    public final ReportedDeliveryRepository repository;
+    private final ReportedDeliveryRepository repository;
 
     protected final Function<ReportedDelivery, Boolean> validator;
 

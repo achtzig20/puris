@@ -30,20 +30,20 @@ import javax.management.openmbean.KeyAlreadyExistsException;
 
 import org.eclipse.tractusx.puris.backend.delivery.domain.model.EventTypeEnumeration;
 import org.eclipse.tractusx.puris.backend.delivery.domain.model.OwnDelivery;
-import org.eclipse.tractusx.puris.backend.delivery.domain.repository.DeliveryRepository;
+import org.eclipse.tractusx.puris.backend.delivery.domain.repository.OwnDeliveryRepository;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Partner;
 import org.eclipse.tractusx.puris.backend.masterdata.logic.service.PartnerService;
 import org.springframework.stereotype.Service;
 
 @Service
 public class OwnDeliveryService {
-    public final DeliveryRepository repository;
+    private final OwnDeliveryRepository repository;
 
     private final PartnerService partnerService;
 
     protected final Function<OwnDelivery, Boolean> validator;
 
-    public OwnDeliveryService(DeliveryRepository repository, PartnerService partnerService) {
+    public OwnDeliveryService(OwnDeliveryRepository repository, PartnerService partnerService) {
         this.repository = repository;
         this.partnerService = partnerService;
         this.validator = this::validate;
