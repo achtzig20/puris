@@ -17,10 +17,17 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-package org.eclipse.tractusx.puris.backend.production.logic.dto.plannedproductionsamm;
+package org.eclipse.tractusx.puris.backend.demand.logic.dto.demandsamm;
+
+import java.util.Date;
+import java.util.Objects;
+import java.util.Set;
+
+import org.eclipse.tractusx.puris.backend.common.util.PatternStore;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -29,47 +36,43 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.util.Date;
-import java.util.Objects;
-
-import org.eclipse.tractusx.puris.backend.common.util.PatternStore;
-import org.eclipse.tractusx.puris.backend.common.domain.model.measurement.ItemQuantityEntity;
-
 /**
- * Generated class for Planned and Allocated Production Output. Quantity, site
- * of the supplier and date with time at which a production of a certain
- * material for a certain customer is planned to be finished.
+ * Generated class for Demand Series. Encapsulates the demand series related
+ * information.
  */
-
 @Getter
 @Setter
 @NoArgsConstructor
 @ToString
-public class AllocatedPlannedProductionOutput {
+public class DemandSeries {
 
     @NotNull
     @Valid
-    private ItemQuantityEntity plannedProductionQuantity;
+    private Set<Demand> demands;
 
     @NotNull
+    private DemandCategoryCharacteristic demandCategory;
+
     @Pattern(regexp = PatternStore.BPNS_STRING)
-    private String productionSiteBpns;
+    private String expectedSupplierLocationBpns;
 
     @NotNull
-    private Date estimatedTimeOfCompletion;
+    @Pattern(regexp = "^BPNS[a-zA-Z0-9]{12}$")
+    private String customerLocationBpns;
 
     @NotNull
     private Date lastUpdatedOnDateTime;
 
     @JsonCreator
-    public AllocatedPlannedProductionOutput(
-            @JsonProperty(value = "plannedProductionQuantity") ItemQuantityEntity plannedProductionQuantity,
-            @JsonProperty(value = "productionSiteBpns") String productionSiteBpns,
-            @JsonProperty(value = "estimatedTimeOfCompletion") Date estimatedTimeOfCompletion,
-            @JsonProperty(value = "lastUpdatedOnDateTime") Date lastUpdatedOnDateTime) {
-        this.plannedProductionQuantity = plannedProductionQuantity;
-        this.productionSiteBpns = productionSiteBpns;
-        this.estimatedTimeOfCompletion = estimatedTimeOfCompletion;
+    public DemandSeries(@JsonProperty(value = "demands") Set<Demand> demands,
+                        @JsonProperty(value = "demandCategory") DemandCategoryCharacteristic demandCategory,
+                        @JsonProperty(value = "expectedSupplierLocationBpns") String expectedSupplierLocationBpns,
+                        @JsonProperty(value = "customerLocationBpns") String customerLocationBpns,
+                        @JsonProperty(value = "lastUpdatedOnDateTime") Date lastUpdatedOnDateTime) {
+        this.demands = demands;
+        this.demandCategory = demandCategory;
+        this.expectedSupplierLocationBpns = expectedSupplierLocationBpns;
+        this.customerLocationBpns = customerLocationBpns;
         this.lastUpdatedOnDateTime = lastUpdatedOnDateTime;
     }
 
@@ -82,15 +85,15 @@ public class AllocatedPlannedProductionOutput {
             return false;
         }
 
-        final AllocatedPlannedProductionOutput that = (AllocatedPlannedProductionOutput) o;
-        return Objects.equals(plannedProductionQuantity, that.plannedProductionQuantity)
-                && Objects.equals(productionSiteBpns, that.productionSiteBpns)
-                && Objects.equals(estimatedTimeOfCompletion, that.estimatedTimeOfCompletion)
+        final DemandSeries that = (DemandSeries) o;
+        return Objects.equals(demands, that.demands) && Objects.equals(demandCategory, that.demandCategory)
+                && Objects.equals(expectedSupplierLocationBpns, that.expectedSupplierLocationBpns)
+                && Objects.equals(customerLocationBpns, that.customerLocationBpns)
                 && Objects.equals(lastUpdatedOnDateTime, that.lastUpdatedOnDateTime);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(plannedProductionQuantity, productionSiteBpns, estimatedTimeOfCompletion, lastUpdatedOnDateTime);
+        return Objects.hash(demands, demandCategory, expectedSupplierLocationBpns, customerLocationBpns, lastUpdatedOnDateTime);
     }
 }

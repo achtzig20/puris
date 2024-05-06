@@ -17,47 +17,47 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-package org.eclipse.tractusx.puris.backend.production.logic.dto.plannedproductionsamm;
+package org.eclipse.tractusx.puris.backend.demand.logic.dto.demandsamm;
+
+import java.util.HashSet;
+import java.util.Objects;
+
+import org.eclipse.tractusx.puris.backend.common.util.PatternStore;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Objects;
-
 /**
- * Generated class for Position. The Position can be planned for production at
- * several sites. A position may be anonymous or may reference a position within
- * an order.
+ * Generated class for Short Term Material Demand. The requirements of a
+ * customer towards a specific supplier for a specific material. Each material
+ * demand is unique by its Customer, Supplier and Material Number.
  */
-
 @Getter
 @Setter
 @NoArgsConstructor
 @ToString
-public class Position {
-    @Valid
-    private OrderPositionReference orderPositionReference;
+public class ShortTermMaterialDemand {
 
     @NotNull
     @Valid
-    private HashSet<AllocatedPlannedProductionOutput> allocatedPlannedProductionOutputs;
+    private HashSet<DemandSeries> demandSeries;
+
+    @Pattern(regexp = PatternStore.URN_OR_UUID_STRING)
+    private String materialGlobalAssetId;
 
     @JsonCreator
-    public Position(
-            @JsonProperty(value = "orderPositionReference") OrderPositionReference orderPositionReference,
-            @JsonProperty(value = "lastUpdatedOnDateTime") Date lastUpdatedOnDateTime,
-            @JsonProperty(value = "allocatedPlannedProductionOutputs") HashSet<AllocatedPlannedProductionOutput> allocatedPlannedProductionOutputs) {
-        super();
-        this.orderPositionReference = orderPositionReference;
-        this.allocatedPlannedProductionOutputs = allocatedPlannedProductionOutputs;
+    public ShortTermMaterialDemand(@JsonProperty(value = "demandSeries") HashSet<DemandSeries> demandSeries,
+            @JsonProperty(value = "materialGlobalAssetId") String materialGlobalAssetId) {
+        this.demandSeries = demandSeries;
+        this.materialGlobalAssetId = materialGlobalAssetId;
     }
 
     @Override
@@ -69,13 +69,13 @@ public class Position {
             return false;
         }
 
-        final Position that = (Position) o;
-        return Objects.equals(orderPositionReference, that.orderPositionReference)
-                && Objects.equals(allocatedPlannedProductionOutputs, that.allocatedPlannedProductionOutputs);
+        final ShortTermMaterialDemand that = (ShortTermMaterialDemand) o;
+        return Objects.equals(demandSeries, that.demandSeries) && 
+               Objects.equals(materialGlobalAssetId, that.materialGlobalAssetId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(orderPositionReference, allocatedPlannedProductionOutputs);
+        return Objects.hash(demandSeries, materialGlobalAssetId);
     }
 }

@@ -25,10 +25,13 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
+import java.util.concurrent.ExecutorService;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.management.openmbean.KeyAlreadyExistsException;
 
+import org.eclipse.tractusx.puris.backend.common.util.PatternStore;
 import org.eclipse.tractusx.puris.backend.common.util.PatternStore;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Material;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Partner;
@@ -42,9 +45,12 @@ import org.eclipse.tractusx.puris.backend.production.logic.dto.ProductionDto;
 import org.eclipse.tractusx.puris.backend.production.logic.service.ReportedProductionService;
 import org.eclipse.tractusx.puris.backend.production.logic.service.OwnProductionService;
 import org.eclipse.tractusx.puris.backend.production.logic.service.ProductionRequestApiService;
+import org.eclipse.tractusx.puris.backend.production.logic.service.ProductionRequestApiService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -63,6 +69,9 @@ public class ProductionController {
 
     @Autowired
     private ReportedProductionService reportedProductionService;
+
+    @Autowired
+    private ProductionRequestApiService productionRequestApiService;
 
     @Autowired
     private ProductionRequestApiService productionRequestApiService;
@@ -87,11 +96,16 @@ public class ProductionController {
     @Autowired
     private ExecutorService executorService;
 
+    private final Pattern materialPattern = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_PATTERN;
+
+    @Autowired
+    private ExecutorService executorService;
+
     @GetMapping()
     @ResponseBody
     @Operation(summary = "Get all planned productions for the given Material", description = "Get all planned productions for the given material number. Optionally the production site can be filtered by its bpns.")
-    public List<ProductionDto> getAllProductions(String materialNumber, Optional<String> site) {
-        return ownProductionService.findAllByFilters(Optional.of(materialNumber), Optional.empty(), site)
+    public List<ProductionDto> getAllProductions(String ownMaterialNumber, Optional<String> site) {
+        return ownProductionService.findAllByFilters(Optional.of(ownMaterialNumber), Optional.empty(), site)
                 .stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
@@ -205,9 +219,9 @@ public class ProductionController {
         summary = "Get all productions of partners for a material", 
         description = "Get all productions of partners for a material number. Optionally the partners can be filtered by their bpnl and the production site can be filtered by its bpns."
     )
-    public List<ProductionDto> getAllProductionsForPartner(String materialNumber, Optional<String> bpnl,
+    public List<ProductionDto> getAllProductionsForPartner(String ownMaterialNumber, Optional<String> bpnl,
             Optional<String> site) {
-        return reportedProductionService.findAllByFilters(Optional.of(materialNumber), bpnl, site)
+        return reportedProductionService.findAllByFilters(Optional.of(ownMaterialNumber), bpnl, site)
                 .stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
