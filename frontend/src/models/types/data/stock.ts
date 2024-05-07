@@ -24,7 +24,7 @@ import { Partner } from '../edc/partner';
 import { UnitOfMeasurementKey } from './uom';
 import { OrderReference } from './order-reference';
 
-type MaterialDetails = {
+export type MaterialDetails = {
     uuid?: UUID | null;
     materialFlag: boolean;
     productFlag: boolean;

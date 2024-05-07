@@ -18,10 +18,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.eclipse.tractusx.puris.backend.common.edc.domain.repository;
+ package org.eclipse.tractusx.puris.backend.common.edc.domain.repository;
 
-import org.eclipse.tractusx.puris.backend.common.edc.domain.model.EdcContractMapping;
-import org.springframework.data.jpa.repository.JpaRepository;
-
-public interface EdcContractMappingRepository extends JpaRepository<EdcContractMapping, String> {
-}
+ import org.eclipse.tractusx.puris.backend.common.edc.domain.model.ContractMapping;
+import org.eclipse.tractusx.puris.backend.common.edc.domain.model.DemandContractMapping;
+import org.springframework.stereotype.Repository;
+ 
+ @Repository
+ public interface DemandContractMappingRepository extends GeneralContractMappingRepository<DemandContractMapping> {
+ 
+     @Override
+     default Class<? extends ContractMapping> getType() {
+         return DemandContractMapping.class;
+     }
+ }
+ 

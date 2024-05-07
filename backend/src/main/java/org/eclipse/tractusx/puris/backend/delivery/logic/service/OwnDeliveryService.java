@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 2024 Volkswagen AG
- * (represented by Fraunhofer ISST)
  * Copyright (c) 2024 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
@@ -29,6 +28,7 @@ import java.util.stream.Stream;
 
 import javax.management.openmbean.KeyAlreadyExistsException;
 
+import org.eclipse.tractusx.puris.backend.delivery.domain.model.EventTypeEnumeration;
 import org.eclipse.tractusx.puris.backend.delivery.domain.model.OwnDelivery;
 import org.eclipse.tractusx.puris.backend.delivery.domain.repository.DeliveryRepository;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Partner;
@@ -119,7 +119,7 @@ public class OwnDeliveryService {
             delivery.getPartner() != null &&
             delivery.getTrackingNumber() != null &&
             delivery.getIncoterm() != null &&
-            !(delivery.isHasDeparted() == false && delivery.isHasArrived() == true) &&
+            this.validateTransitEvent(delivery) &&
             !delivery.getPartner().equals(ownPartnerEntity) &&
             !ownPartnerEntity.getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getDestinationBpns())) &&
             ((
@@ -131,5 +131,15 @@ public class OwnDeliveryService {
                 delivery.getCustomerOrderPositionNumber() == null &&
                 delivery.getSupplierOrderNumber() == null
             ));
+    }
+
+    private boolean validateTransitEvent(OwnDelivery delivery) {
+        return
+            delivery.getDepartureType() != null &&
+            (delivery.getDepartureType() == EventTypeEnumeration.ESTIMATED_DEPARTURE || delivery.getDepartureType() == EventTypeEnumeration.ACTUAL_DEPARTURE) &&
+            delivery.getArrivalType() != null &&
+            (delivery.getArrivalType() == EventTypeEnumeration.ESTIMATED_ARRIVAL || delivery.getArrivalType() == EventTypeEnumeration.ACTUAL_ARRIVAL) &&
+            !(delivery.getDepartureType() == EventTypeEnumeration.ESTIMATED_DEPARTURE && delivery.getArrivalType() == EventTypeEnumeration.ACTUAL_ARRIVAL) &&
+            delivery.getDateOfDeparture().getTime() < delivery.getDateOfArrival().getTime();
     }
 }

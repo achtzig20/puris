@@ -22,11 +22,22 @@ import { TableWithRowHeader } from '@components/TableWithRowHeader';
 import { Stock } from '@models/types/data/stock';
 import { Site } from '@models/types/edc/site';
 import { createDateColumnHeaders } from '../util/helpers';
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
 import { Delivery } from '@models/types/data/delivery';
+import { Add } from '@mui/icons-material';
+import { Demand } from '@models/types/data/demand';
 
-const createDemandRow = (numberOfDays: number) => {
-    return { ...Object.keys(Array.from({ length: numberOfDays })).reduce((acc, _, index) => ({ ...acc, [index]: 0 }), {}) }
+const createDemandRow = (numberOfDays: number, demands: Demand[]) => {
+    return {
+        ...Object.keys(Array.from({ length: numberOfDays })).reduce((acc, _, index) => {
+            const date = new Date();
+            date.setDate(date.getDate() + index);
+            const demand = demands
+                .filter((d) => new Date(d.day).toDateString() === date.toDateString())
+                .reduce((sum, d) => sum + d.quantity, 0);
+            return { ...acc, [index]: demand };
+        }, {}),
+    };
 };
 
 const createDeliveryRow = (numberOfDays: number, deliveries: Delivery[], site: Site) => {
@@ -42,8 +53,8 @@ const createDeliveryRow = (numberOfDays: number, deliveries: Delivery[], site: S
     };
 }
 
-const createTableRows = (numberOfDays: number, stocks: Stock[], deliveries: Delivery[], site: Site) => {
-    const demandRow = createDemandRow(numberOfDays);
+const createTableRows = (numberOfDays: number, stocks: Stock[], demands: Demand[], deliveries: Delivery[], site: Site) => {
+    const demandRow = createDemandRow(numberOfDays, demands);
     const deliveryRow = createDeliveryRow(numberOfDays, deliveries, site);
     const currentStock = stocks.find((s) => s.stockLocationBpns === site.bpns)?.quantity ?? 0;
     const itemStock = {
@@ -68,12 +79,15 @@ const createTableRows = (numberOfDays: number, stocks: Stock[], deliveries: Deli
 type DemandTableProps = {
     numberOfDays: number;
     stocks: Stock[] | null;
+    demands: Demand[] | null;
     deliveries: Delivery[] | null;
     site: Site;
+    readOnly?: boolean;
     onDeliveryClick: (delivery: Partial<Delivery>, mode: 'create' | 'edit') => void;
+    onDemandClick: (demand: Partial<Demand>, mode: 'create' | 'edit') => void;
 };
 
-export const DemandTable = ({ numberOfDays, stocks, deliveries, site, onDeliveryClick }: DemandTableProps) => {
+export const DemandTable = ({ numberOfDays, stocks, demands, deliveries, site, readOnly, onDeliveryClick, onDemandClick }: DemandTableProps) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleCellClick = (cellData: any) => {
         if (cellData.value === 0) return;
@@ -83,6 +97,13 @@ export const DemandTable = ({ numberOfDays, stocks, deliveries, site, onDelivery
                     quantity: cellData.value,
                     dateOfArrival: cellData.colDef.headerName,
                     destinationBpns: site.bpns,
+                }, 'edit');
+                break;
+            case 'demand':
+                onDemandClick({
+                    quantity: parseFloat(cellData.value),
+                    demandLocationBpns: site.bpns,
+                    day: new Date(cellData.colDef.headerName),
                 }, 'edit');
                 break;
             default:
@@ -96,12 +117,23 @@ export const DemandTable = ({ numberOfDays, stocks, deliveries, site, onDelivery
                     Site:
                 </Typography>
                 {site.name} ({site.bpns})
+                {!readOnly && <Button
+                    variant="contained"
+                    onClick={() =>
+                        onDemandClick({
+                            demandLocationBpns: site.bpns,
+                        }, 'create')
+                    }
+                    sx={{ marginLeft: 'auto' }}
+                >
+                    <Add></Add> Create Demand
+                </Button> }
             </Box>
             <TableWithRowHeader
                 title=""
                 noRowsMsg="Select a Material to show the customer demand"
                 columns={createDateColumnHeaders(numberOfDays)}
-                rows={createTableRows(numberOfDays, stocks ?? [], deliveries ?? [], site)}
+                rows={createTableRows(numberOfDays, stocks ?? [], demands ?? [], deliveries ?? [], site)}
                 onCellClick={handleCellClick}
                 getRowId={(row) => row.id}
                 hideFooter={true}
