@@ -25,13 +25,10 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
-import java.util.concurrent.ExecutorService;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.management.openmbean.KeyAlreadyExistsException;
 
-import org.eclipse.tractusx.puris.backend.common.util.PatternStore;
 import org.eclipse.tractusx.puris.backend.common.util.PatternStore;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Material;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Partner;
@@ -45,12 +42,9 @@ import org.eclipse.tractusx.puris.backend.production.logic.dto.ProductionDto;
 import org.eclipse.tractusx.puris.backend.production.logic.service.ReportedProductionService;
 import org.eclipse.tractusx.puris.backend.production.logic.service.OwnProductionService;
 import org.eclipse.tractusx.puris.backend.production.logic.service.ProductionRequestApiService;
-import org.eclipse.tractusx.puris.backend.production.logic.service.ProductionRequestApiService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -74,9 +68,6 @@ public class ProductionController {
     private ProductionRequestApiService productionRequestApiService;
 
     @Autowired
-    private ProductionRequestApiService productionRequestApiService;
-
-    @Autowired
     private MaterialService materialService;
 
     @Autowired
@@ -90,11 +81,6 @@ public class ProductionController {
 
     @Autowired
     private Validator validator;
-
-    private final Pattern materialPattern = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_PATTERN;
-
-    @Autowired
-    private ExecutorService executorService;
 
     private final Pattern materialPattern = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_PATTERN;
 

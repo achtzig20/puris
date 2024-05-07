@@ -72,8 +72,8 @@ public class DeliveryRequestApiService {
             log.error("Unknown Material " + materialNumberCx);
             return null;
         }
-        var currentProduction = ownDeliveryService.findAllByFilters(Optional.of(material.getOwnMaterialNumber()), Optional.of(partner.getBpnl()));
-        return sammMapper.ownDeliveryToSamm(currentProduction);
+        var currentDeliveries = ownDeliveryService.findAllByFilters(Optional.of(material.getOwnMaterialNumber()), Optional.of(partner.getBpnl()));
+        return sammMapper.ownDeliveryToSamm(currentDeliveries);
     }
 
     public void doReportedDeliveryRequest(Partner partner, Material material) {

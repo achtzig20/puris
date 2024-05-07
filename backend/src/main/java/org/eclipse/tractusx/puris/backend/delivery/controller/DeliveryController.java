@@ -197,13 +197,13 @@ public class DeliveryController {
             return new ResponseEntity<>(HttpStatusCode.valueOf(400));
         }
         Material materialEntity = materialService.findByOwnMaterialNumber(ownMaterialNumber);
-        List<Partner> allCustomerPartnerEntities = mprService.findAllCustomersForOwnMaterialNumber(ownMaterialNumber);
-        for (Partner customerPartner : allCustomerPartnerEntities) {
+        List<Partner> allSupplierPartnerEntities = mprService.findAllSuppliersForOwnMaterialNumber(ownMaterialNumber);
+        for (Partner supplierPartner : allSupplierPartnerEntities) {
             executorService.submit(() ->
-            deliveryRequestApiService.doReportedDeliveryRequest(customerPartner, materialEntity));
+            deliveryRequestApiService.doReportedDeliveryRequest(supplierPartner, materialEntity));
         }
 
-        return ResponseEntity.ok(allCustomerPartnerEntities.stream()
+        return ResponseEntity.ok(allSupplierPartnerEntities.stream()
             .map(partner -> modelMapper.map(partner, PartnerDto.class))
             .toList());
     }

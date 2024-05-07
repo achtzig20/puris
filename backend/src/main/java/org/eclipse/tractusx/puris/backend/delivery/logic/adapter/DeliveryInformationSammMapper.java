@@ -56,12 +56,11 @@ public class DeliveryInformationSammMapper {
             return null;
         }
         Partner partner = deliveryList.get(0).getPartner();
-        Material material = deliveryList.get(0).getMaterial();
         if (deliveryList.stream().anyMatch(deli -> !deli.getPartner().equals(partner))) {
             log.warn("Can't map delivery list with different partners");
             return null;
         }
-
+        Material material = deliveryList.get(0).getMaterial();
         if (deliveryList.stream().anyMatch(deli -> !deli.getMaterial().equals(material))) {
             log.warn("Can't map delivery list with different materials");
             return null;
@@ -100,7 +99,7 @@ public class DeliveryInformationSammMapper {
                 Set<TransitEvent> events = new HashSet<TransitEvent>();
                 events.add(new TransitEvent(v.getDateOfDeparture(), v.getDepartureType()));
                 events.add(new TransitEvent(v.getDateOfArrival(), v.getArrivalType()));
-                TransitLocations locations = new TransitLocations(new Location(v.getOriginBpns(), v.getOriginBpna()), new Location(v.getDestinationBpns(), v.getDestinationBpna()));
+                TransitLocations locations = new TransitLocations(new Location(v.getOriginBpna(), v.getOriginBpns()), new Location(v.getDestinationBpna(), v.getDestinationBpns()));
                 Delivery newDelivery = new Delivery(
                         itemQuantityEntity, new Date(), events, locations, v.getTrackingNumber(), v.getIncoterm());
                 deliveries.add(newDelivery);
@@ -112,7 +111,7 @@ public class DeliveryInformationSammMapper {
     public List<ReportedDelivery> sammToReportedDeliveries(DeliveryInformation samm, Partner partner) {
         String matNbrCatenaX = samm.getMaterialGlobalAssetId();
         ArrayList<ReportedDelivery> outputList = new ArrayList<>();
-        var mpr = mprService.findAllBySupplierPartnerAndPartnerMaterialNumber(partner, matNbrCatenaX).stream().filter(mr -> mr.getPartner().getBpnl().equals(partner.getBpnl())).findFirst().orElse(null);
+        var mpr = mprService.findByPartnerAndPartnerCXNumber(partner, matNbrCatenaX);
 
         if (mpr == null) {
             log.warn("Could not identify materialPartnerRelation with matNbrCatenaX " + matNbrCatenaX
@@ -134,8 +133,12 @@ public class DeliveryInformationSammMapper {
             }
             for (var delivery : position.getDeliveries()) {
                 var builder = ReportedDelivery.builder();
-                var arrivalEvent = delivery.getTransitEvents().stream().filter(e -> e.getEventType().equals(EventTypeEnumeration.ACTUAL_ARRIVAL) || e.getEventType().equals(EventTypeEnumeration.ESTIMATED_ARRIVAL)).findFirst().get();
-                var departureEvent = delivery.getTransitEvents().stream().filter(e -> e.getEventType().equals(EventTypeEnumeration.ACTUAL_DEPARTURE) || e.getEventType().equals(EventTypeEnumeration.ESTIMATED_DEPARTURE)).findFirst().get();
+                var arrivalEvent = delivery.getTransitEvents().stream()
+                    .filter(e -> e.getEventType().equals(EventTypeEnumeration.ACTUAL_ARRIVAL) || e.getEventType().equals(EventTypeEnumeration.ESTIMATED_ARRIVAL))
+                    .findFirst().get();
+                var departureEvent = delivery.getTransitEvents().stream()
+                    .filter(e -> e.getEventType().equals(EventTypeEnumeration.ACTUAL_DEPARTURE) || e.getEventType().equals(EventTypeEnumeration.ESTIMATED_DEPARTURE))
+                    .findFirst().get();
                 var production = builder
                     .material(material)
                     .partner(partner)
