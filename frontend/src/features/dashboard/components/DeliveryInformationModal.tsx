@@ -29,6 +29,8 @@ import { getIncoterm, getUnitOfMeasurement, isValidOrderReference } from '@util/
 import { useEffect, useMemo, useState } from 'react';
 import { Notification } from '@models/types/data/notification';
 import { INCOTERMS } from '@models/constants/incoterms';
+import { ARRIVAL_TYPES, DEPARTURE_TYPES } from '@models/constants/event-type';
+import { ModalMode } from '@models/types/data/modal-mode';
 
 const GridItem = ({ label, value }: { label: string; value: string }) => (
     <Grid item xs={6}>
@@ -43,8 +45,8 @@ const GridItem = ({ label, value }: { label: string; value: string }) => (
     </Grid>
 );
 
-const createDeliveryColumns = (handleDelete: (row: Delivery) => void) =>
-    [
+const createDeliveryColumns = (handleDelete?: (row: Delivery) => void) => {
+    const columns = [
         {
             field: 'dateOfDeparture',
             headerName: 'Departure Time',
@@ -146,20 +148,31 @@ const createDeliveryColumns = (handleDelete: (row: Delivery) => void) =>
             width: 150,
             renderCell: (data: { row: Delivery }) => {
                 return (
-                    <Box display="flex" flexDirection="column" textAlign="center" alignItems="center" justifyContent="center" width="100%" height="100%">
+                    <Box
+                        display="flex"
+                        flexDirection="column"
+                        textAlign="center"
+                        alignItems="center"
+                        justifyContent="center"
+                        width="100%"
+                        height="100%"
+                    >
                         <Box>{INCOTERMS.find((i) => i.key === data.row.incoterm)?.value ?? '-'}</Box>
                         <Box>({data.row.incoterm})</Box>
                     </Box>
                 );
             },
         },
-        {
+    ] as const;
+    if (handleDelete) {
+        return [...columns, {
             field: 'delete',
             headerName: '',
             sortable: false,
-            hideable: false,
-            filterable: false,
+            disableColumnMenu: true,
             headerAlign: 'center',
+            type: 'string',
+            width: 30,
             renderCell: (data: { row: Delivery }) => {
                 return (
                     <Box display="flex" textAlign="center" alignItems="center" justifyContent="center" width="100%" height="100%">
@@ -169,23 +182,25 @@ const createDeliveryColumns = (handleDelete: (row: Delivery) => void) =>
                     </Box>
                 );
             },
-        },
-    ] as const;
+        }] as const;
+    }
+    return columns;
+};
 
-const isValidDelivery = (delivery: Partial<Delivery>) => 
-        delivery.ownMaterialNumber &&
-        delivery.originBpns &&
-        delivery.partnerBpnl &&
-        delivery.destinationBpns &&
-        delivery.quantity &&
-        delivery.measurementUnit &&
-        delivery.dateOfDeparture &&
-        delivery.dateOfArrival &&
-        isValidOrderReference(delivery);
+const isValidDelivery = (delivery: Partial<Delivery>) =>
+    delivery.ownMaterialNumber &&
+    delivery.originBpns &&
+    delivery.partnerBpnl &&
+    delivery.destinationBpns &&
+    delivery.quantity &&
+    delivery.measurementUnit &&
+    delivery.dateOfDeparture &&
+    delivery.dateOfArrival &&
+    isValidOrderReference(delivery);
 
 type DeliveryInformationModalProps = {
     open: boolean;
-    mode: 'create' | 'edit';
+    mode: ModalMode;
     onClose: () => void;
     onSave: () => void;
     delivery: Delivery | null;
@@ -202,16 +217,16 @@ export const DeliveryInformationModal = ({ open, mode, onClose, onSave, delivery
             deliveries?.filter(
                 (d) =>
                     d.dateOfDeparture &&
-                    new Date(d.dateOfDeparture).toLocaleDateString() ===
-                        new Date(delivery?.dateOfDeparture ?? Date.now()).toLocaleDateString()
+                    new Date(mode === 'view' ? d.dateOfArrival : d.dateOfDeparture).toLocaleDateString() ===
+                        new Date((mode === 'view' ? d.dateOfArrival : delivery?.dateOfDeparture) ?? Date.now()).toLocaleDateString()
             ) ?? [],
-        [deliveries, delivery?.dateOfDeparture]
+        [deliveries, delivery?.dateOfDeparture, mode]
     );
 
     const handleSaveClick = () => {
         temporaryDelivery.customerOrderNumber ||= undefined;
         temporaryDelivery.customerOrderPositionNumber ||= undefined;
-        temporaryDelivery.supplierOrderNumber ||= undefined; 
+        temporaryDelivery.supplierOrderNumber ||= undefined;
         if (!isValidDelivery(temporaryDelivery)) {
             setFormError(true);
             return;
@@ -264,6 +279,46 @@ export const DeliveryInformationModal = ({ open, mode, onClose, onSave, delivery
                             <>
                                 <GridItem label="Material Number" value={temporaryDelivery.ownMaterialNumber ?? ''} />
                                 <GridItem label="Origin Site" value={temporaryDelivery.originBpns ?? ''} />
+                                <Grid item xs={6}>
+                                    <Autocomplete
+                                        id="departure-type"
+                                        options={DEPARTURE_TYPES}
+                                        getOptionLabel={(option) => option.value ?? ''}
+                                        isOptionEqualToValue={(option, value) => option?.key === value.key}
+                                        onChange={(_, value) =>
+                                            setTemporaryDelivery({ ...temporaryDelivery, departureType: value?.key ?? undefined })
+                                        }
+                                        value={DEPARTURE_TYPES.find((s) => s.key === temporaryDelivery.departureType) ?? null}
+                                        renderInput={(params) => (
+                                            <Input
+                                                {...params}
+                                                label="Departure Type*"
+                                                placeholder="Select the type of departure"
+                                                error={formError && !temporaryDelivery?.departureType}
+                                            />
+                                        )}
+                                    ></Autocomplete>
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <Autocomplete
+                                        id="arrival-type"
+                                        options={ARRIVAL_TYPES}
+                                        getOptionLabel={(option) => option.value ?? ''}
+                                        isOptionEqualToValue={(option, value) => option?.key === value.key}
+                                        onChange={(_, value) =>
+                                            setTemporaryDelivery({ ...temporaryDelivery, arrivalType: value?.key ?? undefined })
+                                        }
+                                        value={ARRIVAL_TYPES.find((s) => s.key === temporaryDelivery.arrivalType) ?? null}
+                                        renderInput={(params) => (
+                                            <Input
+                                                {...params}
+                                                label="Arrival Type*"
+                                                placeholder="Select the type of departure"
+                                                error={formError && !temporaryDelivery?.departureType}
+                                            />
+                                        )}
+                                    ></Autocomplete>
+                                </Grid>
                                 <Grid item xs={6} display="flex" alignItems="end">
                                     <DateTime
                                         label="Departure Time"
@@ -271,7 +326,9 @@ export const DeliveryInformationModal = ({ open, mode, onClose, onSave, delivery
                                         locale="de"
                                         error={formError}
                                         value={temporaryDelivery?.dateOfDeparture ?? null}
-                                        onValueChange={(date) => setTemporaryDelivery({ ...temporaryDelivery, dateOfDeparture: date ?? undefined })}
+                                        onValueChange={(date) =>
+                                            setTemporaryDelivery({ ...temporaryDelivery, dateOfDeparture: date ?? undefined })
+                                        }
                                     />
                                 </Grid>
                                 <Grid item xs={6} display="flex" alignItems="end">
@@ -281,7 +338,9 @@ export const DeliveryInformationModal = ({ open, mode, onClose, onSave, delivery
                                         locale="de"
                                         error={formError}
                                         value={temporaryDelivery?.dateOfArrival ?? null}
-                                        onValueChange={(date) => setTemporaryDelivery({ ...temporaryDelivery, dateOfArrival: date ?? undefined})}
+                                        onValueChange={(date) =>
+                                            setTemporaryDelivery({ ...temporaryDelivery, dateOfArrival: date ?? undefined })
+                                        }
                                     />
                                 </Grid>
                                 <Grid item xs={6}>
@@ -315,9 +374,11 @@ export const DeliveryInformationModal = ({ open, mode, onClose, onSave, delivery
                                         onChange={(_, value) =>
                                             setTemporaryDelivery({ ...temporaryDelivery, destinationBpns: value?.bpns ?? undefined })
                                         }
-                                        value={partners
-                                            ?.find((s) => s.bpnl === temporaryDelivery?.partnerBpnl)
-                                            ?.sites.find((s) => s.bpns === temporaryDelivery?.destinationBpns) ?? null}
+                                        value={
+                                            partners
+                                                ?.find((s) => s.bpnl === temporaryDelivery?.partnerBpnl)
+                                                ?.sites.find((s) => s.bpns === temporaryDelivery?.destinationBpns) ?? null
+                                        }
                                         renderInput={(params) => (
                                             <Input
                                                 {...params}
@@ -335,7 +396,10 @@ export const DeliveryInformationModal = ({ open, mode, onClose, onSave, delivery
                                         value={temporaryDelivery.quantity ?? ''}
                                         error={formError && !temporaryDelivery?.quantity}
                                         onChange={(e) =>
-                                            setTemporaryDelivery((curr) => ({ ...curr, quantity: e.target.value ? parseFloat(e.target.value) : undefined}))
+                                            setTemporaryDelivery((curr) => ({
+                                                ...curr,
+                                                quantity: e.target.value ? parseFloat(e.target.value) : undefined,
+                                            }))
                                         }
                                     />
                                 </Grid>
@@ -376,7 +440,7 @@ export const DeliveryInformationModal = ({ open, mode, onClose, onSave, delivery
                                     />
                                 </Grid>
                                 <Grid item xs={6}>
-                                <Autocomplete
+                                    <Autocomplete
                                         id="incoterm"
                                         value={
                                             temporaryDelivery.incoterm
@@ -405,9 +469,7 @@ export const DeliveryInformationModal = ({ open, mode, onClose, onSave, delivery
                                         id="customer-order-number"
                                         label="Customer Order Number"
                                         type="text"
-                                        error={
-                                            formError && !isValidOrderReference(temporaryDelivery)
-                                        }
+                                        error={formError && !isValidOrderReference(temporaryDelivery)}
                                         value={temporaryDelivery?.customerOrderNumber ?? ''}
                                         onChange={(event) =>
                                             setTemporaryDelivery({ ...temporaryDelivery, customerOrderNumber: event.target.value })
@@ -419,10 +481,7 @@ export const DeliveryInformationModal = ({ open, mode, onClose, onSave, delivery
                                         id="customer-order-position-number"
                                         label="Customer Order Position"
                                         type="text"
-                                        error={
-                                            formError &&
-                                            !isValidOrderReference(temporaryDelivery)
-                                        }
+                                        error={formError && !isValidOrderReference(temporaryDelivery)}
                                         value={temporaryDelivery?.customerOrderPositionNumber ?? ''}
                                         onChange={(event) =>
                                             setTemporaryDelivery({
@@ -437,9 +496,7 @@ export const DeliveryInformationModal = ({ open, mode, onClose, onSave, delivery
                                         id="supplier-order-number"
                                         label="Supplier Order Number"
                                         type="text"
-                                        error={
-                                            formError && !isValidOrderReference(temporaryDelivery)
-                                        }
+                                        error={formError && !isValidOrderReference(temporaryDelivery)}
                                         value={temporaryDelivery?.supplierOrderNumber ?? ''}
                                         onChange={(event) =>
                                             setTemporaryDelivery({ ...temporaryDelivery, supplierOrderNumber: event.target.value })
@@ -449,24 +506,26 @@ export const DeliveryInformationModal = ({ open, mode, onClose, onSave, delivery
                             </>
                         ) : (
                             <Grid item xs={12}>
-                                {<Table
-                                    title={`Deliveries ${
-                                        temporaryDelivery?.dateOfDeparture
-                                            ? ' on ' +
-                                              new Date(temporaryDelivery?.dateOfDeparture).toLocaleDateString('en-UK', {
-                                                  weekday: 'long',
-                                                  day: '2-digit',
-                                                  month: '2-digit',
-                                                  year: 'numeric',
-                                              })
-                                            : ''
-                                    }`}
-                                    density='standard'
-                                    getRowId={(row) => row.uuid}
-                                    columns={createDeliveryColumns(handleDelete)}
-                                    rows={dailyDeliveries}
-                                    hideFooter
-                                />}
+                                {
+                                    <Table
+                                        title={`Deliveries ${
+                                            temporaryDelivery?.dateOfDeparture
+                                                ? ' on ' +
+                                                  new Date(temporaryDelivery?.dateOfDeparture).toLocaleDateString('en-UK', {
+                                                      weekday: 'long',
+                                                      day: '2-digit',
+                                                      month: '2-digit',
+                                                      year: 'numeric',
+                                                  })
+                                                : ''
+                                        }`}
+                                        density="standard"
+                                        getRowId={(row) => row.uuid}
+                                        columns={createDeliveryColumns(mode === 'view' ? undefined : handleDelete)}
+                                        rows={dailyDeliveries}
+                                        hideFooter
+                                    />
+                                }
                             </Grid>
                         )}
                     </Grid>

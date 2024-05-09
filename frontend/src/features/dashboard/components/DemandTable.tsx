@@ -26,6 +26,7 @@ import { Box, Button, Stack, Typography } from '@mui/material';
 import { Delivery } from '@models/types/data/delivery';
 import { Add } from '@mui/icons-material';
 import { Demand } from '@models/types/data/demand';
+import { ModalMode } from '@models/types/data/modal-mode';
 
 const createDemandRow = (numberOfDays: number, demands: Demand[]) => {
     return {
@@ -46,7 +47,7 @@ const createDeliveryRow = (numberOfDays: number, deliveries: Delivery[], site: S
             const date = new Date();
             date.setDate(date.getDate() + index);
             const delivery = deliveries
-                .filter((d) => new Date(`${new Date(d.dateOfArrival ?? Date.now())}Z`).toDateString() === date.toDateString() && d.destinationBpns === site.bpns)
+                .filter((d) => new Date(d.dateOfArrival ?? Date.now()).toDateString() === date.toDateString() && d.destinationBpns === site.bpns)
                 .reduce((sum, d) => sum + d.quantity, 0);
             return { ...acc, [index]: delivery };
         }, {}),
@@ -83,8 +84,8 @@ type DemandTableProps = {
     deliveries: Delivery[] | null;
     site: Site;
     readOnly?: boolean;
-    onDeliveryClick: (delivery: Partial<Delivery>, mode: 'create' | 'edit') => void;
-    onDemandClick: (demand: Partial<Demand>, mode: 'create' | 'edit') => void;
+    onDeliveryClick: (delivery: Partial<Delivery>, mode: ModalMode) => void;
+    onDemandClick: (demand: Partial<Demand>, mode: ModalMode) => void;
 };
 
 export const DemandTable = ({ numberOfDays, stocks, demands, deliveries, site, readOnly, onDeliveryClick, onDemandClick }: DemandTableProps) => {
@@ -97,14 +98,14 @@ export const DemandTable = ({ numberOfDays, stocks, demands, deliveries, site, r
                     quantity: cellData.value,
                     dateOfArrival: cellData.colDef.headerName,
                     destinationBpns: site.bpns,
-                }, 'edit');
+                }, readOnly ? 'view' : 'edit');
                 break;
             case 'demand':
                 onDemandClick({
                     quantity: parseFloat(cellData.value),
                     demandLocationBpns: site.bpns,
                     day: new Date(cellData.colDef.headerName),
-                }, 'edit');
+                }, readOnly ? 'view' : 'edit');
                 break;
             default:
                 break;

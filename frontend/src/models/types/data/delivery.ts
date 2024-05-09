@@ -23,6 +23,9 @@ import { BPNA, BPNL, BPNS } from '../edc/bpn';
 import { UnitOfMeasurementKey } from './uom';
 import { OrderReference } from './order-reference';
 
+export type ArrivalType = 'estimated-arrival' | 'actual-arrival';
+export type DepartureType = 'estimated-departure' | 'actual-departure';
+
 export type Delivery = {
   uuid?: UUID;
   ownMaterialNumber: string;
@@ -37,6 +40,6 @@ export type Delivery = {
   originBpna?: BPNA;
   dateOfDeparture: Date;
   dateOfArrival: Date;
-  hasDeparted?: boolean;
-  hasArrived?: boolean;
+  departureType: DepartureType;
+  arrivalType: ArrivalType;
 } & OrderReference;

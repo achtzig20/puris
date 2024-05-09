@@ -41,9 +41,13 @@ import { PlannedProductionModal } from './PlannedProductionModal';
 import { useProduction } from '../hooks/useProduction';
 import { useReportedProduction } from '../hooks/useReportedProduction';
 
-import { refreshPartnerStocks } from '@services/stocks-service';
+import { requestReportedStocks } from '@services/stocks-service';
 import { useReportedDelivery } from '../hooks/useReportedDelivery';
 import { useDelivery } from '../hooks/useDelivery';
+import { requestReportedDeliveries } from '@services/delivery-service';
+import { requestReportedProductions } from '@services/productions-service';
+import { requestReportedDemands } from '@services/demands-service';
+import { ModalMode } from '@models/types/data/modal-mode';
 
 const NUMBER_OF_DAYS = 28;
 
@@ -51,9 +55,9 @@ type DashboardState = {
     selectedMaterial: MaterialDescriptor | null;
     selectedSite: Site | null;
     selectedPartnerSites: Site[] | null;
-    deliveryDialogOptions: { open: boolean; mode: 'create' | 'edit', site: Site | null };
-    demandDialogOptions: { open: boolean; mode: 'create' | 'edit' };
-    productionDialogOptions: { open: boolean; mode: 'create' | 'edit' };
+    deliveryDialogOptions: { open: boolean; mode: ModalMode, site: Site | null };
+    demandDialogOptions: { open: boolean; mode: ModalMode };
+    productionDialogOptions: { open: boolean; mode: ModalMode };
     delivery: Delivery | null;
     demand: Partial<Demand> | null;
     production: Partial<Production> | null;
@@ -73,7 +77,7 @@ const initialState: DashboardState = {
     selectedMaterial: null,
     selectedSite: null,
     selectedPartnerSites: null,
-    deliveryDialogOptions: { open: false, mode: 'create', site: null },
+    deliveryDialogOptions: { open: false, mode: 'edit', site: null },
     demandDialogOptions: { open: false, mode: 'edit' },
     productionDialogOptions: { open: false, mode: 'edit' },
     delivery: null,
@@ -85,7 +89,7 @@ const initialState: DashboardState = {
 export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
     const [state, dispatch] = useReducer(reducer, initialState);
     const { stocks } = useStocks(type === 'customer' ? 'material' : 'product');
-    const { partnerStocks, refreshPartnerStocks: refresh } = usePartnerStocks(
+    const { partnerStocks } = usePartnerStocks(
         type === 'customer' ? 'material' : 'product',
         state.selectedMaterial?.ownMaterialNumber ?? null
     );
@@ -104,26 +108,30 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
 
     const handleRefresh = () => {
         dispatch({ type: 'isRefreshing', payload: true });
-        refreshPartnerStocks( type === 'customer' ? 'material' : 'product', state.selectedMaterial?.ownMaterialNumber ?? null )
-            .then(refresh)
-            .finally(() => dispatch({ type: 'isRefreshing', payload: false }));
+        Promise.all([
+            requestReportedStocks(type === 'customer' ? 'material' : 'product', state.selectedMaterial?.ownMaterialNumber ?? null), 
+            requestReportedDeliveries(state.selectedMaterial?.ownMaterialNumber ?? null), 
+            type === 'customer' 
+                ? requestReportedProductions(state.selectedMaterial?.ownMaterialNumber ?? null) 
+                : requestReportedDemands(state.selectedMaterial?.ownMaterialNumber ?? null)
+        ]).finally(() => dispatch({ type: 'isRefreshing', payload: false }));
     };
     const openDeliveryDialog = useCallback(
-        (d: Partial<Delivery>, mode: 'create' | 'edit') => {
+        (d: Partial<Delivery>, mode: ModalMode) => {
             d.ownMaterialNumber = state.selectedMaterial?.ownMaterialNumber ?? '';
             dispatch({ type: 'delivery', payload: d });
             dispatch({ type: 'deliveryDialogOptions', payload: { open: true, mode } });
         },
         [state.selectedMaterial?.ownMaterialNumber]
     );
-    const openDemandDialog = (d: Partial<Demand>, mode: 'create' | 'edit') => {
+    const openDemandDialog = (d: Partial<Demand>, mode: ModalMode) => {
         d.measurementUnit ??= 'unit:piece';
         d.demandCategoryCode ??= DEMAND_CATEGORY[0]?.key;
         d.ownMaterialNumber = state.selectedMaterial?.ownMaterialNumber ?? '';
         dispatch({ type: 'demand', payload: d });
         dispatch({ type: 'demandDialogOptions', payload: { open: true, mode } });
     };
-    const openProductionDialog = (p: Partial<Production>, mode: 'create' | 'edit') => {
+    const openProductionDialog = (p: Partial<Production>, mode: ModalMode) => {
         p.material ??= {
             materialFlag: true,
             productFlag: false,
@@ -257,14 +265,14 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                 onClose={() => dispatch({ type: 'demandDialogOptions', payload: { open: false, mode: state.demandDialogOptions.mode } })}
                 onSave={refreshDemand}
                 demand={state.demand}
-                demands={demands ?? []}
+                demands={(state.demandDialogOptions.mode === 'view' ? reportedDemands : demands) ?? []}
             />
             <PlannedProductionModal
                 {...state.productionDialogOptions}
                 onClose={() => dispatch({ type: 'productionDialogOptions', payload: { open: false, mode: state.productionDialogOptions.mode } })}
                 onSave={refreshProduction}
                 production={state.production}
-                productions={state.productionDialogOptions.mode === 'edit' ? productions ?? [] : []}
+                productions={(state.productionDialogOptions.mode === 'view' ? reportedProductions : productions) ?? []}
             />
             <DeliveryInformationModal
                 open={state.deliveryDialogOptions.open}
@@ -274,7 +282,7 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                 }
                 onSave={refreshDelivery}
                 delivery={state.delivery}
-                deliveries={deliveries ?? []}
+                deliveries={(state.deliveryDialogOptions.mode === 'view' ? reportedDeliveries : deliveries) ?? []}
             />
         </>
     );

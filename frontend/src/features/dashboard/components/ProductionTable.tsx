@@ -26,6 +26,7 @@ import { Box, Button, Stack, Typography } from '@mui/material';
 import { Delivery } from '@models/types/data/delivery';
 import { Production } from '@models/types/data/production';
 import { Add } from '@mui/icons-material';
+import { ModalMode } from '@models/types/data/modal-mode';
 
 const createProductionRow = (numberOfDays: number, productions: Production[]) => {
     return {
@@ -48,7 +49,7 @@ const createShipmentRow = (numberOfDays: number, deliveries: Delivery[], site: S
             const d = deliveries
                 .filter(
                     (delivery) =>
-                        new Date(`${new Date(delivery.dateOfDeparture!)}Z`).toDateString() === date.toDateString() &&
+                        new Date(delivery.dateOfDeparture!).toDateString() === date.toDateString() &&
                         delivery.originBpns === site.bpns
                 )
                 .reduce((sum, delivery) => sum + delivery.quantity!, 0);
@@ -87,6 +88,7 @@ const createProductionTableRows = (
         { id: 'plannedProduction', name: 'Planned Production', ...productionRow },
     ];
 };
+
 type ProductionTableProps = {
     numberOfDays: number;
     stocks: Stock[] | null;
@@ -94,8 +96,8 @@ type ProductionTableProps = {
     productions: Production[] | null;
     deliveries: Delivery[];
     readOnly: boolean;
-    onDeliveryClick: (delivery: Partial<Delivery>, mode: 'create' | 'edit') => void;
-    onProductionClick: (production: Partial<Production>, mode: 'create' | 'edit') => void;
+    onDeliveryClick: (delivery: Partial<Delivery>, mode: ModalMode) => void;
+    onProductionClick: (production: Partial<Production>, mode: ModalMode) => void;
 };
 
 export const ProductionTable = ({
@@ -119,7 +121,7 @@ export const ProductionTable = ({
                     originBpns: site.bpns,
                     destinationBpns: site.bpns,
                 },
-                'edit'
+                readOnly ? 'view' : 'edit'
             );
         }
         if (cellData.id === 'plannedProduction') {
@@ -131,7 +133,7 @@ export const ProductionTable = ({
                     estimatedTimeOfCompletion: new Date(cellData.colDef.headerName),
                     productionSiteBpns: site.bpns,
                 },
-                'edit'
+                readOnly ? 'view' : 'edit'
             );
         }
     };
