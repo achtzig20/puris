@@ -55,7 +55,7 @@ type DashboardState = {
     selectedMaterial: MaterialDescriptor | null;
     selectedSite: Site | null;
     selectedPartnerSites: Site[] | null;
-    deliveryDialogOptions: { open: boolean; mode: ModalMode, site: Site | null };
+    deliveryDialogOptions: { open: boolean; mode: ModalMode, direction: 'incoming' | 'outgoing', site: Site | null };
     demandDialogOptions: { open: boolean; mode: ModalMode };
     productionDialogOptions: { open: boolean; mode: ModalMode };
     delivery: Delivery | null;
@@ -77,7 +77,7 @@ const initialState: DashboardState = {
     selectedMaterial: null,
     selectedSite: null,
     selectedPartnerSites: null,
-    deliveryDialogOptions: { open: false, mode: 'edit', site: null },
+    deliveryDialogOptions: { open: false, mode: 'edit', direction: 'incoming', site: null },
     demandDialogOptions: { open: false, mode: 'edit' },
     productionDialogOptions: { open: false, mode: 'edit' },
     delivery: null,
@@ -117,10 +117,10 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
         ]).finally(() => dispatch({ type: 'isRefreshing', payload: false }));
     };
     const openDeliveryDialog = useCallback(
-        (d: Partial<Delivery>, mode: ModalMode) => {
+        (d: Partial<Delivery>, mode: ModalMode, direction: 'incoming' | 'outgoing' = 'outgoing', site: Site | null) => {
             d.ownMaterialNumber = state.selectedMaterial?.ownMaterialNumber ?? '';
             dispatch({ type: 'delivery', payload: d });
-            dispatch({ type: 'deliveryDialogOptions', payload: { open: true, mode } });
+            dispatch({ type: 'deliveryDialogOptions', payload: { open: true, mode, direction, site } });
         },
         [state.selectedMaterial?.ownMaterialNumber]
     );
@@ -173,7 +173,7 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                                 numberOfDays={NUMBER_OF_DAYS}
                                 stocks={stocks ?? []}
                                 site={state.selectedSite}
-                                onDeliveryClick={openDeliveryDialog}
+                                onDeliveryClick={(delivery, mode) => openDeliveryDialog(delivery, mode, 'outgoing', state.selectedSite)}
                                 onProductionClick={openProductionDialog}
                                 productions={productions ?? []}
                                 deliveries={deliveries ?? []}
@@ -183,7 +183,7 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                                 numberOfDays={NUMBER_OF_DAYS}
                                 stocks={stocks}
                                 site={state.selectedSite}
-                                onDeliveryClick={openDeliveryDialog}
+                                onDeliveryClick={(delivery, mode) => openDeliveryDialog(delivery, mode, 'incoming', state.selectedSite)}
                                 onDemandClick={openDemandDialog}
                                 demands={demands}
                                 deliveries={reportedDeliveries}
@@ -230,7 +230,7 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                                             numberOfDays={NUMBER_OF_DAYS}
                                             stocks={partnerStocks}
                                             site={ps}
-                                            onDeliveryClick={openDeliveryDialog}
+                                            onDeliveryClick={(delivery, mode) => openDeliveryDialog(delivery, mode, 'incoming', ps)}
                                             onDemandClick={openDemandDialog}
                                             demands={reportedDemands?.filter((d) => d.demandLocationBpns === ps.bpns) ?? []}
                                             deliveries={deliveries ?? []}
@@ -242,7 +242,7 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                                             numberOfDays={NUMBER_OF_DAYS}
                                             stocks={partnerStocks ?? []}
                                             site={ps}
-                                            onDeliveryClick={openDeliveryDialog}
+                                            onDeliveryClick={(delivery, mode) => openDeliveryDialog(delivery, mode, 'outgoing', ps)}
                                             onProductionClick={openProductionDialog}
                                             productions={reportedProductions?.filter((p) => p.productionSiteBpns === ps.bpns) ?? []}
                                             deliveries={reportedDeliveries ?? []}
@@ -260,8 +260,7 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                 )}
             </Stack>
             <DemandCategoryModal
-                open={state.demandDialogOptions.open}
-                mode={state.demandDialogOptions.mode}
+                {...state.demandDialogOptions}
                 onClose={() => dispatch({ type: 'demandDialogOptions', payload: { open: false, mode: state.demandDialogOptions.mode } })}
                 onSave={refreshDemand}
                 demand={state.demand}
@@ -275,14 +274,13 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                 productions={(state.productionDialogOptions.mode === 'view' ? reportedProductions : productions) ?? []}
             />
             <DeliveryInformationModal
-                open={state.deliveryDialogOptions.open}
-                mode={state.deliveryDialogOptions.mode}
+                {...state.deliveryDialogOptions}
                 onClose={() =>
-                    dispatch({ type: 'deliveryDialogOptions', payload: { open: false, mode: state.deliveryDialogOptions.mode, site: null } })
+                    dispatch({ type: 'deliveryDialogOptions', payload: { ...state.deliveryDialogOptions, open: false, } })
                 }
                 onSave={refreshDelivery}
                 delivery={state.delivery}
-                deliveries={(state.deliveryDialogOptions.mode === 'view' ? reportedDeliveries : deliveries) ?? []}
+                deliveries={(type === 'customer' ? reportedDeliveries : deliveries) ?? []}
             />
         </>
     );

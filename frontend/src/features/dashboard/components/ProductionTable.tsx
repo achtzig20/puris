@@ -155,7 +155,7 @@ export const ProductionTable = ({
                 {site.name} ({site.bpns})
                 {!readOnly && (
                     <Box marginLeft="auto" display="flex" gap="1rem">
-                        <Button variant="contained" onClick={() => onDeliveryClick({ originBpns: site.bpns }, 'create')}>
+                        <Button variant="contained" onClick={() => onDeliveryClick({ originBpns: site.bpns, departureType: 'estimated-departure', arrivalType: 'estimated-arrival' }, 'create')}>
                             <Add></Add> Add Delivery
                         </Button>
                         <Button variant="contained" onClick={() => onProductionClick({ productionSiteBpns: site.bpns }, 'create')}>

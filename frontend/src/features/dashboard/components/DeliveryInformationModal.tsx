@@ -31,6 +31,7 @@ import { Notification } from '@models/types/data/notification';
 import { INCOTERMS } from '@models/constants/incoterms';
 import { ARRIVAL_TYPES, DEPARTURE_TYPES } from '@models/constants/event-type';
 import { ModalMode } from '@models/types/data/modal-mode';
+import { Site } from '@models/types/edc/site';
 
 const GridItem = ({ label, value }: { label: string; value: string }) => (
     <Grid item xs={6}>
@@ -51,11 +52,26 @@ const createDeliveryColumns = (handleDelete?: (row: Delivery) => void) => {
             field: 'dateOfDeparture',
             headerName: 'Departure Time',
             headerAlign: 'center',
-            width: 120,
+            width: 150,
             renderCell: (data: { row: Delivery }) => {
                 return (
-                    <Box display="flex" textAlign="center" alignItems="center" justifyContent="center" width="100%" height="100%">
-                        {new Date(data.row.dateOfDeparture!).toLocaleTimeString('de-DE')}
+                    <Box
+                        display="flex"
+                        textAlign="center"
+                        alignItems="center"
+                        justifyContent="center"
+                        width="100%"
+                        height="100%"
+                        flexDirection="column"
+                    >
+                        {new Date(data.row.dateOfDeparture!).toLocaleString('de-DE', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                        <Box fontSize='.9em'>({data.row.departureType.split('-')[0]})</Box>
                     </Box>
                 );
             },
@@ -67,8 +83,15 @@ const createDeliveryColumns = (handleDelete?: (row: Delivery) => void) => {
             width: 150,
             renderCell: (data: { row: Delivery }) => {
                 return (
-                    <Box display="flex" textAlign="center" alignItems="center" justifyContent="center" width="100%" height="100%">
-                        {new Date(data.row.dateOfArrival!).toLocaleString('de-DE')}
+                    <Box display="flex" textAlign="center" alignItems="center" justifyContent="center" width="100%" height="100%" flexDirection="column">
+                        {new Date(data.row.dateOfArrival!).toLocaleString('de-DE', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                        <Box fontSize='.9em'>({data.row.departureType.split('-')[0]})</Box>
                     </Box>
                 );
             },
@@ -165,24 +188,27 @@ const createDeliveryColumns = (handleDelete?: (row: Delivery) => void) => {
         },
     ] as const;
     if (handleDelete) {
-        return [...columns, {
-            field: 'delete',
-            headerName: '',
-            sortable: false,
-            disableColumnMenu: true,
-            headerAlign: 'center',
-            type: 'string',
-            width: 30,
-            renderCell: (data: { row: Delivery }) => {
-                return (
-                    <Box display="flex" textAlign="center" alignItems="center" justifyContent="center" width="100%" height="100%">
-                        <Button variant="text" color="error" onClick={() => handleDelete(data.row)}>
-                            <Delete></Delete>
-                        </Button>
-                    </Box>
-                );
+        return [
+            ...columns,
+            {
+                field: 'delete',
+                headerName: '',
+                sortable: false,
+                disableColumnMenu: true,
+                headerAlign: 'center',
+                type: 'string',
+                width: 30,
+                renderCell: (data: { row: Delivery }) => {
+                    return (
+                        <Box display="flex" textAlign="center" alignItems="center" justifyContent="center" width="100%" height="100%">
+                            <Button variant="text" color="error" onClick={() => handleDelete(data.row)}>
+                                <Delete></Delete>
+                            </Button>
+                        </Box>
+                    );
+                },
             },
-        }] as const;
+        ] as const;
     }
     return columns;
 };
@@ -201,13 +227,24 @@ const isValidDelivery = (delivery: Partial<Delivery>) =>
 type DeliveryInformationModalProps = {
     open: boolean;
     mode: ModalMode;
+    direction: 'incoming' | 'outgoing';
+    site: Site | null;
     onClose: () => void;
     onSave: () => void;
     delivery: Delivery | null;
     deliveries: Delivery[];
 };
 
-export const DeliveryInformationModal = ({ open, mode, onClose, onSave, delivery, deliveries }: DeliveryInformationModalProps) => {
+export const DeliveryInformationModal = ({
+    open,
+    mode,
+    direction,
+    site,
+    onClose,
+    onSave,
+    delivery,
+    deliveries,
+}: DeliveryInformationModalProps) => {
     const [temporaryDelivery, setTemporaryDelivery] = useState<Partial<Delivery>>(delivery ?? {});
     const { partners } = usePartners('product', temporaryDelivery?.ownMaterialNumber ?? null);
     const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -216,11 +253,10 @@ export const DeliveryInformationModal = ({ open, mode, onClose, onSave, delivery
         () =>
             deliveries?.filter(
                 (d) =>
-                    d.dateOfDeparture &&
-                    new Date(mode === 'view' ? d.dateOfArrival : d.dateOfDeparture).toLocaleDateString() ===
-                        new Date((mode === 'view' ? d.dateOfArrival : delivery?.dateOfDeparture) ?? Date.now()).toLocaleDateString()
+                    (direction === 'incoming' && d.destinationBpns === site?.bpns && new Date (d.dateOfArrival).toLocaleDateString() === new Date (delivery!.dateOfArrival).toLocaleDateString()) ||
+                    (direction === 'outgoing' && d.originBpns === site?.bpns && new Date (d.dateOfDeparture).toLocaleDateString() === new Date (delivery!.dateOfDeparture).toLocaleDateString())
             ) ?? [],
-        [deliveries, delivery?.dateOfDeparture, mode]
+        [deliveries, delivery, direction, site?.bpns]
     );
 
     const handleSaveClick = () => {
@@ -288,7 +324,7 @@ export const DeliveryInformationModal = ({ open, mode, onClose, onSave, delivery
                                         onChange={(_, value) =>
                                             setTemporaryDelivery({ ...temporaryDelivery, departureType: value?.key ?? undefined })
                                         }
-                                        value={DEPARTURE_TYPES.find((s) => s.key === temporaryDelivery.departureType) ?? null}
+                                        value={DEPARTURE_TYPES.find((dt) => dt.key === temporaryDelivery.departureType) ?? null}
                                         renderInput={(params) => (
                                             <Input
                                                 {...params}
@@ -308,7 +344,7 @@ export const DeliveryInformationModal = ({ open, mode, onClose, onSave, delivery
                                         onChange={(_, value) =>
                                             setTemporaryDelivery({ ...temporaryDelivery, arrivalType: value?.key ?? undefined })
                                         }
-                                        value={ARRIVAL_TYPES.find((s) => s.key === temporaryDelivery.arrivalType) ?? null}
+                                        value={ARRIVAL_TYPES.find((dt) => dt.key === temporaryDelivery.arrivalType) ?? null}
                                         renderInput={(params) => (
                                             <Input
                                                 {...params}
@@ -508,7 +544,7 @@ export const DeliveryInformationModal = ({ open, mode, onClose, onSave, delivery
                             <Grid item xs={12}>
                                 {
                                     <Table
-                                        title={`Deliveries ${
+                                        title={`${capitalize(direction ?? '')} Deliveries ${
                                             temporaryDelivery?.dateOfDeparture
                                                 ? ' on ' +
                                                   new Date(temporaryDelivery?.dateOfDeparture).toLocaleDateString('en-UK', {
