@@ -46,7 +46,7 @@ import lombok.experimental.SuperBuilder;
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 @Entity
 @ToString
-public abstract class DaysOfSupply {
+public abstract class Supply {
     // customer controller, supplier controller
     // in dto flatten material and partner
     @Id
@@ -88,7 +88,7 @@ public abstract class DaysOfSupply {
             return false;
         }
 
-        final DaysOfSupply that = (DaysOfSupply) o;
+        final Supply that = (Supply) o;
         return this.getMaterial().getOwnMaterialNumber().equals(that.getMaterial().getOwnMaterialNumber()) &&
                 this.getPartner().getUuid().equals(that.getPartner().getUuid()) &&
                 this.getStockLocationBPNA().equals(that.getStockLocationBPNA()) &&

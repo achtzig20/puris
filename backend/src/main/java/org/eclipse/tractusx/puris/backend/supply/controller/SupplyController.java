@@ -24,25 +24,26 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.eclipse.tractusx.puris.backend.supply.domain.model.DaysOfSupply;
-import org.eclipse.tractusx.puris.backend.supply.logic.dto.DaysOfSupplyDto;
-import org.eclipse.tractusx.puris.backend.supply.logic.service.SupplierDaysOfSupplyService;
+import org.eclipse.tractusx.puris.backend.supply.domain.model.Supply;
+import org.eclipse.tractusx.puris.backend.supply.logic.dto.SupplyDto;
+import org.eclipse.tractusx.puris.backend.supply.logic.service.CustomerSupplyService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
 
 @RestController
-@RequestMapping("daysOfSupply/supplier")
+@RequestMapping("supply")
 @Slf4j
-public class SupplierDaysOfSupplyController {
+public class SupplyController {
     @Autowired
-    private SupplierDaysOfSupplyService daysOfSupplyService;
+    private CustomerSupplyService daysOfSupplyService;
 
     @Autowired
     private ModelMapper modelMapper;
@@ -51,13 +52,13 @@ public class SupplierDaysOfSupplyController {
     @ResponseBody
     @Operation(summary = "Get all planned days of supply for the given Material",
         description = "Get all planned days of supply for the given material number. Optionally the days of supply can be filtered by its partner bpnl.")
-    public List<DaysOfSupplyDto> getAllDaysOfSupply(String materialNumber, Optional<String> bpnl) {
+    public List<SupplyDto> getAllDaysOfSupply(String materialNumber, Optional<String> bpnl) {
         return daysOfSupplyService.findAllByFilters(Optional.of(materialNumber), bpnl)
             .stream().map(this::convertToDto).collect(Collectors.toList());
     }
     
-    private DaysOfSupplyDto convertToDto(DaysOfSupply entity) {
-        DaysOfSupplyDto dto = modelMapper.map(entity, DaysOfSupplyDto.class);
+    private SupplyDto convertToDto(Supply entity) {
+        SupplyDto dto = modelMapper.map(entity, SupplyDto.class);
 
         dto.setOwnMaterialNumber(entity.getMaterial().getOwnMaterialNumber());
         

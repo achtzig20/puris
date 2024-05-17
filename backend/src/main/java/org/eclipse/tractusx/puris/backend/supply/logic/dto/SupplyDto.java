@@ -36,7 +36,7 @@ import lombok.ToString;
 @Setter
 @NoArgsConstructor
 @ToString
-public class DaysOfSupplyDto implements Serializable {
+public class SupplyDto implements Serializable {
     private UUID uuid;
 
     @Pattern(regexp = PatternStore.BPNL_STRING)

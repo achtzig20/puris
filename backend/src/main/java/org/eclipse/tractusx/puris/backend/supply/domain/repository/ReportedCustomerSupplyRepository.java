@@ -22,9 +22,9 @@ package org.eclipse.tractusx.puris.backend.supply.domain.repository;
 
 import java.util.UUID;
 
-import org.eclipse.tractusx.puris.backend.supply.domain.model.ReportedSupplierDaysOfSupply;
+import org.eclipse.tractusx.puris.backend.supply.domain.model.ReportedCustomerSupply;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ReportedSupplierDaysOfSupplyRepository extends JpaRepository<ReportedSupplierDaysOfSupply, UUID> {
+public interface ReportedCustomerSupplyRepository extends JpaRepository<ReportedCustomerSupply, UUID> {
     
 }

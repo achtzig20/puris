@@ -26,47 +26,46 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import org.eclipse.tractusx.puris.backend.supply.domain.model.ReportedCustomerDaysOfSupply;
-import org.eclipse.tractusx.puris.backend.supply.domain.repository.ReportedCustomerDaysOfSupplyRepository;
+import org.eclipse.tractusx.puris.backend.supply.domain.model.ReportedSupplierSupply;
+import org.eclipse.tractusx.puris.backend.supply.domain.repository.ReportedSupplierSupplyRepository;
 import org.springframework.stereotype.Service;
 
 @Service
-public class CustomerDaysOfSupplyService {
-    private final ReportedCustomerDaysOfSupplyRepository repository; 
+public class SupplierSupplyService {
+    private final ReportedSupplierSupplyRepository repository; 
 
-    protected final Function<ReportedCustomerDaysOfSupply, Boolean> validator;
+    protected final Function<ReportedSupplierSupply, Boolean> validator;
 
-    public CustomerDaysOfSupplyService(ReportedCustomerDaysOfSupplyRepository repository) {
+    public SupplierSupplyService(ReportedSupplierSupplyRepository repository) {
         this.repository = repository;
         this.validator = this::validate;
     }
 
-    public final List<ReportedCustomerDaysOfSupply> findAll() {
+    public final List<ReportedSupplierSupply> findAll() {
         return repository.findAll();
     }
 
-    public final ReportedCustomerDaysOfSupply findById(UUID id) {
+    public final ReportedSupplierSupply findById(UUID id) {
         return repository.findById(id).orElse(null);
     }
 
-    public final List<ReportedCustomerDaysOfSupply> findAllByFilters(Optional<String> ownMaterialNumber, Optional<String> bpnl) {
-        Stream<ReportedCustomerDaysOfSupply> stream = repository.findAll().stream();
+    public final List<ReportedSupplierSupply> findAllByFilters(Optional<String> ownMaterialNumber, Optional<String> bpnl) {
+        Stream<ReportedSupplierSupply> stream = repository.findAll().stream();
         if (ownMaterialNumber.isPresent()) {
             stream = stream.filter(dayOfSupply -> dayOfSupply.getMaterial().getOwnMaterialNumber().equals(ownMaterialNumber.get()));
         }
         if (bpnl.isPresent()) {
             stream = stream.filter(dayOfSupply -> dayOfSupply.getPartner().getBpnl().equals(bpnl.get()));
-        }
+        } 
         return stream.toList();
     }
 
-    public boolean validate(ReportedCustomerDaysOfSupply daysOfSupply) {
+    public boolean validate(ReportedSupplierSupply daysOfSupply) {
         return 
             daysOfSupply.getPartner() != null &&
             daysOfSupply.getMaterial() != null &&
             daysOfSupply.getDate() != null &&
             daysOfSupply.getStockLocationBPNA() != null &&
             daysOfSupply.getStockLocationBPNS() != null;
-
     }
 }

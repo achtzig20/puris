@@ -18,18 +18,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
- package org.eclipse.tractusx.puris.backend.supply.domain.model;
+package org.eclipse.tractusx.puris.backend.supply.domain.model;
 
- import jakarta.persistence.Entity;
- import lombok.NoArgsConstructor;
- import lombok.ToString;
- import lombok.experimental.SuperBuilder;
- 
- @Entity
- @SuperBuilder
- @NoArgsConstructor
- @ToString(callSuper = true)
- public class OwnCustomerDaysOfSupply extends DaysOfSupply {
- 
- }
- 
+import jakarta.persistence.Entity;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
+
+@Entity
+@SuperBuilder
+@NoArgsConstructor
+@ToString(callSuper = true)
+public class ReportedSupplierSupply extends Supply {
+    
+}

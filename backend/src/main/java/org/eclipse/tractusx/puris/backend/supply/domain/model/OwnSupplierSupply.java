@@ -29,6 +29,6 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @ToString(callSuper = true)
-public class OwnSupplierDaysOfSupply extends DaysOfSupply {
+public class OwnSupplierSupply extends Supply {
 
 }

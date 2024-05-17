@@ -29,7 +29,7 @@
  @SuperBuilder
  @NoArgsConstructor
  @ToString(callSuper = true)
- public class ReportedCustomerDaysOfSupply extends DaysOfSupply {
+ public class ReportedCustomerSupply extends Supply {
  
  }
  
