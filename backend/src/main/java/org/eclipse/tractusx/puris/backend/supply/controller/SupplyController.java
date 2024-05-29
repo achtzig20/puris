@@ -36,6 +36,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 
 @RestController
@@ -48,11 +50,27 @@ public class SupplyController {
     @Autowired
     private ModelMapper modelMapper;
 
-    @GetMapping()
+    @GetMapping("customer")
     @ResponseBody
-    @Operation(summary = "Get all planned days of supply for the given Material",
-        description = "Get all planned days of supply for the given material number. Optionally the days of supply can be filtered by its partner bpnl.")
-    public List<SupplyDto> getAllDaysOfSupply(String materialNumber, Optional<String> bpnl) {
+    @Operation(summary = "Calculate days of supply for given material, partner bpnl and site bpns")
+    public List<SupplyDto> calculateCustomerDaysOfSupply(String materialNumber, String bpnl, String siteBpns, int numberOfDays) {
+        return daysOfSupplyService.calculateCustomerDaysOfSupply(materialNumber, bpnl, siteBpns, numberOfDays)
+            .stream().map(this::convertToDto).collect(Collectors.toList());
+    }
+
+    @GetMapping("customer/reported")
+    public List<SupplyDto> getCustomerDaysOfSupply(String materialNumber, Optional<String> bpnl) {
+        return daysOfSupplyService.findAllByFilters(Optional.of(materialNumber), bpnl)
+            .stream().map(this::convertToDto).collect(Collectors.toList());
+    }
+
+    @GetMapping("supplier")
+    public String calculateSupplierDaysOfSupply(@RequestParam String param) {
+        return new String();
+    }
+
+    @GetMapping("supplier/reported")
+    public List<SupplyDto> getSupplierDaysOfSupply(String materialNumber, Optional<String> bpnl) {
         return daysOfSupplyService.findAllByFilters(Optional.of(materialNumber), bpnl)
             .stream().map(this::convertToDto).collect(Collectors.toList());
     }

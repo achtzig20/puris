@@ -20,6 +20,10 @@ SPDX-License-Identifier: Apache-2.0
 
 package org.eclipse.tractusx.puris.backend.production.logic.service;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -62,7 +66,11 @@ public class OwnProductionService {
                 .toList();
     }
 
-    public final List<OwnProduction> findAllByFilters(Optional<String> ownMaterialNumber, Optional<String> bpnl, Optional<String> bpns) {
+    public final List<OwnProduction> findAllByFilters(
+        Optional<String> ownMaterialNumber,
+        Optional<String> bpnl,
+        Optional<String> bpns,
+        Optional<Date> estimatedTimeOfCompletion) {
         Stream<OwnProduction> stream = repository.findAll().stream();
         if (ownMaterialNumber != null) {
             stream = stream.filter(production -> production.getMaterial().getOwnMaterialNumber().equals(ownMaterialNumber.get()));
@@ -72,6 +80,17 @@ public class OwnProductionService {
         }
         if (bpns != null) {
             stream = stream.filter(production -> production.getProductionSiteBpns().equals(bpns.get()));
+        }
+        if (estimatedTimeOfCompletion.isPresent()) {
+            LocalDate localEstimatedTimeOfCompletion = Instant.ofEpochMilli(estimatedTimeOfCompletion.get().getTime())
+                .atOffset(ZoneOffset.UTC)
+                .toLocalDate();
+            stream = stream.filter(production -> {
+                LocalDate productionEstimatedTimeOfCompletion = Instant.ofEpochMilli(production.getEstimatedTimeOfCompletion().getTime())
+                    .atOffset(ZoneOffset.UTC)
+                    .toLocalDate();
+                return productionEstimatedTimeOfCompletion.getDayOfMonth() == localEstimatedTimeOfCompletion.getDayOfMonth();
+            });
         }
         return stream.toList();
     }

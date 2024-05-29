@@ -20,6 +20,12 @@
 
 package org.eclipse.tractusx.puris.backend.delivery.logic.service;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -63,7 +69,11 @@ public class OwnDeliveryService {
                 .toList();
     }
 
-    public final List<OwnDelivery> findAllByFilters(Optional<String> ownMaterialNumber, Optional<String> bpnl) {
+    public final List<OwnDelivery> findAllByFilters(
+        Optional<String> ownMaterialNumber,
+        Optional<String> bpnl,
+        Optional<String> siteBpns,
+        Optional<Date> day) {
         Stream<OwnDelivery> stream = repository.findAll().stream();
         if (ownMaterialNumber.isPresent()) {
             stream = stream.filter(delivery -> delivery.getMaterial().getOwnMaterialNumber().equals(ownMaterialNumber.get()));
@@ -71,11 +81,50 @@ public class OwnDeliveryService {
         if (bpnl.isPresent()) {
             stream = stream.filter(delivery -> delivery.getPartner().getBpnl().equals(bpnl.get()));
         }
+        if (siteBpns.isPresent()) {
+            stream = stream.filter(delivery -> delivery.getOriginBpns().equals(siteBpns.get()));
+        }
+        if (day.isPresent()) {
+            LocalDate localDayDate = Instant.ofEpochMilli(day.get().getTime())
+                .atOffset(ZoneOffset.UTC)
+                .toLocalDate();
+            stream = stream.filter(delivery -> {
+                LocalDate demandDayDate = Instant.ofEpochMilli(delivery.getDateOfArrival().getTime())
+                    .atOffset(ZoneOffset.UTC)
+                    .toLocalDate();
+                return demandDayDate.getDayOfMonth() == localDayDate.getDayOfMonth();
+            });
+        }
         return stream.toList();
     }
 
     public final OwnDelivery findById(UUID id) {
         return repository.findById(id).orElse(null);
+    }
+
+    public final double getSumOfQuantities(List<OwnDelivery> deliveries) {
+        double sum = 0;
+        for (OwnDelivery delivery : deliveries) {
+            sum += delivery.getQuantity();
+        }
+        return sum;
+    }
+
+    public final List<Double> getQuantityForDays(String material, String partnerBpnl, String siteBpns, int numberOfDays) {
+        List<Double> quantities = new ArrayList<>();
+        Date date = new Date();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+
+        for (int i = 0; i < numberOfDays; i++) {
+            List<OwnDelivery> deliveries = findAllByFilters(Optional.of(material), Optional.of(partnerBpnl), Optional.of(siteBpns), Optional.of(date));
+            double deliveryQuantity = getSumOfQuantities(deliveries);
+            quantities.add(deliveryQuantity);
+
+            calendar.add(Calendar.DAY_OF_MONTH, 1);
+            date = calendar.getTime();
+        }
+        return quantities;
     }
 
     public final OwnDelivery create(OwnDelivery delivery) {
@@ -113,7 +162,7 @@ public class OwnDeliveryService {
     public boolean validate(OwnDelivery delivery) {
         Partner ownPartnerEntity = partnerService.getOwnPartnerEntity();
         return 
-            delivery.getQuantity() > 0 && 
+            delivery.getQuantity() >= 0 && 
             delivery.getMeasurementUnit() != null &&
             delivery.getMaterial() != null &&
             delivery.getPartner() != null &&

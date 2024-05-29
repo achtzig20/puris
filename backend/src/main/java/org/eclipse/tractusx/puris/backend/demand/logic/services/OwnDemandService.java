@@ -19,6 +19,12 @@ SPDX-License-Identifier: Apache-2.0
 */
 package org.eclipse.tractusx.puris.backend.demand.logic.services;
 
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
 import org.eclipse.tractusx.puris.backend.demand.domain.model.OwnDemand;
 import org.eclipse.tractusx.puris.backend.demand.domain.repository.OwnDemandRepository;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Partner;
@@ -30,6 +36,23 @@ import org.springframework.stereotype.Service;
 public class OwnDemandService extends DemandService<OwnDemand, OwnDemandRepository> {
     public OwnDemandService(OwnDemandRepository repository, PartnerService partnerService, MaterialPartnerRelationService mprService) {
         super(repository, partnerService, mprService);
+    }
+
+    public final List<Double> getQuantityForDays(String material, String partnerBpnl, String siteBpns, int numberOfDays) {
+        List<Double> quantities = new ArrayList<>();
+        Date date = new Date();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+
+        for (int i = 0; i < numberOfDays; i++) {
+            List<OwnDemand> demands = findAllByFilters(Optional.of(material), Optional.of(partnerBpnl), Optional.of(siteBpns), Optional.of(date));
+            double demandQuantity = getSumOfQuantities(demands);
+            quantities.add(demandQuantity);
+
+            calendar.add(Calendar.DAY_OF_MONTH, 1);
+            date = calendar.getTime();
+        }
+        return quantities;
     }
 
     @Override

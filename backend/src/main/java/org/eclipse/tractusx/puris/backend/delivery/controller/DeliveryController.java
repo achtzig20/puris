@@ -84,7 +84,7 @@ public class DeliveryController {
     @Operation(summary = "Get all planned deliveries for the given Material",
         description = "Get all planned deliveries for the given material number. Optionally the delivery can be filtered by its partner bpnl.")
     public List<DeliveryDto> getAllDeliveries(String materialNumber, Optional<String> bpnl) {
-        return ownDeliveryService.findAllByFilters(Optional.of(materialNumber), bpnl)
+        return ownDeliveryService.findAllByFilters(Optional.of(materialNumber), bpnl, null, null)
             .stream().map(this::convertToDto).collect(Collectors.toList());
     }
 

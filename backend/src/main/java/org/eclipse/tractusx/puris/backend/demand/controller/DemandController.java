@@ -76,7 +76,7 @@ public class DemandController {
     @ResponseBody
     @Operation(summary = "Get all own demands for the given Material", description = "Get all own demands for the given material number. Optionally the demanding site can be filtered by its bpns.")
     public List<DemandDto> getAllDemands(String materialNumber, Optional<String> site) {
-        return ownDemandService.findAllByFilters(Optional.of(materialNumber), Optional.empty(), site)
+        return ownDemandService.findAllByFilters(Optional.of(materialNumber), Optional.empty(), site, null)
                 .stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
@@ -156,7 +156,7 @@ public class DemandController {
     )
     public List<DemandDto> getAllDemandsForPartner(String materialNumber, Optional<String> bpnl,
             Optional<String> site) {
-        return reportedDemandService.findAllByFilters(Optional.of(materialNumber), bpnl, site)
+        return reportedDemandService.findAllByFilters(Optional.of(materialNumber), bpnl, site, null)
                 .stream().map(this::convertToDto).collect(Collectors.toList());
     }
 

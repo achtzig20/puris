@@ -20,6 +20,7 @@
 package org.eclipse.tractusx.puris.backend.stock.logic.service;
 
 import lombok.extern.slf4j.Slf4j;
+
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Material;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.MaterialPartnerRelation;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Partner;
@@ -28,11 +29,15 @@ import org.eclipse.tractusx.puris.backend.masterdata.logic.service.PartnerServic
 import org.eclipse.tractusx.puris.backend.stock.domain.model.ItemStock;
 import org.eclipse.tractusx.puris.backend.stock.domain.repository.ItemStockRepository;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
-
+import java.util.stream.Stream;
 
 @Slf4j
 public abstract class ItemStockService<T extends ItemStock> {
@@ -45,7 +50,8 @@ public abstract class ItemStockService<T extends ItemStock> {
 
     protected final Function<T, Boolean> validator;
 
-    public ItemStockService(PartnerService partnerService, MaterialPartnerRelationService mprService, ItemStockRepository<T> repository) {
+    public ItemStockService(PartnerService partnerService, MaterialPartnerRelationService mprService,
+            ItemStockRepository<T> repository) {
         this.partnerService = partnerService;
         this.mprService = mprService;
         this.repository = repository;
@@ -103,6 +109,41 @@ public abstract class ItemStockService<T extends ItemStock> {
 
     public final List<T> findByPartnerBpnlAndOwnMaterialNumber(String partnerBpnl, String ownMaterialNumber) {
         return repository.getForPartnerBpnlAndOwnMatNbr(partnerBpnl, ownMaterialNumber);
+    }
+
+    public final List<T> findAllByMaterialAndDate(String ownMaterialNumber, String partnerBpnl, String siteBpns, Date date) {
+        Stream<T> stream = repository.findAll().stream();
+        LocalDate localDate = Instant.ofEpochMilli(date.getTime())
+                .atOffset(ZoneOffset.UTC)
+                .toLocalDate();
+
+        stream = stream.filter(stock -> stock.getMaterial().getOwnMaterialNumber().equals(ownMaterialNumber));
+        stream = stream.filter(stock -> stock.getPartner().getBpnl().equals(partnerBpnl));
+        stream = stream.filter(stock -> stock.getLocationBpns().equals(siteBpns));
+        stream = stream.filter(stock -> {
+            LocalDate stockDate = Instant.ofEpochMilli(stock.getLastUpdatedOnDateTime().getTime())
+                    .atOffset(ZoneOffset.UTC)
+                    .toLocalDate();
+            return stockDate.getDayOfMonth() == localDate.getDayOfMonth();
+        });
+        return stream.toList();
+    }
+
+    public final double getSumOfQuantities(List<T> stocks) {
+        double sum = 0;
+        for (T stock : stocks) {
+            sum = stock.getQuantity();
+        }
+        return sum;
+    }
+
+    public final double getInitialStockQuantity(String material, String partnerBpnl, String siteBpns) {
+        Date date = new Date();
+
+        List<T> stocks = findAllByMaterialAndDate(material, partnerBpnl, siteBpns, date);
+        double initialStockQuantity = getSumOfQuantities(stocks);
+
+        return initialStockQuantity;
     }
 
     public abstract boolean validate(T itemStock);
@@ -171,12 +212,12 @@ public abstract class ItemStockService<T extends ItemStock> {
     protected boolean validateLocation(ItemStock itemStock, Partner partner) {
         try {
             var stockSite = partner.getSites().stream()
-                .filter(site -> site.getBpns().equals(itemStock.getLocationBpns()))
-                .findFirst().orElse(null);
+                    .filter(site -> site.getBpns().equals(itemStock.getLocationBpns()))
+                    .findFirst().orElse(null);
             Objects.requireNonNull(stockSite, "Site not found");
             var stockAddress = stockSite.getAddresses().stream()
-                .filter(addr -> addr.getBpna().equals(itemStock.getLocationBpna()))
-                .findFirst().orElse(null);
+                    .filter(addr -> addr.getBpna().equals(itemStock.getLocationBpna()))
+                    .findFirst().orElse(null);
             Objects.requireNonNull(stockAddress, "Address not found");
         } catch (Exception e) {
             log.error("Location Validation failed: " + itemStock + "\n" + e.getMessage());

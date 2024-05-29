@@ -25,6 +25,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.tractusx.puris.backend.common.util.VariablesService;
+import org.eclipse.tractusx.puris.backend.delivery.domain.model.EventTypeEnumeration;
+import org.eclipse.tractusx.puris.backend.delivery.domain.model.IncotermEnumeration;
+import org.eclipse.tractusx.puris.backend.delivery.domain.model.OwnDelivery;
+import org.eclipse.tractusx.puris.backend.delivery.logic.service.OwnDeliveryService;
+import org.eclipse.tractusx.puris.backend.demand.domain.model.DemandCategoryEnumeration;
+import org.eclipse.tractusx.puris.backend.demand.domain.model.OwnDemand;
+import org.eclipse.tractusx.puris.backend.demand.logic.services.OwnDemandService;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Material;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.MaterialPartnerRelation;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Partner;
@@ -45,8 +52,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -75,6 +89,12 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
 
     @Autowired
     private VariablesService variablesService;
+
+    @Autowired
+    private OwnDemandService demandService;
+
+    @Autowired
+    private OwnDeliveryService deliveryService;
 
     private ObjectMapper objectMapper;
 
@@ -220,6 +240,63 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
             .build();
         reportedMaterialItemStock = reportedMaterialItemStockService.create(reportedMaterialItemStock);
         log.info("Created ReportedMaterialItemStock: \n" + reportedMaterialItemStock);
+
+        // Testing data for days of supply
+        Random random = new Random();
+        double[] demands = {40, 60, 50, 50, 60, 50};
+        double[] deliveries = {0, 60, 100, 0, 0, 40};
+        String[] trackingNumbers = {
+            "1Z9829WDE02128",
+            "2Y0738XEF13239",
+            "3A1930VBC11247",
+            "4B2041YHG34567",
+            "5C3152UJI45678",
+            "6D4263TJK56789"
+        };
+        Date date = new Date();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        var siteBpns = mySelf.getSites().first().getBpns();
+
+        for (int i = 0; i < demands.length; i++) {
+            OwnDemand demand = OwnDemand.builder()
+                .material(semiconductorMaterial)
+                .partner(supplierPartner)
+                .quantity(demands[i])
+                .measurementUnit(ItemUnitEnumeration.UNIT_PIECE)
+                .day(date)
+                .demandLocationBpns(siteBpns)
+                .supplierLocationBpns(null)
+                .demandCategoryCode(DemandCategoryEnumeration.DEMAND_DEFAULT)
+                .build();
+            demand = demandService.create(demand);
+
+            EventTypeCombination eventTypeCombination = generateRandomEventTypeCombination(random);
+            var departureDate = generateRandomDate(random);
+            OwnDelivery delivery = OwnDelivery.builder()
+                .material(semiconductorMaterial)
+                .partner(supplierPartner)
+                .quantity(deliveries[i])
+                .measurementUnit(ItemUnitEnumeration.UNIT_PIECE)
+                .trackingNumber(trackingNumbers[i])
+                .incoterm(IncotermEnumeration.CFR)
+                .supplierOrderNumber("M-Nbr-4711")
+                .customerOrderNumber("C-Nbr-4711")
+                .customerOrderPositionNumber("PositionId-" + i)
+                .destinationBpna(null)
+                .destinationBpns(supplierPartner.getSites().first().getBpns())
+                .originBpna(null)
+                .originBpns(siteBpns)
+                .dateOfDeparture(departureDate)
+                .dateOfArrival(date)
+                .departureType(eventTypeCombination.departureType)
+                .arrivalType(eventTypeCombination.arrivalType)
+                .build();
+            deliveryService.create(delivery);
+
+            calendar.add(Calendar.DAY_OF_MONTH, 1);
+            date = calendar.getTime();
+        }
     }
 
     /**
@@ -431,4 +508,47 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
         return material;
     }
 
+    private static Date generateRandomDate(Random random) {
+        int daysOffset = -random.nextInt(31);
+        LocalDate currentDate = LocalDate.now();
+        LocalDate randomLocalDate = currentDate.plus(daysOffset, ChronoUnit.DAYS);
+        return Date.from(randomLocalDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+     }
+
+     private static EventTypeCombination generateRandomEventTypeCombination(Random random) {
+        EventTypeEnumeration departureType;
+        EventTypeEnumeration arrivalType;
+        
+        do {
+            departureType = getRandomDepartureType(random);
+            arrivalType = getRandomArrivalType(random);
+        } while (departureType == EventTypeEnumeration.ESTIMATED_DEPARTURE && 
+                 arrivalType == EventTypeEnumeration.ACTUAL_ARRIVAL);
+        
+        return new EventTypeCombination(departureType, arrivalType);
+    }
+
+    private static EventTypeEnumeration getRandomDepartureType(Random random) {
+        List<EventTypeEnumeration> departureTypes = Arrays.stream(EventTypeEnumeration.values())
+            .filter(e -> e == EventTypeEnumeration.ESTIMATED_DEPARTURE || e == EventTypeEnumeration.ACTUAL_DEPARTURE)
+            .collect(Collectors.toList());
+        return departureTypes.get(random.nextInt(departureTypes.size()));
+    }
+
+    private static EventTypeEnumeration getRandomArrivalType(Random random) {
+        List<EventTypeEnumeration> arrivalTypes = Arrays.stream(EventTypeEnumeration.values())
+            .filter(e -> e == EventTypeEnumeration.ESTIMATED_ARRIVAL || e == EventTypeEnumeration.ACTUAL_ARRIVAL)
+            .collect(Collectors.toList());
+        return arrivalTypes.get(random.nextInt(arrivalTypes.size()));
+    }
+
+    public static class EventTypeCombination {
+        public EventTypeEnumeration departureType;
+        public EventTypeEnumeration arrivalType;
+
+        public EventTypeCombination(EventTypeEnumeration departureType, EventTypeEnumeration arrivalType) {
+            this.departureType = departureType;
+            this.arrivalType = arrivalType;
+        }
+    }
 }

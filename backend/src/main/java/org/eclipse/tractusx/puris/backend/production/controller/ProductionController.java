@@ -77,7 +77,7 @@ public class ProductionController {
     @ResponseBody
     @Operation(summary = "Get all planned productions for the given Material", description = "Get all planned productions for the given material number. Optionally the production site can be filtered by its bpns.")
     public List<ProductionDto> getAllProductions(String materialNumber, Optional<String> site) {
-        return ownProductionService.findAllByFilters(Optional.of(materialNumber), null, site)
+        return ownProductionService.findAllByFilters(Optional.of(materialNumber), null, site, null)
                 .stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
