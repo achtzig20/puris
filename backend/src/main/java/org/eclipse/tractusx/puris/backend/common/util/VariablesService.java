@@ -56,13 +56,6 @@ public class VariablesService {
      */
     private String edrEndpoint;
 
-    @Value("${puris.edr.deletiontimer}")
-    /**
-     * The number of minutes before received authentication data
-     * in the context of a consumer pull is removed from memory
-     */
-    private long edrTokenDeletionTimer;
-
     @Value("${puris.baseurl}" + "catena/item-stock/request")
     /**
      * The url under which this application's request endpoint can
@@ -77,18 +70,71 @@ public class VariablesService {
      */
     private String itemStockSubmodelAssetId;
 
-    @Value("${puris.frameworkagreement.use}")
+    @Value("${puris.baseurl}" + "catena/planned-production/request")
     /**
-     * A flag that signals whether a framework policy
-     * shall be used as contract policy for your api assets.
+     * The url under which this application's request endpoint can
+     * be reached by external machines.
      */
-    private boolean useFrameworkPolicy;
+    private String productionSubmodelEndpoint;
+
+    @Value("${puris.productionsubmodel.apiassetid}")
+    /**
+     * The assetId that shall be assigned to the request API
+     * during asset creation.
+     */
+    private String productionSubmodelAssetId;
+
+    @Value("${puris.baseurl}" + "catena/material-demand/request")
+    /**
+     * The url under which this application's request endpoint can
+     * be reached by external machines.
+     */
+    private String demandSubmodelEndpoint;
+
+    @Value("${puris.demandsubmodel.apiassetid}")
+    /**
+     * The assetId that shall be assigned to the request API
+     * during asset creation.
+     */
+    private String demandSubmodelAssetId;
+
+    @Value("${puris.baseurl}" + "catena/delivery-information/request")
+    /**
+     * The url under which this application's request endpoint can
+     * be reached by external machines.
+     */
+    private String deliverySubmodelEndpoint;
+
+    @Value("${puris.deliverysubmodel.apiassetid}")
+    /**
+     * The assetId that shall be assigned to the request API
+     * during asset creation.
+     */
+    private String deliverySubmodelAssetId;
 
     @Value("${puris.frameworkagreement.credential}")
     /**
      * The name of the framework agreement to be used.
      */
     private String purisFrameworkAgreement;
+
+    @Value("${puris.frameworkagreement.version}")
+    /**
+     * The version of the framework agreement to be used.
+     */
+    private String purisFrameworkAgreementVersion;
+
+    @Value("${puris.purpose.name}")
+    /**
+     * The name of the purpose to be used for submodel contract policies.
+     */
+    private String purisPurposeName;
+
+    @Value("${puris.purpose.version}")
+    /**
+     * The version of the purpse to be  used for submodel contract policies.
+     */
+    private String purisPurposeVersion;
 
     @Value("${puris.api.key}")
     /**
@@ -190,5 +236,28 @@ public class VariablesService {
     public String getItemStockSubmodelApiAssetId() {
         return itemStockSubmodelAssetId + "@" + ownBpnl;
     }
-    
+
+    public String getProductionSubmodelApiAssetId() {
+        return productionSubmodelAssetId + "@" + ownBpnl;
+    }
+
+    public String getDemandSubmodelApiAssetId() {
+        return demandSubmodelAssetId + "@" + ownBpnl;
+    }
+
+    public String getDeliverySubmodelApiAssetId() {
+        return deliverySubmodelAssetId + "@" + ownBpnl;
+    }
+
+    public String getPartTypeSubmodelApiAssetId() {
+        return "PartTypeInformationSubmodelApi@" + getOwnBpnl();
+    }
+
+    public String getPurisFrameworkAgreementWithVersion() {
+        return getPurisFrameworkAgreement() + ":" + getPurisFrameworkAgreementVersion();
+    }
+
+    public String getPurisPurposeWithVersion() {
+        return getPurisPurposeName() + ":" + getPurisPurposeVersion();
+    }
 }

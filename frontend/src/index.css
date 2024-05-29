@@ -29,6 +29,7 @@ body {
 
 [role='tabpanel'] {
     width: 100%;
+    width: 100%;
 }
 
 .MuiDataGrid-root > .MuiBox-root h5 > span {
@@ -43,6 +44,7 @@ body {
 
 .table-container .MuiDataGrid-root > .MuiBox-root {
     height: 0;
+    height: 0;
 }
 
 .table-container .MuiDataGrid-root {
@@ -54,12 +56,15 @@ body {
     max-width: unset !important;
 }
 
+.MuiFormControl-root > .MuiBox-root {
+    display: none;
+}
+
 input[type='time'] {
     box-sizing: border-box;
     padding: 0.875rem;
     border-radius: 4px;
     border: 1px solid #c5c7cb;
-    
 }
 
 input[type='time']:hover {
@@ -77,3 +82,78 @@ input[type='time']:active {
 input[type='time'].error {
     border-color: #f44336;
 }
+
+/* Markdown styles */
+.markdown h1 {
+    @apply text-2xl font-bold my-3;
+}
+
+.markdown h2 {
+    @apply text-xl font-bold my-2;
+}
+
+.markdown h3 {
+    @apply text-lg font-bold my-2;
+}
+
+.markdown h4 {
+    @apply text-base font-bold my-2;
+}
+
+.markdown h5 {
+    @apply text-base font-bold my-2;
+}
+
+.markdown h6 {
+    @apply text-base font-bold my-2;
+}
+
+.markdown p {
+    @apply text-base py-3;
+}
+
+.markdown a {
+    @apply text-blue-500;
+}
+
+.markdown ul {
+    @apply list-disc ps-5;
+}
+
+.markdown ol {
+    @apply list-decimal ps-5;
+}
+
+.markdown li {
+    @apply text-base;
+}
+
+.markdown blockquote {
+    @apply border-l-4 border-gray-300 pl-4;
+}
+
+.markdown pre {
+    @apply bg-gray-100 p-4 rounded;
+}
+
+.markdown code {
+    @apply bg-gray-100 p-1 rounded;
+}
+
+.markdown table {
+    @apply w-full;
+}
+
+.markdown table th {
+    @apply bg-gray-200 p-2;
+}
+
+.markdown table td {
+    @apply p-2;
+}
+
+.markdown img {
+    @apply mx-auto;
+}
+
+

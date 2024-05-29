@@ -20,6 +20,7 @@
 package org.eclipse.tractusx.puris.backend.common.security;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -28,8 +29,8 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import jakarta.servlet.DispatcherType;
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.eclipse.tractusx.puris.backend.common.security.logic.ApiKeyAuthenticationFilter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -48,7 +49,6 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @AllArgsConstructor
-@Slf4j
 @SecurityScheme(type = SecuritySchemeType.APIKEY, name = SecurityConfig.API_KEY_HEADER_NAME, in = SecuritySchemeIn.HEADER)
 @OpenAPIDefinition(info = @Info(title = "PURIS FOSS Open API", version = "1.0.0"), security = {@SecurityRequirement(name = "X-API-KEY")})
 public class SecurityConfig {
@@ -56,6 +56,10 @@ public class SecurityConfig {
     public static final String API_KEY_HEADER_NAME = "X-API-KEY";
 
     private final ApiKeyAuthenticationFilter apiKeyAuthenticationFilter;
+
+    private final ObjectMapper objectMapper;
+
+    private DtrSecurityConfiguration dtrSecurityConfiguration;
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -79,7 +83,22 @@ public class SecurityConfig {
             .authorizeHttpRequests(
                 // any request in spring context
                 (authorizeHttpRequests) -> authorizeHttpRequests
-                    .requestMatchers("/stockView/**", "/partners/**", "/materials/**", "/materialpartnerrelations/**", "/item-stock/**", "/production/**", "/delivery/**", "/supply/**", "/demand/**","/edrendpoint/**", "/edc/**", "/parttypeinformation/**").authenticated()
+                    .requestMatchers(
+                        "/stockView/**",
+                        "/partners/**",
+                        "/materials/**",
+                        "/materialpartnerrelations/**",
+                        "/item-stock/**",
+                        "/production/**",
+                        "/delivery/**",
+                        "/demand/**",
+                        "/planned-production/**",
+                        "/material-demand/**",
+                        "/delivery-information/**",
+                        "/supply/**",
+                        "/edc/**",
+                        "/parttypeinformation/**")
+                    .authenticated()
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/health/**").permitAll()
                     .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
             )
@@ -95,6 +114,12 @@ public class SecurityConfig {
         http.addFilterBefore(apiKeyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "puris.dtr.idp.enabled", havingValue = "true")
+    public OAuth2ClientInterceptor oAuth2ClientInterceptor() {
+        return new OAuth2ClientInterceptor(objectMapper, dtrSecurityConfiguration.getTokenUrl(), dtrSecurityConfiguration.getPurisClientId(), dtrSecurityConfiguration.getPurisClientSecret(), dtrSecurityConfiguration.getGrant_type());
     }
 
 }

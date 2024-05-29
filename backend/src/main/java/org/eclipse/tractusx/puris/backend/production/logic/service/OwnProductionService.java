@@ -72,13 +72,13 @@ public class OwnProductionService {
         Optional<String> bpns,
         Optional<Date> estimatedTimeOfCompletion) {
         Stream<OwnProduction> stream = repository.findAll().stream();
-        if (ownMaterialNumber != null) {
+        if (ownMaterialNumber.isPresent()) {
             stream = stream.filter(production -> production.getMaterial().getOwnMaterialNumber().equals(ownMaterialNumber.get()));
         }
-        if (bpnl != null) {
+        if (bpnl.isPresent()) {
             stream = stream.filter(production -> production.getPartner().getBpnl().equals(bpnl.get()));
         }
-        if (bpns != null) {
+        if (bpns.isPresent()) {
             stream = stream.filter(production -> production.getProductionSiteBpns().equals(bpns.get()));
         }
         if (estimatedTimeOfCompletion.isPresent()) {
@@ -104,7 +104,7 @@ public class OwnProductionService {
             
             throw new IllegalArgumentException("Invalid production");
         }
-        if (production.getUuid() != null && repository.findById(production.getUuid()).isPresent()) {
+        if (repository.findAll().stream().anyMatch(prod -> prod.equals(production))) {
             throw new KeyAlreadyExistsException("Production already exists");
         }
         return repository.save(production);

@@ -32,10 +32,11 @@ const app = {
     ENDPOINT_REPORTED_PRODUCT_STOCKS: import.meta.env.VITE_ENDPOINT_REPORTED_PRODUCT_STOCKS.trim() as string,
     ENDPOINT_UPDATE_REPORTED_MATERIAL_STOCKS: import.meta.env.VITE_ENDPOINT_UPDATE_REPORTED_MATERIAL_STOCKS.trim() as string,
     ENDPOINT_UPDATE_REPORTED_PRODUCT_STOCKS: import.meta.env.VITE_ENDPOINT_UPDATE_REPORTED_PRODUCT_STOCKS.trim() as string,
-    ENDPOINT_PARTNER_OWNSITES: import.meta.env.VITE_ENDPOINT_PARTNER_OWNSITES.trim() as string,
+    ENDPOINT_PARTNER: import.meta.env.VITE_ENDPOINT_PARTNER.trim() as string,
     ENDPOINT_DEMAND: import.meta.env.VITE_ENDPOINT_DEMAND.trim() as string,
     ENDPOINT_PRODUCTION: import.meta.env.VITE_ENDPOINT_PRODUCTION.trim() as string,
     ENDPOINT_PRODUCTION_RANGE: import.meta.env.VITE_ENDPOINT_PRODUCTION_RANGE.trim() as string,
+    ENDPOINT_DELIVERY: import.meta.env.VITE_ENDPOINT_DELIVERY.trim() as string,
 };
 
 const auth = {

@@ -168,7 +168,7 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
         Partner supplierPartner = createAndGetSupplierPartner();
         Material semiconductorMaterial = getNewSemiconductorMaterialForCustomer();
         Partner mySelf = partnerService.getOwnPartnerEntity();
-
+        semiconductorMaterial.setProductFlag(true);
         semiconductorMaterial = materialService.create(semiconductorMaterial);
         log.info(String.format("Created material: %s", semiconductorMaterial));
         List<Material> materialsFound = materialService.findAllMaterials();
@@ -181,8 +181,7 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
 
 
         MaterialPartnerRelation semiconductorPartnerRelation = new MaterialPartnerRelation(semiconductorMaterial,
-            supplierPartner, semiconductorMatNbrSupplier, true, false);
-//        semiconductorPartnerRelation.setPartnerCXNumber(semiconductorMatNbrCatenaX);
+            supplierPartner, semiconductorMatNbrSupplier, true, true);
         mprService.create(semiconductorPartnerRelation);
         semiconductorPartnerRelation = mprService.find(semiconductorMaterial, supplierPartner);
         log.info("Found Relation: " + semiconductorPartnerRelation);
@@ -297,6 +296,27 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
             calendar.add(Calendar.DAY_OF_MONTH, 1);
             date = calendar.getTime();
         }
+        ProductItemStock productItemStock = ProductItemStock.builder()
+            .partner(supplierPartner)
+            .material(semiconductorMaterial)
+            .lastUpdatedOnDateTime(new Date())
+            .measurementUnit(ItemUnitEnumeration.UNIT_PIECE)
+            .quantity(33)
+            .locationBpna(mySelf.getSites().first().getAddresses().first().getBpna())
+            .locationBpns(mySelf.getSites().first().getBpns())
+            .build();
+        productItemStockService.create(productItemStock);
+
+        ReportedProductItemStock reportedProductItemStock = ReportedProductItemStock.builder()
+            .partner(supplierPartner)
+            .material(semiconductorMaterial)
+            .lastUpdatedOnDateTime(new Date())
+            .measurementUnit(ItemUnitEnumeration.UNIT_PIECE)
+            .quantity(44)
+            .locationBpns(supplierPartner.getSites().first().getBpns())
+            .locationBpna(supplierPartner.getSites().first().getAddresses().first().getBpna())
+            .build();
+        reportedProductItemStockService.create(reportedProductItemStock);
     }
 
     /**
@@ -305,6 +325,7 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
     private void setupSupplierRole() {
         Partner customerPartner = createAndGetCustomerPartner();
         Material semiconductorMaterial = getNewSemiconductorMaterialForSupplier();
+        semiconductorMaterial.setMaterialFlag(true);
         Partner mySelf = partnerService.getOwnPartnerEntity();
 
         Site secondSite = new Site(
@@ -324,8 +345,7 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
         log.info(String.format("Created product: %s", semiconductorMaterial));
 
         MaterialPartnerRelation semiconductorPartnerRelation = new MaterialPartnerRelation(semiconductorMaterial,
-            customerPartner, semiconductorMatNbrCustomer, false, true);
-//        semiconductorPartnerRelation.setPartnerCXNumber(semiconductorMatNbrCatenaX);
+            customerPartner, semiconductorMatNbrCustomer, true, true);
         semiconductorPartnerRelation = mprService.create(semiconductorPartnerRelation);
 
         log.info("Created Relation " + semiconductorPartnerRelation);
@@ -385,6 +405,28 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
             .build();
         reportedProductItemStock = reportedProductItemStockService.create(reportedProductItemStock);
         log.info("Created ReportedProductItemStock \n" + reportedProductItemStock);
+
+       MaterialItemStock materialItemStock = MaterialItemStock.builder()
+           .partner(customerPartner)
+           .material(semiconductorMaterial)
+           .lastUpdatedOnDateTime(new Date())
+           .measurementUnit(ItemUnitEnumeration.UNIT_PIECE)
+           .quantity(400)
+           .locationBpna(siteLa.getAddresses().stream().findFirst().get().getBpna())
+           .locationBpns(siteLa.getBpns())
+           .build();
+       materialItemStockService.create(materialItemStock);
+
+       ReportedMaterialItemStock reportedMaterialItemStock = ReportedMaterialItemStock.builder()
+           .partner(customerPartner)
+           .material(semiconductorMaterial)
+           .lastUpdatedOnDateTime(new Date())
+           .measurementUnit(ItemUnitEnumeration.UNIT_PIECE)
+           .quantity(23)
+           .locationBpna(customerPartner.getSites().first().getAddresses().first().getBpna())
+           .locationBpns(customerPartner.getSites().first().getBpns())
+           .build();
+       reportedMaterialItemStockService.create(reportedMaterialItemStock);
     }
 
     /**
@@ -479,7 +521,6 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
     private Material getNewSemiconductorMaterialForSupplier() {
         Material material = new Material();
         material.setOwnMaterialNumber(semiconductorMatNbrSupplier);
-        material.setMaterialNumberCx(semiconductorMatNbrCatenaX);
         material.setProductFlag(true);
         material.setName("Semiconductor");
         return material;
@@ -488,7 +529,6 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
     private Material getNewSemiconductorMaterialForCustomer() {
         Material material = new Material();
         material.setOwnMaterialNumber(semiconductorMatNbrCustomer);
-//        material.setMaterialNumberCx(semiconductorMatNbrCatenaX);
         material.setMaterialFlag(true);
         material.setName("Semiconductor");
         return material;

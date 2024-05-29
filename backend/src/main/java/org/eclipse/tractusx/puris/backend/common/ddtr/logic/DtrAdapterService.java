@@ -21,9 +21,11 @@
 package org.eclipse.tractusx.puris.backend.common.ddtr.logic;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.eclipse.tractusx.puris.backend.common.ddtr.logic.util.DtrRequestBodyBuilder;
+import org.eclipse.tractusx.puris.backend.common.security.OAuth2ClientInterceptor;
 import org.eclipse.tractusx.puris.backend.common.util.VariablesService;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Material;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.MaterialPartnerRelation;
@@ -42,7 +44,7 @@ import java.util.Map;
 @Service
 @Slf4j
 public class DtrAdapterService {
-    private static final OkHttpClient CLIENT = new OkHttpClient();
+    private OkHttpClient CLIENT;
 
     @Autowired
     private VariablesService variablesService;
@@ -52,6 +54,18 @@ public class DtrAdapterService {
 
     @Autowired
     private DigitalTwinMappingService digitalTwinMappingService;
+
+    @Autowired(required = false)
+    public DtrAdapterService(@Nullable OAuth2ClientInterceptor oAuth2ClientInterceptor) {
+        OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
+
+        // add client interceptor if enabled by property
+        if (oAuth2ClientInterceptor != null) {
+            clientBuilder.addInterceptor(oAuth2ClientInterceptor);
+        }
+
+        this.CLIENT = clientBuilder.build();
+    }
 
     private Response sendDtrPostRequest(JsonNode requestBody, List<String> pathSegments) throws IOException {
         HttpUrl.Builder urlBuilder = HttpUrl.parse(variablesService.getDtrUrl()).newBuilder();
@@ -103,84 +117,74 @@ public class DtrAdapterService {
     /**
      * Updates an existing product-AAS with all corresponding customer partners.
      *
-     * @param material  The given Material
-     * @param mprs      The list of all MaterialProductRelations that exist with customers of the given Material
-     * @return          true, if the DTR signaled a successful registration
+     * @param material The given Material
+     * @param mprs     The list of all MaterialProductRelations that exist with customers of the given Material
+     * @return The HTTP response code from the DTR, or null if none was received
      */
-    public boolean updateProduct(Material material, List<MaterialPartnerRelation> mprs) {
+    public Integer updateProduct(Material material, List<MaterialPartnerRelation> mprs) {
         String twinId = digitalTwinMappingService.get(material).getProductTwinId();
         String idAsBase64 = Base64.getEncoder().encodeToString(twinId.getBytes(StandardCharsets.UTF_8));
         var body = dtrRequestBodyBuilder.createProductRegistrationRequestBody(material, twinId, mprs);
-        try (var response = sendDtrPutRequest(body, List.of("api", "v3.0", "shell-descriptors", idAsBase64))) {
-            var bodyString = response.body().string();
-            log.info("Response Code " + response.code());
-            if (response.isSuccessful()) {
-                return true;
-            }
-            log.error("Failure in update for product twin " + material.getOwnMaterialNumber() + "\n" + bodyString);
+        try (var response = sendDtrPutRequest(body, List.of("api", "v3", "shell-descriptors", idAsBase64))) {
+            return response.code();
         } catch (Exception e) {
             log.error("Failure in update for product twin " + material.getOwnMaterialNumber(), e);
         }
-        return false;
+        return null;
     }
 
     /**
-     * Call this method when a new Material with a product flag was created in your MaterialService - or if a product
-     * flag was later added to an existing Material.
-     *
+     * Call this method when you need to register a product at the DTR for which there was no product AAS registered
+     * previously. 
+     * <p>
      * A new AAS will be registered for this Material at your dDTR.
      *
-     * @param material  The Material
-     * @return          true, if the DTR signaled a successful registration
+     * @param material The Material
+     * @param mprs     The list of all MaterialProductRelations that exist with customers of the given Material
+     * @return The HTTP response code from the DTR, or null if none was received
      */
-    public boolean registerProductAtDtr(Material material) {
+    public Integer registerProductAtDtr(Material material, List<MaterialPartnerRelation> mprs) {
         String twinId = digitalTwinMappingService.get(material).getProductTwinId();
-        var body = dtrRequestBodyBuilder.createProductRegistrationRequestBody(material, twinId, List.of());
-        try (var response = sendDtrPostRequest(body, List.of("api", "v3.0", "shell-descriptors"))) {
-            var bodyString = response.body().string();
-            if (response.isSuccessful()) {
-                return true;
-            }
-            log.error("Failed to register product at DTR " + material.getOwnMaterialNumber() + "\n" + bodyString);
+        var body = dtrRequestBodyBuilder.createProductRegistrationRequestBody(material, twinId, mprs);
+        try (var response = sendDtrPostRequest(body, List.of("api", "v3", "shell-descriptors"))) {
+            return response.code();
         } catch (Exception e) {
             log.error("Failed to register product at DTR " + material.getOwnMaterialNumber(), e);
         }
-        return false;
+        return null;
     }
 
     /**
      * Call this method when a MaterialPartnerRelation was created or updated it's flag signals that this partner is
      * a supplier for the referenced Material.
      *
-     * @param supplierPartnerRelation   The MaterialPartnerRelation indicating a supplier for a given Material.
-     * @return
+     * @param supplierPartnerRelation The MaterialPartnerRelation indicating a supplier for a given Material.
+     * @return The HTTP response code from the DTR, or null if none was received
      */
-    public boolean registerMaterialAtDtr(MaterialPartnerRelation supplierPartnerRelation) {
+    public Integer registerMaterialAtDtr(MaterialPartnerRelation supplierPartnerRelation) {
         var body = dtrRequestBodyBuilder.createMaterialRegistrationRequestBody(supplierPartnerRelation);
-        try (var response = sendDtrPostRequest(body, List.of("api", "v3.0", "shell-descriptors"))) {
-            var bodyString = response.body().string();
-            if(response.isSuccessful()) {
-                return true;
-            }
-            log.error("Failed to register material at DTR " + supplierPartnerRelation.getMaterial().getOwnMaterialNumber() + "\n" + bodyString);
+        try (var response = sendDtrPostRequest(body, List.of("api", "v3", "shell-descriptors"))) {
+            return response.code();
         } catch (Exception e) {
             log.error("Failed to register material at DTR " + supplierPartnerRelation.getMaterial().getOwnMaterialNumber(), e);
         }
-        return false;
+        return null;
     }
 
-    public boolean updateMaterialAtDtr(MaterialPartnerRelation supplierPartnerRelation) {
+    /**
+     * Updates an existing material-AAS with the Information from the given MaterialPartnerRelation
+     *
+     * @param supplierPartnerRelation The MPR that indicates the material and the partner
+     * @return The HTTP response code from the DTR, or null if none was received
+     */
+    public Integer updateMaterialAtDtr(MaterialPartnerRelation supplierPartnerRelation) {
         var body = dtrRequestBodyBuilder.createMaterialRegistrationRequestBody(supplierPartnerRelation);
         String idAsBase64 = Base64.getEncoder().encodeToString(supplierPartnerRelation.getPartnerCXNumber().getBytes(StandardCharsets.UTF_8));
-        try (var response = sendDtrPutRequest(body, List.of("api", "v3.0", "shell-descriptors", idAsBase64))) {
-            var bodyString = response.body().string();
-            if(response.isSuccessful()) {
-                return true;
-            }
-            log.error("Failed to register material at DTR " + supplierPartnerRelation.getMaterial().getOwnMaterialNumber() + "\n" + bodyString);
+        try (var response = sendDtrPutRequest(body, List.of("api", "v3", "shell-descriptors", idAsBase64))) {
+            return response.code();
         } catch (Exception e) {
             log.error("Failed to register material at DTR " + supplierPartnerRelation.getMaterial().getOwnMaterialNumber(), e);
         }
-        return false;
+        return null;
     }
 }
