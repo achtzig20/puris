@@ -22,30 +22,29 @@ package org.eclipse.tractusx.puris.backend.supply.controller;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.eclipse.tractusx.puris.backend.supply.domain.model.Supply;
 import org.eclipse.tractusx.puris.backend.supply.logic.dto.SupplyDto;
 import org.eclipse.tractusx.puris.backend.supply.logic.service.CustomerSupplyService;
+import org.eclipse.tractusx.puris.backend.supply.logic.service.SupplierSupplyService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RequestParam;
 
 
 
 @RestController
 @RequestMapping("supply")
-@Slf4j
 public class SupplyController {
     @Autowired
-    private CustomerSupplyService daysOfSupplyService;
+    private CustomerSupplyService customerSupplyService;
+    @Autowired
+    private SupplierSupplyService supplierSupplyService;
 
     @Autowired
     private ModelMapper modelMapper;
@@ -54,25 +53,26 @@ public class SupplyController {
     @ResponseBody
     @Operation(summary = "Calculate days of supply for given material, partner bpnl and site bpns")
     public List<SupplyDto> calculateCustomerDaysOfSupply(String materialNumber, String bpnl, String siteBpns, int numberOfDays) {
-        return daysOfSupplyService.calculateCustomerDaysOfSupply(materialNumber, bpnl, siteBpns, numberOfDays)
-            .stream().map(this::convertToDto).collect(Collectors.toList());
+        return customerSupplyService.calculateCustomerDaysOfSupply(materialNumber, bpnl, siteBpns, numberOfDays)
+            .stream().map(this::convertToDto).toList();
     }
 
     @GetMapping("customer/reported")
     public List<SupplyDto> getCustomerDaysOfSupply(String materialNumber, Optional<String> bpnl) {
-        return daysOfSupplyService.findAllByFilters(Optional.of(materialNumber), bpnl)
-            .stream().map(this::convertToDto).collect(Collectors.toList());
+        return customerSupplyService.findAllByFilters(Optional.of(materialNumber), bpnl)
+            .stream().map(this::convertToDto).toList();
     }
 
     @GetMapping("supplier")
-    public String calculateSupplierDaysOfSupply(@RequestParam String param) {
-        return new String();
+    public List<SupplyDto> calculateSupplierDaysOfSupply(String materialNumber, String bpnl, String siteBpns, int numberOfDays) {
+        return supplierSupplyService.calculateSupplierDaysOfSupply(materialNumber, bpnl, siteBpns, numberOfDays)
+            .stream().map(this::convertToDto).toList();
     }
 
     @GetMapping("supplier/reported")
     public List<SupplyDto> getSupplierDaysOfSupply(String materialNumber, Optional<String> bpnl) {
-        return daysOfSupplyService.findAllByFilters(Optional.of(materialNumber), bpnl)
-            .stream().map(this::convertToDto).collect(Collectors.toList());
+        return supplierSupplyService.findAllByFilters(Optional.of(materialNumber), bpnl)
+            .stream().map(this::convertToDto).toList();
     }
     
     private SupplyDto convertToDto(Supply entity) {

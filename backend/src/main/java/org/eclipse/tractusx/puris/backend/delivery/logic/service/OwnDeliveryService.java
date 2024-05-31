@@ -37,11 +37,15 @@ import javax.management.openmbean.KeyAlreadyExistsException;
 import org.eclipse.tractusx.puris.backend.delivery.domain.model.EventTypeEnumeration;
 import org.eclipse.tractusx.puris.backend.delivery.domain.model.OwnDelivery;
 import org.eclipse.tractusx.puris.backend.delivery.domain.repository.OwnDeliveryRepository;
+import org.eclipse.tractusx.puris.backend.delivery.logic.dto.DeliveryQuantityDto;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Partner;
 import org.eclipse.tractusx.puris.backend.masterdata.logic.service.PartnerService;
 import org.springframework.stereotype.Service;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Slf4j
 public class OwnDeliveryService {
     private final OwnDeliveryRepository repository;
 
@@ -71,13 +75,26 @@ public class OwnDeliveryService {
                 .toList();
     }
 
-    public final List<OwnDelivery> findAllByFilters(Optional<String> ownMaterialNumber, Optional<String> bpns, Optional<String> bpnl, Optional<Date> day) {
+    public final List<OwnDelivery> findAllByFilters(
+        Optional<String> ownMaterialNumber,
+        Optional<String> bpns,
+        Optional<String> bpnl,
+        Optional<Date> day,
+        Optional<Boolean> incoming) {
         Stream<OwnDelivery> stream = repository.findAll().stream();
         if (ownMaterialNumber.isPresent()) {
             stream = stream.filter(delivery -> delivery.getMaterial().getOwnMaterialNumber().equals(ownMaterialNumber.get()));
         }
         if (bpns.isPresent()) {
-            stream = stream.filter(delivery -> delivery.getDestinationBpns().equals(bpns.get()) || delivery.getOriginBpns().equals(bpns.get()));
+            if (incoming.isPresent()) {
+                if (incoming.get() == true) {
+                    stream = stream.filter(delivery -> delivery.getDestinationBpns().equals(bpns.get()));
+                } else {
+                    stream = stream.filter(delivery -> delivery.getOriginBpns().equals(bpns.get()));
+                }
+            } else {
+                stream = stream.filter(delivery -> delivery.getDestinationBpns().equals(bpns.get()) || delivery.getOriginBpns().equals(bpns.get()));
+            }
         }
         if (bpnl.isPresent()) {
             stream = stream.filter(delivery -> delivery.getPartner().getBpnl().equals(bpnl.get()));
@@ -87,10 +104,11 @@ public class OwnDeliveryService {
                 .atOffset(ZoneOffset.UTC)
                 .toLocalDate();
             stream = stream.filter(delivery -> {
-                LocalDate demandDayDate = Instant.ofEpochMilli(delivery.getDateOfArrival().getTime())
+                long time = incoming.get() ? delivery.getDateOfArrival().getTime() : delivery.getDateOfDeparture().getTime();
+                LocalDate deliveryDayDate = Instant.ofEpochMilli(time)
                     .atOffset(ZoneOffset.UTC)
                     .toLocalDate();
-                return demandDayDate.getDayOfMonth() == localDayDate.getDayOfMonth();
+                return deliveryDayDate.getDayOfMonth() == localDayDate.getDayOfMonth();
             });
         }
         return stream.toList();
@@ -108,21 +126,21 @@ public class OwnDeliveryService {
         return sum;
     }
 
-    public final List<Double> getQuantityForDays(String material, String partnerBpnl, String siteBpns, int numberOfDays) {
-        List<Double> quantities = new ArrayList<>();
-        Date date = new Date();
+    public final List<DeliveryQuantityDto> getQuantityForDays(String material, String partnerBpnl, String siteBpns, boolean incoming, int numberOfDays) {
+        List<DeliveryQuantityDto> deliveryQtys = new ArrayList<>();
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
 
         for (int i = 0; i < numberOfDays; i++) {
-            List<OwnDelivery> deliveries = findAllByFilters(Optional.of(material), Optional.of(partnerBpnl), Optional.of(siteBpns), Optional.of(date));
+            Date date = calendar.getTime();
+            List<OwnDelivery> deliveries = findAllByFilters(Optional.of(material), Optional.of(partnerBpnl), Optional.of(siteBpns), Optional.of(date), Optional.of(incoming));
             double deliveryQuantity = getSumOfQuantities(deliveries);
-            quantities.add(deliveryQuantity);
+            deliveryQtys.add(new DeliveryQuantityDto(date, deliveryQuantity));
 
             calendar.add(Calendar.DAY_OF_MONTH, 1);
             date = calendar.getTime();
         }
-        return quantities;
+        return deliveryQtys;
     }
 
     public final OwnDelivery create(OwnDelivery delivery) {
@@ -157,64 +175,156 @@ public class OwnDeliveryService {
         repository.deleteById(id);
     }
 
+    // public boolean validate(OwnDelivery delivery) {
+    //     if (ownPartnerEntity == null) {
+    //         ownPartnerEntity = partnerService.getOwnPartnerEntity();
+    //     }
+    //     return 
+    //         delivery.getQuantity() >= 0 && 
+    //         delivery.getMeasurementUnit() != null &&
+    //         delivery.getMaterial() != null &&
+    //         delivery.getPartner() != null &&
+    //         validateResponsibility(delivery) &&
+    //         validateTransitEvent(delivery) &&
+    //         !delivery.getPartner().equals(ownPartnerEntity) &&
+    //         ((
+    //             delivery.getCustomerOrderNumber() != null && 
+    //             delivery.getCustomerOrderPositionNumber() != null
+    //         ) || (
+    //             delivery.getCustomerOrderNumber() == null && 
+    //             delivery.getCustomerOrderPositionNumber() == null &&
+    //             delivery.getSupplierOrderNumber() == null
+    //         ));
+    // }
+
     public boolean validate(OwnDelivery delivery) {
         if (ownPartnerEntity == null) {
             ownPartnerEntity = partnerService.getOwnPartnerEntity();
         }
-        return 
-            delivery.getQuantity() >= 0 && 
-            delivery.getMeasurementUnit() != null &&
-            delivery.getMaterial() != null &&
-            delivery.getPartner() != null &&
-            validateResponsibility(delivery) &&
-            validateTransitEvent(delivery) &&
-            !delivery.getPartner().equals(ownPartnerEntity) &&
-            ((
-                delivery.getCustomerOrderNumber() != null && 
-                delivery.getCustomerOrderPositionNumber() != null
-            ) || (
-                delivery.getCustomerOrderNumber() == null && 
-                delivery.getCustomerOrderPositionNumber() == null &&
-                delivery.getSupplierOrderNumber() == null
-            ));
+
+        boolean quantityValid = delivery.getQuantity() >= 0;
+        log.info("Quantity valid: {}", quantityValid);
+
+        boolean measurementUnitValid = delivery.getMeasurementUnit() != null;
+        log.info("Measurement unit valid: {}", measurementUnitValid);
+
+        boolean materialValid = delivery.getMaterial() != null;
+        log.info("Material valid: {}", materialValid);
+
+        boolean partnerValid = delivery.getPartner() != null;
+        log.info("Partner valid: {}", partnerValid);
+
+        boolean responsibilityValid = validateResponsibility(delivery);
+        log.info("Responsibility valid: {}", responsibilityValid);
+
+        boolean transitEventValid = validateTransitEvent(delivery);
+        log.info("Transit event valid: {}", transitEventValid);
+
+        boolean partnerNotEqual = !delivery.getPartner().equals(ownPartnerEntity);
+        log.info("Partner not equal to own entity: {}", partnerNotEqual);
+
+        boolean orderNumberValid = (delivery.getCustomerOrderNumber() != null && delivery.getCustomerOrderPositionNumber() != null)
+                || (delivery.getCustomerOrderNumber() == null && delivery.getCustomerOrderPositionNumber() == null && delivery.getSupplierOrderNumber() == null);
+        log.info("Order number valid: {}", orderNumberValid);
+
+        return quantityValid && measurementUnitValid && materialValid && partnerValid && responsibilityValid && transitEventValid && partnerNotEqual && orderNumberValid;
     }
 
+    // private boolean validateTransitEvent(OwnDelivery delivery) {
+    //     var now = new Date().getTime();
+    //     return
+    //         delivery.getDepartureType() != null &&
+    //         (delivery.getDepartureType() == EventTypeEnumeration.ESTIMATED_DEPARTURE || delivery.getDepartureType() == EventTypeEnumeration.ACTUAL_DEPARTURE) &&
+    //         delivery.getArrivalType() != null &&
+    //         (delivery.getArrivalType() == EventTypeEnumeration.ESTIMATED_ARRIVAL || delivery.getArrivalType() == EventTypeEnumeration.ACTUAL_ARRIVAL) &&
+    //         !(delivery.getDepartureType() == EventTypeEnumeration.ESTIMATED_DEPARTURE && delivery.getArrivalType() == EventTypeEnumeration.ACTUAL_ARRIVAL) &&
+    //         delivery.getDateOfDeparture().getTime() < delivery.getDateOfArrival().getTime() && 
+    //         (delivery.getArrivalType() != EventTypeEnumeration.ACTUAL_ARRIVAL || delivery.getDateOfArrival().getTime() < now) &&
+    //         (delivery.getDepartureType() != EventTypeEnumeration.ACTUAL_DEPARTURE || delivery.getDateOfDeparture().getTime() < now);
+    // }
     private boolean validateTransitEvent(OwnDelivery delivery) {
         var now = new Date().getTime();
-        return
-            delivery.getDepartureType() != null &&
-            (delivery.getDepartureType() == EventTypeEnumeration.ESTIMATED_DEPARTURE || delivery.getDepartureType() == EventTypeEnumeration.ACTUAL_DEPARTURE) &&
-            delivery.getArrivalType() != null &&
-            (delivery.getArrivalType() == EventTypeEnumeration.ESTIMATED_ARRIVAL || delivery.getArrivalType() == EventTypeEnumeration.ACTUAL_ARRIVAL) &&
-            !(delivery.getDepartureType() == EventTypeEnumeration.ESTIMATED_DEPARTURE && delivery.getArrivalType() == EventTypeEnumeration.ACTUAL_ARRIVAL) &&
-            delivery.getDateOfDeparture().getTime() < delivery.getDateOfArrival().getTime() && 
-            (delivery.getArrivalType() != EventTypeEnumeration.ACTUAL_ARRIVAL || delivery.getDateOfArrival().getTime() < now) &&
-            (delivery.getDepartureType() != EventTypeEnumeration.ACTUAL_DEPARTURE || delivery.getDateOfDeparture().getTime() < now);
+
+        boolean departureTypeValid = delivery.getDepartureType() != null &&
+                (delivery.getDepartureType() == EventTypeEnumeration.ESTIMATED_DEPARTURE || delivery.getDepartureType() == EventTypeEnumeration.ACTUAL_DEPARTURE);
+        log.info("Departure type valid: {}", departureTypeValid);
+
+        boolean arrivalTypeValid = delivery.getArrivalType() != null &&
+                (delivery.getArrivalType() == EventTypeEnumeration.ESTIMATED_ARRIVAL || delivery.getArrivalType() == EventTypeEnumeration.ACTUAL_ARRIVAL);
+        log.info("Arrival type valid: {}", arrivalTypeValid);
+
+        boolean invalidCombination = !(delivery.getDepartureType() == EventTypeEnumeration.ESTIMATED_DEPARTURE && delivery.getArrivalType() == EventTypeEnumeration.ACTUAL_ARRIVAL);
+        log.info("Invalid combination (ESTIMATED_DEPARTURE and ACTUAL_ARRIVAL): {}", invalidCombination);
+
+        boolean departureBeforeArrival = delivery.getDateOfDeparture().getTime() < delivery.getDateOfArrival().getTime();
+        log.info("Departure before arrival: {}", departureBeforeArrival);
+
+        boolean actualArrivalBeforeNow = delivery.getArrivalType() != EventTypeEnumeration.ACTUAL_ARRIVAL || delivery.getDateOfArrival().getTime() < now;
+        log.info("Actual arrival before now: {}", actualArrivalBeforeNow);
+
+        boolean actualDepartureBeforeNow = delivery.getDepartureType() != EventTypeEnumeration.ACTUAL_DEPARTURE || delivery.getDateOfDeparture().getTime() < now;
+        log.info("Actual departure before now: {}", actualDepartureBeforeNow);
+
+        return departureTypeValid && arrivalTypeValid && invalidCombination && departureBeforeArrival && actualArrivalBeforeNow && actualDepartureBeforeNow;
     }
 
     private boolean validateResponsibility(OwnDelivery delivery) {
+        // if (ownPartnerEntity == null) {
+        //     ownPartnerEntity = partnerService.getOwnPartnerEntity();
+        // }
+        // return delivery.getIncoterm() != null && switch (delivery.getIncoterm().getResponsibility()) {
+        //     case SUPPLIER ->
+        //         delivery.getMaterial().isProductFlag() &&
+        //         ownPartnerEntity.getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getOriginBpns())) &&
+        //         delivery.getPartner().getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getDestinationBpns()));
+        //     case CUSTOMER ->
+        //         delivery.getMaterial().isMaterialFlag() &&
+        //         delivery.getPartner().getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getOriginBpns())) &&
+        //         ownPartnerEntity.getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getDestinationBpns()));
+        //     case PARTIAL ->
+        //         (
+        //             delivery.getMaterial().isProductFlag() &&
+        //             ownPartnerEntity.getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getOriginBpns())) &&
+        //             delivery.getPartner().getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getDestinationBpns()))
+        //         ) || (
+        //             delivery.getMaterial().isMaterialFlag() &&
+        //             delivery.getPartner().getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getOriginBpns())) &&
+        //             ownPartnerEntity.getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getDestinationBpns()))
+        //         );
+        // };
         if (ownPartnerEntity == null) {
             ownPartnerEntity = partnerService.getOwnPartnerEntity();
         }
-        return delivery.getIncoterm() != null && switch (delivery.getIncoterm().getResponsibility()) {
-            case SUPPLIER ->
-                delivery.getMaterial().isProductFlag() &&
-                ownPartnerEntity.getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getOriginBpns())) &&
-                delivery.getPartner().getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getDestinationBpns()));
-            case CUSTOMER ->
-                delivery.getMaterial().isMaterialFlag() &&
-                delivery.getPartner().getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getOriginBpns())) &&
-                ownPartnerEntity.getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getDestinationBpns()));
-            case PARTIAL ->
-                (
-                    delivery.getMaterial().isProductFlag() &&
-                    ownPartnerEntity.getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getOriginBpns())) &&
-                    delivery.getPartner().getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getDestinationBpns()))
-                ) || (
-                    delivery.getMaterial().isMaterialFlag() &&
-                    delivery.getPartner().getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getOriginBpns())) &&
-                    ownPartnerEntity.getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getDestinationBpns()))
-                );
-        };
+
+        boolean incotermValid = delivery.getIncoterm() != null;
+        log.info("Incoterm valid: {}", incotermValid);
+
+        boolean responsibilityValid = false;
+
+        if (incotermValid) {
+            switch (delivery.getIncoterm().getResponsibility()) {
+                case SUPPLIER:
+                    responsibilityValid = delivery.getMaterial().isProductFlag() &&
+                            ownPartnerEntity.getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getOriginBpns())) &&
+                            delivery.getPartner().getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getDestinationBpns()));
+                    break;
+                case CUSTOMER:
+                    responsibilityValid = delivery.getMaterial().isMaterialFlag() &&
+                            delivery.getPartner().getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getOriginBpns())) &&
+                            ownPartnerEntity.getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getDestinationBpns()));
+                    break;
+                case PARTIAL:
+                    responsibilityValid = (delivery.getMaterial().isProductFlag() &&
+                            ownPartnerEntity.getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getOriginBpns())) &&
+                            delivery.getPartner().getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getDestinationBpns())))
+                            || (delivery.getMaterial().isMaterialFlag() &&
+                            delivery.getPartner().getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getOriginBpns())) &&
+                            ownPartnerEntity.getSites().stream().anyMatch(site -> site.getBpns().equals(delivery.getDestinationBpns())));
+                    break;
+            }
+            log.info("Responsibility valid: {}", responsibilityValid);
+        }
+
+        return incotermValid && responsibilityValid;
     }
 }

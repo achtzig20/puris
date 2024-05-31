@@ -71,4 +71,12 @@ public class OwnDemandService extends DemandService<OwnDemand, OwnDemandReposito
             ownPartnerEntity.getSites().stream().anyMatch(site -> site.getBpns().equals(demand.getDemandLocationBpns())) &&
             (demand.getSupplierLocationBpns() == null || demand.getPartner().getSites().stream().anyMatch(site -> site.getBpns().equals(demand.getSupplierLocationBpns())));
     }
+
+    private final double getSumOfQuantities(List<OwnDemand> demands) {
+        double sum = 0;
+        for (OwnDemand demand : demands) {
+            sum += demand.getQuantity();
+        }
+        return sum;
+    }
 }

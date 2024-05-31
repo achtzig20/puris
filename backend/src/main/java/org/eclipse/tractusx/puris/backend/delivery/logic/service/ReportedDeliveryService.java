@@ -20,6 +20,11 @@
 
 package org.eclipse.tractusx.puris.backend.delivery.logic.service;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -30,6 +35,7 @@ import java.util.stream.Stream;
 import org.eclipse.tractusx.puris.backend.delivery.domain.model.EventTypeEnumeration;
 import org.eclipse.tractusx.puris.backend.delivery.domain.model.ReportedDelivery;
 import org.eclipse.tractusx.puris.backend.delivery.domain.repository.ReportedDeliveryRepository;
+import org.eclipse.tractusx.puris.backend.delivery.logic.dto.DeliveryQuantityDto;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Partner;
 import org.eclipse.tractusx.puris.backend.masterdata.logic.service.PartnerService;
 import org.springframework.stereotype.Service;
@@ -63,18 +69,68 @@ public class ReportedDeliveryService {
         return repository.findById(id).orElse(null);
     }
 
-    public final List<ReportedDelivery> findAllByFilters(Optional<String> ownMaterialNumber, Optional<String> bpns, Optional<String> bpnl) {
+    public final List<ReportedDelivery> findAllByFilters(
+        Optional<String> ownMaterialNumber,
+        Optional<String> bpns,
+        Optional<String> bpnl,
+        Optional<Date> day,
+        Optional<Boolean> incoming) {
         Stream<ReportedDelivery> stream = repository.findAll().stream();
         if (ownMaterialNumber.isPresent()) {
             stream = stream.filter(delivery -> delivery.getMaterial().getOwnMaterialNumber().equals(ownMaterialNumber.get()));
         }
         if (bpns.isPresent()) {
-            stream = stream.filter(delivery -> delivery.getDestinationBpns().equals(bpns.get()) || delivery.getOriginBpns().equals(bpns.get()));
+            if (incoming.isPresent()) {
+                if (incoming.get() == true) {
+                    stream = stream.filter(delivery -> delivery.getDestinationBpns().equals(bpns.get()));
+                } else {
+                    stream = stream.filter(delivery -> delivery.getOriginBpns().equals(bpns.get()));
+                }
+            } else {
+                stream = stream.filter(delivery -> delivery.getDestinationBpns().equals(bpns.get()) || delivery.getOriginBpns().equals(bpns.get()));
+            }
         }
         if (bpnl.isPresent()) {
             stream = stream.filter(delivery -> delivery.getPartner().getBpnl().equals(bpnl.get()));
         }
+        if (day.isPresent()) {
+            LocalDate localDayDate = Instant.ofEpochMilli(day.get().getTime())
+                .atOffset(ZoneOffset.UTC)
+                .toLocalDate();
+            stream = stream.filter(delivery -> {
+                long time = incoming.get() ? delivery.getDateOfArrival().getTime() : delivery.getDateOfDeparture().getTime();
+                LocalDate deliveryDayDate = Instant.ofEpochMilli(time)
+                    .atOffset(ZoneOffset.UTC)
+                    .toLocalDate();
+                return deliveryDayDate.getDayOfMonth() == localDayDate.getDayOfMonth();
+            });
+        }
         return stream.toList();
+    }
+
+    public final double getSumOfQuantities(List<ReportedDelivery> deliveries) {
+        double sum = 0;
+        for (ReportedDelivery delivery : deliveries) {
+            sum += delivery.getQuantity();
+        }
+        return sum;
+    }
+
+    public final List<DeliveryQuantityDto> getQuantityForDays(String material, String partnerBpnl, String siteBpns, boolean incoming, int numberOfDays) {
+        List<DeliveryQuantityDto> deliveryQtys = new ArrayList<>();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+
+        for (int i = 0; i < numberOfDays; i++) {
+            Date date = calendar.getTime();
+            List<ReportedDelivery> deliveries = findAllByFilters(Optional.of(material), Optional.of(partnerBpnl), Optional.of(siteBpns), Optional.of(date), Optional.of(incoming));
+            double deliveryQuantity = getSumOfQuantities(deliveries);
+            deliveryQtys.add(new DeliveryQuantityDto(date, deliveryQuantity));
+
+            calendar.add(Calendar.DAY_OF_MONTH, 1);
+            date = calendar.getTime();
+        }
+        return deliveryQtys;
     }
 
     public final ReportedDelivery create(ReportedDelivery delivery) {

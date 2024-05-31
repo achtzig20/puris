@@ -54,7 +54,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
@@ -240,7 +239,7 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
         reportedMaterialItemStock = reportedMaterialItemStockService.create(reportedMaterialItemStock);
         log.info("Created ReportedMaterialItemStock: \n" + reportedMaterialItemStock);
 
-        // Testing data for days of supply
+        // #region Days of supply
         Random random = new Random();
         double[] demands = {40, 60, 50, 50, 60, 50};
         double[] deliveries = {0, 60, 100, 0, 0, 40};
@@ -272,6 +271,22 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
 
             EventTypeCombination eventTypeCombination = generateRandomEventTypeCombination(random);
             var departureDate = generateRandomDate(random);
+            LocalDate arrivalDate = LocalDate.now();
+            Date arrivalDateAsDate = new Date();
+
+            if (eventTypeCombination.arrivalType == EventTypeEnumeration.ACTUAL_ARRIVAL) {
+                arrivalDate = arrivalDate.minusDays(random.nextInt((4 - 1) + 1) + 1);
+        
+                arrivalDateAsDate = Date.from(arrivalDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            } else {
+                arrivalDate = arrivalDate.plusDays(random.nextInt((14 - 1) + 1) + 1);
+        
+                arrivalDateAsDate = Date.from(arrivalDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            }
+
+            log.info("departure date: " + departureDate);
+            log.info("arrival date: " + arrivalDate);
+
             OwnDelivery delivery = OwnDelivery.builder()
                 .material(semiconductorMaterial)
                 .partner(supplierPartner)
@@ -287,7 +302,7 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
                 .originBpna(null)
                 .originBpns(siteBpns)
                 .dateOfDeparture(departureDate)
-                .dateOfArrival(date)
+                .dateOfArrival(arrivalDateAsDate)
                 .departureType(eventTypeCombination.departureType)
                 .arrivalType(eventTypeCombination.arrivalType)
                 .build();
@@ -296,6 +311,7 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
             calendar.add(Calendar.DAY_OF_MONTH, 1);
             date = calendar.getTime();
         }
+        // #endregion
         ProductItemStock productItemStock = ProductItemStock.builder()
             .partner(supplierPartner)
             .material(semiconductorMaterial)
@@ -549,9 +565,9 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
     }
 
     private static Date generateRandomDate(Random random) {
-        int daysOffset = -random.nextInt(31);
+        int daysOffset = random.nextInt((30 - 6) + 1) + 6;
         LocalDate currentDate = LocalDate.now();
-        LocalDate randomLocalDate = currentDate.plus(daysOffset, ChronoUnit.DAYS);
+        LocalDate randomLocalDate = currentDate.minusDays(daysOffset);
         return Date.from(randomLocalDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
      }
 

@@ -96,14 +96,6 @@ public abstract class DemandService<TEntity extends Demand, TRepository extends 
         return stream.toList();
     }
 
-    public final double getSumOfQuantities(List<TEntity> demands) {
-        double sum = 0;
-        for (TEntity demand : demands) {
-            sum += demand.getQuantity();
-        }
-        return sum;
-    }
-
     public final TEntity create(TEntity demand) {
         if (!validator.apply(demand)) {
             throw new IllegalArgumentException("Invalid demand");
