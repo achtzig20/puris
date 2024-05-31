@@ -23,7 +23,6 @@ package org.eclipse.tractusx.puris.backend.supply.logic.service;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -73,9 +72,7 @@ public class SupplierSupplyService {
 
         public final List<OwnSupplierSupply> calculateSupplierDaysOfSupply(String material, String partnerBpnl, String siteBpns, int numberOfDays) {
         List<OwnSupplierSupply> supplierSupply = new ArrayList<>();
-        Date date = new Date();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
+        LocalDate localDate = LocalDate.now();
 
         List<DeliveryQuantityDto> ownDeliveries = ownDeliveryService.getQuantityForDays(material, partnerBpnl, siteBpns, false, numberOfDays);
         List<DeliveryQuantityDto> reportedDeliveries = reportedDeliveryService.getQuantityForDays(material, partnerBpnl, siteBpns, false, numberOfDays);
@@ -84,6 +81,8 @@ public class SupplierSupplyService {
         double stockQuantity = stockService.getInitialStockQuantity(material, partnerBpnl, siteBpns);
         
         for (int i = 0; i < numberOfDays; i++) {
+            Date date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+
             if (i == numberOfDays - 1) {
                 stockQuantity += productions.get(i);
             }
@@ -100,8 +99,7 @@ public class SupplierSupplyService {
 
             stockQuantity = stockQuantity - deliveries.get(i) + productions.get(i);
 
-            calendar.add(Calendar.DAY_OF_MONTH, 1);
-            date = calendar.getTime();
+            localDate = localDate.plusDays(1);
         }
 
         return supplierSupply;

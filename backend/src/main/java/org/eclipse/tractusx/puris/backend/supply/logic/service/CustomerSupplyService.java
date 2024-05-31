@@ -23,12 +23,10 @@ package org.eclipse.tractusx.puris.backend.supply.logic.service;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -44,7 +42,10 @@ import org.eclipse.tractusx.puris.backend.supply.domain.model.ReportedCustomerSu
 import org.eclipse.tractusx.puris.backend.supply.domain.repository.ReportedCustomerSupplyRepository;
 import org.springframework.stereotype.Service;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Slf4j
 public class CustomerSupplyService {
     private final ReportedCustomerSupplyRepository repository;
     private final OwnDeliveryService ownDeliveryService;
@@ -73,32 +74,22 @@ public class CustomerSupplyService {
 
     public final List<OwnCustomerSupply> calculateCustomerDaysOfSupply(String material, String partnerBpnl, String siteBpns, int numberOfDays) {
         List<OwnCustomerSupply> customerSupply = new ArrayList<>();
-        Date date = new Date();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
+        LocalDate localDate = LocalDate.now();
 
         List<Double> demands = demandService.getQuantityForDays(material, partnerBpnl, siteBpns, numberOfDays);
-        // List<Double> demands = new ArrayList<>();
-        // demands.add(40.0);
-        // demands.add(60.0);
-        // demands.add(50.0);
-        // demands.add(50.0);
-        // demands.add(60.0);
-        // demands.add(50.0);
+        log.info("demands: " + demands);
+
         List<DeliveryQuantityDto> ownDeliveries = ownDeliveryService.getQuantityForDays(material, partnerBpnl, siteBpns, true, numberOfDays);
         List<DeliveryQuantityDto> reportedDeliveries = reportedDeliveryService.getQuantityForDays(material, partnerBpnl, siteBpns, true, numberOfDays);
         List<Double> deliveries = mergeDeliveries(ownDeliveries, reportedDeliveries);
-        // List<Double> deliveries = new ArrayList<>();
-        // deliveries.add(0.0);
-        // deliveries.add(60.0);
-        // deliveries.add(100.0);
-        // deliveries.add(0.0);
-        // deliveries.add(0.0);
-        // deliveries.add(40.0);
-        // double stockQuantity = 100;
+        log.info("deliveries: " + deliveries);
+
         double stockQuantity = stockService.getInitialStockQuantity(material, partnerBpnl, siteBpns);
+        log.info("stock qty: " + stockQuantity);
 
         for (int i = 0; i < numberOfDays; i++) {
+            Date date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+
             if (i == numberOfDays - 1) {
                 stockQuantity += deliveries.get(i);
             }
@@ -115,8 +106,7 @@ public class CustomerSupplyService {
 
             stockQuantity = stockQuantity - demands.get(i) + deliveries.get(i);
 
-            calendar.add(Calendar.DAY_OF_MONTH, 1);
-            date = calendar.getTime();
+            localDate = localDate.plusDays(1);
         }
 
         return customerSupply;
@@ -171,21 +161,21 @@ public class CustomerSupplyService {
     }
 
     private List<Double> mergeDeliveries(List<DeliveryQuantityDto> list1, List<DeliveryQuantityDto> list2) {
-        Map<LocalDate, Double> dateQuantityMap = new HashMap<>();
+        TreeMap<LocalDate, Double> dateQuantityMap = new TreeMap<>();
 
         // Helper method to convert Date to LocalDate (only the day part)
         Function<Date, LocalDate> dateToLocalDate = date -> date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
         for (DeliveryQuantityDto dq : list1) {
             LocalDate localDate = dateToLocalDate.apply(dq.getDate());
-            dateQuantityMap.put(localDate, dateQuantityMap.getOrDefault(localDate, 0.0) + dq.getQuantity());
+            dateQuantityMap.merge(localDate, dq.getQuantity(), Double::sum);
         }
 
         for (DeliveryQuantityDto dq : list2) {
             LocalDate localDate = dateToLocalDate.apply(dq.getDate());
-            dateQuantityMap.put(localDate, dateQuantityMap.getOrDefault(localDate, 0.0) + dq.getQuantity());
+            dateQuantityMap.merge(localDate, dq.getQuantity(), Double::sum);
         }
 
-        return dateQuantityMap.values().stream().toList();
+        return new ArrayList<>(dateQuantityMap.values());
     }
 }

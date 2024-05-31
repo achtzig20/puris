@@ -22,9 +22,9 @@ package org.eclipse.tractusx.puris.backend.delivery.logic.service;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -40,7 +40,10 @@ import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Partner;
 import org.eclipse.tractusx.puris.backend.masterdata.logic.service.PartnerService;
 import org.springframework.stereotype.Service;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Slf4j
 public class ReportedDeliveryService {
     private final ReportedDeliveryRepository repository;
 
@@ -118,17 +121,15 @@ public class ReportedDeliveryService {
 
     public final List<DeliveryQuantityDto> getQuantityForDays(String material, String partnerBpnl, String siteBpns, boolean incoming, int numberOfDays) {
         List<DeliveryQuantityDto> deliveryQtys = new ArrayList<>();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(new Date());
+        LocalDate localDate = LocalDate.now();
 
         for (int i = 0; i < numberOfDays; i++) {
-            Date date = calendar.getTime();
-            List<ReportedDelivery> deliveries = findAllByFilters(Optional.of(material), Optional.of(partnerBpnl), Optional.of(siteBpns), Optional.of(date), Optional.of(incoming));
+            Date date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            List<ReportedDelivery> deliveries = findAllByFilters(Optional.of(material), Optional.of(siteBpns), Optional.of(partnerBpnl), Optional.of(date), Optional.of(incoming));
             double deliveryQuantity = getSumOfQuantities(deliveries);
             deliveryQtys.add(new DeliveryQuantityDto(date, deliveryQuantity));
 
-            calendar.add(Calendar.DAY_OF_MONTH, 1);
-            date = calendar.getTime();
+            localDate = localDate.plusDays(1);
         }
         return deliveryQtys;
     }

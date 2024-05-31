@@ -28,7 +28,9 @@ import org.eclipse.tractusx.puris.backend.common.util.VariablesService;
 import org.eclipse.tractusx.puris.backend.delivery.domain.model.EventTypeEnumeration;
 import org.eclipse.tractusx.puris.backend.delivery.domain.model.IncotermEnumeration;
 import org.eclipse.tractusx.puris.backend.delivery.domain.model.OwnDelivery;
+import org.eclipse.tractusx.puris.backend.delivery.domain.model.ReportedDelivery;
 import org.eclipse.tractusx.puris.backend.delivery.logic.service.OwnDeliveryService;
+import org.eclipse.tractusx.puris.backend.delivery.logic.service.ReportedDeliveryService;
 import org.eclipse.tractusx.puris.backend.demand.domain.model.DemandCategoryEnumeration;
 import org.eclipse.tractusx.puris.backend.demand.domain.model.OwnDemand;
 import org.eclipse.tractusx.puris.backend.demand.logic.services.OwnDemandService;
@@ -55,7 +57,6 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
@@ -93,7 +94,9 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
     private OwnDemandService demandService;
 
     @Autowired
-    private OwnDeliveryService deliveryService;
+    private OwnDeliveryService ownDeliveryService;
+    @Autowired
+    private ReportedDeliveryService reportedDeliveryService;
 
     private ObjectMapper objectMapper;
 
@@ -105,6 +108,8 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
     private final String supplierSiteNyBpns = "BPNS1234567890ZZ";
 
     private final String supplierSiteLaBpns = "BPNS2222222222SS";
+
+    private final String CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     public DataInjectionCommandLineRunner(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
@@ -241,28 +246,18 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
 
         // #region Days of supply
         Random random = new Random();
-        double[] demands = {40, 60, 50, 50, 60, 50};
-        double[] deliveries = {0, 60, 100, 0, 0, 40};
-        String[] trackingNumbers = {
-            "1Z9829WDE02128",
-            "2Y0738XEF13239",
-            "3A1930VBC11247",
-            "4B2041YHG34567",
-            "5C3152UJI45678",
-            "6D4263TJK56789"
-        };
-        Date date = new Date();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
+        // double[] demands = {40, 60, 50, 50, 60, 50}; to test the example from the docs
+        // double[] deliveries = {0, 60, 100, 0, 0, 40}; to test the example from the docs
+        LocalDate date = LocalDate.now();
         var siteBpns = mySelf.getSites().first().getBpns();
 
-        for (int i = 0; i < demands.length; i++) {
+        for (int i = 0; i < 28; i++) {
             OwnDemand demand = OwnDemand.builder()
                 .material(semiconductorMaterial)
                 .partner(supplierPartner)
-                .quantity(demands[i])
+                .quantity((random.nextInt(11) + 1) * 10)
                 .measurementUnit(ItemUnitEnumeration.UNIT_PIECE)
-                .day(date)
+                .day(Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant()))
                 .demandLocationBpns(siteBpns)
                 .supplierLocationBpns(null)
                 .demandCategoryCode(DemandCategoryEnumeration.DEMAND_DEFAULT)
@@ -284,32 +279,49 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
                 arrivalDateAsDate = Date.from(arrivalDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
             }
 
-            log.info("departure date: " + departureDate);
-            log.info("arrival date: " + arrivalDate);
-
-            OwnDelivery delivery = OwnDelivery.builder()
+            OwnDelivery ownDelivery = OwnDelivery.builder()
                 .material(semiconductorMaterial)
                 .partner(supplierPartner)
-                .quantity(deliveries[i])
+                .quantity(random.nextInt(11) * 10)
                 .measurementUnit(ItemUnitEnumeration.UNIT_PIECE)
-                .trackingNumber(trackingNumbers[i])
+                .trackingNumber(generateRandomString(random, 12))
                 .incoterm(IncotermEnumeration.CFR)
                 .supplierOrderNumber("M-Nbr-4711")
                 .customerOrderNumber("C-Nbr-4711")
                 .customerOrderPositionNumber("PositionId-" + i)
                 .destinationBpna(null)
-                .destinationBpns(supplierPartner.getSites().first().getBpns())
+                .destinationBpns(siteBpns)
                 .originBpna(null)
-                .originBpns(siteBpns)
+                .originBpns(supplierPartner.getSites().first().getBpns())
                 .dateOfDeparture(departureDate)
                 .dateOfArrival(arrivalDateAsDate)
                 .departureType(eventTypeCombination.departureType)
                 .arrivalType(eventTypeCombination.arrivalType)
                 .build();
-            deliveryService.create(delivery);
+            ownDeliveryService.create(ownDelivery);
 
-            calendar.add(Calendar.DAY_OF_MONTH, 1);
-            date = calendar.getTime();
+            ReportedDelivery reportedDelivery = ReportedDelivery.builder()
+                .material(semiconductorMaterial)
+                .partner(supplierPartner)
+                .quantity(random.nextInt(11) * 10)
+                .measurementUnit(ItemUnitEnumeration.UNIT_PIECE)
+                .trackingNumber(generateRandomString(random, 12))
+                .incoterm(IncotermEnumeration.CFR)
+                .supplierOrderNumber("M-Nbr-4711")
+                .customerOrderNumber("C-Nbr-4711")
+                .customerOrderPositionNumber("PositionId-" + i)
+                .destinationBpna(null)
+                .destinationBpns(siteBpns)
+                .originBpna(null)
+                .originBpns(supplierPartner.getSites().first().getBpns())
+                .dateOfDeparture(departureDate)
+                .dateOfArrival(arrivalDateAsDate)
+                .departureType(eventTypeCombination.departureType)
+                .arrivalType(eventTypeCombination.arrivalType)
+                .build();
+            reportedDeliveryService.create(reportedDelivery);
+
+            date = date.plusDays(1);
         }
         // #endregion
         ProductItemStock productItemStock = ProductItemStock.builder()
@@ -596,6 +608,14 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
             .filter(e -> e == EventTypeEnumeration.ESTIMATED_ARRIVAL || e == EventTypeEnumeration.ACTUAL_ARRIVAL)
             .collect(Collectors.toList());
         return arrivalTypes.get(random.nextInt(arrivalTypes.size()));
+    }
+
+    private String generateRandomString(Random random, int length) {
+        StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            sb.append(CHARACTERS.charAt(random.nextInt(CHARACTERS.length())));
+        }
+        return sb.toString();
     }
 
     public static class EventTypeCombination {

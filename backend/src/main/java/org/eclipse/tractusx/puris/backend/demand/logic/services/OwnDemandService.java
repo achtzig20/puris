@@ -19,8 +19,9 @@ SPDX-License-Identifier: Apache-2.0
 */
 package org.eclipse.tractusx.puris.backend.demand.logic.services;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -40,17 +41,15 @@ public class OwnDemandService extends DemandService<OwnDemand, OwnDemandReposito
 
     public final List<Double> getQuantityForDays(String material, String partnerBpnl, String siteBpns, int numberOfDays) {
         List<Double> quantities = new ArrayList<>();
-        Date date = new Date();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(new Date());
+        LocalDate localDate = LocalDate.now();
 
         for (int i = 0; i < numberOfDays; i++) {
+            Date date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
             List<OwnDemand> demands = findAllByFilters(Optional.of(material), Optional.of(partnerBpnl), Optional.of(siteBpns), Optional.of(date));
             double demandQuantity = getSumOfQuantities(demands);
             quantities.add(demandQuantity);
 
-            calendar.add(Calendar.DAY_OF_MONTH, 1);
-            date = calendar.getTime();
+            localDate = localDate.plusDays(1);
         }
         return quantities;
     }

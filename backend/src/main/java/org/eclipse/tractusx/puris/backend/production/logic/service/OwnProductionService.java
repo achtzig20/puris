@@ -22,9 +22,9 @@ package org.eclipse.tractusx.puris.backend.production.logic.service;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -103,17 +103,15 @@ public class OwnProductionService {
 
     public final List<Double> getQuantityForDays(String material, String partnerBpnl, String siteBpns, int numberOfDays) {
         List<Double> quantities = new ArrayList<>();
-        Date date = new Date();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(new Date());
+        LocalDate localDate = LocalDate.now();
 
         for (int i = 0; i < numberOfDays; i++) {
+            Date date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
             List<OwnProduction> productions = findAllByFilters(Optional.of(material), Optional.of(partnerBpnl), Optional.of(siteBpns), Optional.of(date));
             double productionQuantity = getSumOfQuantities(productions);
             quantities.add(productionQuantity);
 
-            calendar.add(Calendar.DAY_OF_MONTH, 1);
-            date = calendar.getTime();
+            localDate = localDate.plusDays(1);
         }
         return quantities;
     }
