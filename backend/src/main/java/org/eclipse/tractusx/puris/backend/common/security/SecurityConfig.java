@@ -87,17 +87,20 @@ public class SecurityConfig {
                         "/stockView/**",
                         "/partners/**",
                         "/materials/**",
-                        "/materialpartnerrelations/**",
+                        "/materialpartnerrelations/**", 
                         "/item-stock/**",
                         "/production/**",
                         "/delivery/**",
                         "/demand/**",
+                        "/demand-and-capacity-notification/**",
                         "/planned-production/**",
                         "/material-demand/**",
                         "/delivery-information/**",
-                        "/supply/**",
+                        "/supply",
                         "/edc/**",
-                        "/parttypeinformation/**")
+                        "/erp-adapter/**",
+                        "/parttypeinformation/**"
+                    )
                     .authenticated()
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/health/**").permitAll()
                     .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
