@@ -100,6 +100,7 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
     private OwnDeliveryService ownDeliveryService;
     @Autowired
     private ReportedDeliveryService reportedDeliveryService;
+    @Autowired
     private ErpAdapterRequestService erpAdapterRequestService;
 
     private ObjectMapper objectMapper;
