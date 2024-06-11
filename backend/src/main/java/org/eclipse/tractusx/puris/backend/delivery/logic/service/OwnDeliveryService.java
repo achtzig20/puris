@@ -83,15 +83,7 @@ public class OwnDeliveryService {
             stream = stream.filter(delivery -> delivery.getMaterial().getOwnMaterialNumber().equals(ownMaterialNumber.get()));
         }
         if (bpns.isPresent()) {
-            if (direction.isPresent()) {
-                if (direction.get() == DirectionCharacteristic.INBOUND) {
-                    stream = stream.filter(delivery -> delivery.getDestinationBpns().equals(bpns.get()));
-                } else {
-                    stream = stream.filter(delivery -> delivery.getOriginBpns().equals(bpns.get()));
-                }
-            } else {
-                stream = stream.filter(delivery -> delivery.getDestinationBpns().equals(bpns.get()) || delivery.getOriginBpns().equals(bpns.get()));
-            }
+            stream = stream.filter(delivery -> delivery.getDestinationBpns().equals(bpns.get()) || delivery.getOriginBpns().equals(bpns.get()));
         }
         if (bpnl.isPresent()) {
             stream = stream.filter(delivery -> delivery.getPartner().getBpnl().equals(bpnl.get()));
@@ -109,6 +101,13 @@ public class OwnDeliveryService {
                     .toLocalDate();
                 return deliveryDayDate.getDayOfMonth() == localDayDate.getDayOfMonth();
             });
+        }
+        if (direction.isPresent()) {
+            if (direction.get() == DirectionCharacteristic.INBOUND) {
+                stream = stream.filter(delivery -> delivery.getDestinationBpns().equals(bpns.get()));
+            } else {
+                stream = stream.filter(delivery -> delivery.getOriginBpns().equals(bpns.get()));
+            }
         }
         return stream.toList();
     }
