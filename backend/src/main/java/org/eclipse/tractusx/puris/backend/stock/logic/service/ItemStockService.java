@@ -29,10 +29,6 @@ import org.eclipse.tractusx.puris.backend.masterdata.logic.service.PartnerServic
 import org.eclipse.tractusx.puris.backend.stock.domain.model.ItemStock;
 import org.eclipse.tractusx.puris.backend.stock.domain.repository.ItemStockRepository;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -111,21 +107,11 @@ public abstract class ItemStockService<T extends ItemStock> {
         return repository.getForPartnerBpnlAndOwnMatNbr(partnerBpnl, ownMaterialNumber);
     }
 
-    public final List<T> findAllByMaterialAndDate(String ownMaterialNumber, String partnerBpnl, String siteBpns, Date date) {
+    public final List<T> findAllByMaterialAndPartner(String ownMaterialNumber, String partnerBpnl) {
         Stream<T> stream = repository.findAll().stream();
-        LocalDate localDate = Instant.ofEpochMilli(date.getTime())
-                .atOffset(ZoneOffset.UTC)
-                .toLocalDate();
 
         stream = stream.filter(stock -> stock.getMaterial().getOwnMaterialNumber().equals(ownMaterialNumber));
         stream = stream.filter(stock -> stock.getPartner().getBpnl().equals(partnerBpnl));
-        stream = stream.filter(stock -> stock.getLocationBpns().equals(siteBpns));
-        stream = stream.filter(stock -> {
-            LocalDate stockDate = Instant.ofEpochMilli(stock.getLastUpdatedOnDateTime().getTime())
-                    .atOffset(ZoneOffset.UTC)
-                    .toLocalDate();
-            return stockDate.getDayOfMonth() == localDate.getDayOfMonth();
-        });
         return stream.toList();
     }
 
@@ -137,10 +123,8 @@ public abstract class ItemStockService<T extends ItemStock> {
         return sum;
     }
 
-    public final double getInitialStockQuantity(String material, String partnerBpnl, String siteBpns) {
-        Date date = new Date();
-
-        List<T> stocks = findAllByMaterialAndDate(material, partnerBpnl, siteBpns, date);
+    public final double getInitialStockQuantity(String material, String partnerBpnl) {
+        List<T> stocks = findAllByMaterialAndPartner(material, partnerBpnl);
         double initialStockQuantity = getSumOfQuantities(stocks);
 
         return initialStockQuantity;

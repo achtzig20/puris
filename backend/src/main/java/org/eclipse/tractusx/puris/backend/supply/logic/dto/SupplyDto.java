@@ -22,11 +22,7 @@ package org.eclipse.tractusx.puris.backend.supply.logic.dto;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.UUID;
 
-import org.eclipse.tractusx.puris.backend.common.util.PatternStore;
-
-import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -37,20 +33,6 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString
 public class SupplyDto implements Serializable {
-    private UUID uuid;
-
-    @Pattern(regexp = PatternStore.BPNL_STRING)
-    private String partnerBpnl;
-
-    @Pattern(regexp = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_STRING)
-    private String ownMaterialNumber;
-
-    @Pattern(regexp = PatternStore.BPNA_STRING)
-    private String stockLocationBPNA;
-    
-    @Pattern(regexp = PatternStore.BPNS_STRING)
-    private String stockLocationBPNS;
-
     private Date date;
     private double daysOfSupply;
 }

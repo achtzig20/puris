@@ -72,7 +72,7 @@ public class OwnProductionService {
         Optional<String> ownMaterialNumber,
         Optional<String> bpnl,
         Optional<String> bpns,
-        Optional<Date> estimatedTimeOfCompletion) {
+        Optional<Date> dayOfCompletion) {
         Stream<OwnProduction> stream = repository.findAll().stream();
         if (ownMaterialNumber.isPresent()) {
             stream = stream.filter(production -> production.getMaterial().getOwnMaterialNumber().equals(ownMaterialNumber.get()));
@@ -83,8 +83,8 @@ public class OwnProductionService {
         if (bpns.isPresent()) {
             stream = stream.filter(production -> production.getProductionSiteBpns().equals(bpns.get()));
         }
-        if (estimatedTimeOfCompletion.isPresent()) {
-            LocalDate localEstimatedTimeOfCompletion = Instant.ofEpochMilli(estimatedTimeOfCompletion.get().getTime())
+        if (dayOfCompletion.isPresent()) {
+            LocalDate localEstimatedTimeOfCompletion = Instant.ofEpochMilli(dayOfCompletion.get().getTime())
                 .atOffset(ZoneOffset.UTC)
                 .toLocalDate();
             stream = stream.filter(production -> {

@@ -35,15 +35,12 @@ import java.util.stream.Stream;
 import org.eclipse.tractusx.puris.backend.delivery.domain.model.EventTypeEnumeration;
 import org.eclipse.tractusx.puris.backend.delivery.domain.model.ReportedDelivery;
 import org.eclipse.tractusx.puris.backend.delivery.domain.repository.ReportedDeliveryRepository;
-import org.eclipse.tractusx.puris.backend.delivery.logic.dto.DeliveryQuantityDto;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Partner;
 import org.eclipse.tractusx.puris.backend.masterdata.logic.service.PartnerService;
+import org.eclipse.tractusx.puris.backend.stock.logic.dto.itemstocksamm.DirectionCharacteristic;
 import org.springframework.stereotype.Service;
 
-import lombok.extern.slf4j.Slf4j;
-
 @Service
-@Slf4j
 public class ReportedDeliveryService {
     private final ReportedDeliveryRepository repository;
 
@@ -77,14 +74,14 @@ public class ReportedDeliveryService {
         Optional<String> bpns,
         Optional<String> bpnl,
         Optional<Date> day,
-        Optional<Boolean> incoming) {
+        Optional<DirectionCharacteristic> direction) {
         Stream<ReportedDelivery> stream = repository.findAll().stream();
         if (ownMaterialNumber.isPresent()) {
             stream = stream.filter(delivery -> delivery.getMaterial().getOwnMaterialNumber().equals(ownMaterialNumber.get()));
         }
         if (bpns.isPresent()) {
-            if (incoming.isPresent()) {
-                if (incoming.get() == true) {
+            if (direction.isPresent()) {
+                if (direction.get() == DirectionCharacteristic.INBOUND) {
                     stream = stream.filter(delivery -> delivery.getDestinationBpns().equals(bpns.get()));
                 } else {
                     stream = stream.filter(delivery -> delivery.getOriginBpns().equals(bpns.get()));
@@ -101,7 +98,9 @@ public class ReportedDeliveryService {
                 .atOffset(ZoneOffset.UTC)
                 .toLocalDate();
             stream = stream.filter(delivery -> {
-                long time = incoming.get() ? delivery.getDateOfArrival().getTime() : delivery.getDateOfDeparture().getTime();
+                long time = direction.get() == DirectionCharacteristic.INBOUND
+                    ? delivery.getDateOfArrival().getTime()
+                    : delivery.getDateOfDeparture().getTime();
                 LocalDate deliveryDayDate = Instant.ofEpochMilli(time)
                     .atOffset(ZoneOffset.UTC)
                     .toLocalDate();
@@ -119,15 +118,15 @@ public class ReportedDeliveryService {
         return sum;
     }
 
-    public final List<DeliveryQuantityDto> getQuantityForDays(String material, String partnerBpnl, String siteBpns, boolean incoming, int numberOfDays) {
-        List<DeliveryQuantityDto> deliveryQtys = new ArrayList<>();
+    public final List<Double> getQuantityForDays(String material, String partnerBpnl, String siteBpns, DirectionCharacteristic direction, int numberOfDays) {
+        List<Double> deliveryQtys = new ArrayList<>();
         LocalDate localDate = LocalDate.now();
 
         for (int i = 0; i < numberOfDays; i++) {
             Date date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-            List<ReportedDelivery> deliveries = findAllByFilters(Optional.of(material), Optional.of(siteBpns), Optional.of(partnerBpnl), Optional.of(date), Optional.of(incoming));
+            List<ReportedDelivery> deliveries = findAllByFilters(Optional.of(material), Optional.of(siteBpns), Optional.of(partnerBpnl), Optional.of(date), Optional.of(direction));
             double deliveryQuantity = getSumOfQuantities(deliveries);
-            deliveryQtys.add(new DeliveryQuantityDto(date, deliveryQuantity));
+            deliveryQtys.add(deliveryQuantity);
 
             localDate = localDate.plusDays(1);
         }

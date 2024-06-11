@@ -51,25 +51,32 @@ public class SupplyController {
 
     @GetMapping("customer")
     @ResponseBody
-    @Operation(summary = "Calculate days of supply for given material, partner bpnl and site bpns")
+    @Operation(summary = "Calculate days of supply for customer for given number of days.",
+        description = "Calculate days of supply for customer for given number of days. Filtered by given material number, partner bpnl and site bpns.")
     public List<SupplyDto> calculateCustomerDaysOfSupply(String materialNumber, String bpnl, String siteBpns, int numberOfDays) {
         return customerSupplyService.calculateCustomerDaysOfSupply(materialNumber, bpnl, siteBpns, numberOfDays)
             .stream().map(this::convertToDto).toList();
     }
 
     @GetMapping("customer/reported")
+    @Operation(summary = "Get days of supply for customer.", 
+        description = "Get days of supply for customer for given material number. Optionally it can be filtered by partner bpnl.")
     public List<SupplyDto> getCustomerDaysOfSupply(String materialNumber, Optional<String> bpnl) {
         return customerSupplyService.findAllByFilters(Optional.of(materialNumber), bpnl)
             .stream().map(this::convertToDto).toList();
     }
 
     @GetMapping("supplier")
+    @Operation(summary = "Calculate days of supply for supplier for given number of days.",
+        description = "Calculate days of supply for supplier for given number of days. Filtered by given material number, partner bpnl and site bpns.")
     public List<SupplyDto> calculateSupplierDaysOfSupply(String materialNumber, String bpnl, String siteBpns, int numberOfDays) {
         return supplierSupplyService.calculateSupplierDaysOfSupply(materialNumber, bpnl, siteBpns, numberOfDays)
             .stream().map(this::convertToDto).toList();
     }
 
     @GetMapping("supplier/reported")
+    @Operation(summary = "Get days of supply for supplier.", 
+        description = "Get days of supply for supplier for given material number. Optionally it can be filtered by partner bpnl.")
     public List<SupplyDto> getSupplierDaysOfSupply(String materialNumber, Optional<String> bpnl) {
         return supplierSupplyService.findAllByFilters(Optional.of(materialNumber), bpnl)
             .stream().map(this::convertToDto).toList();
@@ -77,8 +84,6 @@ public class SupplyController {
     
     private SupplyDto convertToDto(Supply entity) {
         SupplyDto dto = modelMapper.map(entity, SupplyDto.class);
-
-        dto.setOwnMaterialNumber(entity.getMaterial().getOwnMaterialNumber());
         
         return dto;
     }

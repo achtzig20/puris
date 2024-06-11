@@ -26,28 +26,26 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.TreeMap;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import org.eclipse.tractusx.puris.backend.delivery.logic.dto.DeliveryQuantityDto;
 import org.eclipse.tractusx.puris.backend.delivery.logic.service.OwnDeliveryService;
 import org.eclipse.tractusx.puris.backend.delivery.logic.service.ReportedDeliveryService;
 import org.eclipse.tractusx.puris.backend.demand.logic.services.OwnDemandService;
 import org.eclipse.tractusx.puris.backend.masterdata.logic.service.MaterialServiceImpl;
+import org.eclipse.tractusx.puris.backend.masterdata.logic.service.PartnerService;
+import org.eclipse.tractusx.puris.backend.stock.logic.dto.itemstocksamm.DirectionCharacteristic;
 import org.eclipse.tractusx.puris.backend.stock.logic.service.MaterialItemStockService;
 import org.eclipse.tractusx.puris.backend.supply.domain.model.OwnCustomerSupply;
 import org.eclipse.tractusx.puris.backend.supply.domain.model.ReportedCustomerSupply;
 import org.eclipse.tractusx.puris.backend.supply.domain.repository.ReportedCustomerSupplyRepository;
 import org.springframework.stereotype.Service;
 
-import lombok.extern.slf4j.Slf4j;
-
 @Service
-@Slf4j
 public class CustomerSupplyService {
     private final ReportedCustomerSupplyRepository repository;
+    private final PartnerService partnerService;
     private final OwnDeliveryService ownDeliveryService;
     private final ReportedDeliveryService reportedDeliveryService;
     private final OwnDemandService demandService;
@@ -58,12 +56,14 @@ public class CustomerSupplyService {
 
     public CustomerSupplyService(
         ReportedCustomerSupplyRepository customerRepository,
+        PartnerService partnerService,
         OwnDeliveryService ownDeliveryService,
         ReportedDeliveryService reportedDeliveryService,
         OwnDemandService demandService,
         MaterialItemStockService stockService,
         MaterialServiceImpl materialService) {
         this.repository = customerRepository;
+        this.partnerService = partnerService;
         this.ownDeliveryService = ownDeliveryService;
         this.reportedDeliveryService = reportedDeliveryService;
         this.demandService = demandService;
@@ -77,15 +77,12 @@ public class CustomerSupplyService {
         LocalDate localDate = LocalDate.now();
 
         List<Double> demands = demandService.getQuantityForDays(material, partnerBpnl, siteBpns, numberOfDays);
-        log.info("demands: " + demands);
 
-        List<DeliveryQuantityDto> ownDeliveries = ownDeliveryService.getQuantityForDays(material, partnerBpnl, siteBpns, true, numberOfDays);
-        List<DeliveryQuantityDto> reportedDeliveries = reportedDeliveryService.getQuantityForDays(material, partnerBpnl, siteBpns, true, numberOfDays);
+        List<Double> ownDeliveries = ownDeliveryService.getQuantityForDays(material, partnerBpnl, siteBpns, DirectionCharacteristic.INBOUND, numberOfDays);
+        List<Double> reportedDeliveries = reportedDeliveryService.getQuantityForDays(material, partnerBpnl, siteBpns, DirectionCharacteristic.INBOUND, numberOfDays);
         List<Double> deliveries = mergeDeliveries(ownDeliveries, reportedDeliveries);
-        log.info("deliveries: " + deliveries);
 
-        double stockQuantity = stockService.getInitialStockQuantity(material, partnerBpnl, siteBpns);
-        log.info("stock qty: " + stockQuantity);
+        double stockQuantity = stockService.getInitialStockQuantity(material, partnerBpnl);
 
         for (int i = 0; i < numberOfDays; i++) {
             Date date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
@@ -136,8 +133,10 @@ public class CustomerSupplyService {
             daysOfSupply.getPartner() != null &&
             daysOfSupply.getMaterial() != null &&
             daysOfSupply.getDate() != null &&
-            daysOfSupply.getStockLocationBPNA() != null &&
-            daysOfSupply.getStockLocationBPNS() != null;
+            daysOfSupply.getStockLocationBPNS() != null &&
+            daysOfSupply.getPartner() != partnerService.getOwnPartnerEntity() &&
+            daysOfSupply.getPartner().getSites().stream().anyMatch(site -> site.getBpns().equals(daysOfSupply.getStockLocationBPNS())) &&
+            (daysOfSupply.getStockLocationBPNA() == null || daysOfSupply.getStockLocationBPNA() == daysOfSupply.getStockLocationBPNS());
     }
 
     private final double getDaysOfSupply(double stockQuantity, List<Double> demands) {
@@ -160,22 +159,17 @@ public class CustomerSupplyService {
         return daysOfSupply;
     }
 
-    private List<Double> mergeDeliveries(List<DeliveryQuantityDto> list1, List<DeliveryQuantityDto> list2) {
-        TreeMap<LocalDate, Double> dateQuantityMap = new TreeMap<>();
-
-        // Helper method to convert Date to LocalDate (only the day part)
-        Function<Date, LocalDate> dateToLocalDate = date -> date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-
-        for (DeliveryQuantityDto dq : list1) {
-            LocalDate localDate = dateToLocalDate.apply(dq.getDate());
-            dateQuantityMap.merge(localDate, dq.getQuantity(), Double::sum);
+    private static List<Double> mergeDeliveries(List<Double> list1, List<Double> list2) {
+        if (list1.size() != list2.size()) {
+            throw new IllegalArgumentException("Lists must be of the same length");
         }
 
-        for (DeliveryQuantityDto dq : list2) {
-            LocalDate localDate = dateToLocalDate.apply(dq.getDate());
-            dateQuantityMap.merge(localDate, dq.getQuantity(), Double::sum);
+        List<Double> mergedList = new ArrayList<>(list1.size());
+
+        for (int i = 0; i < list1.size(); i++) {
+            mergedList.add(list1.get(i) + list2.get(i));
         }
 
-        return new ArrayList<>(dateQuantityMap.values());
+        return mergedList;
     }
 }
