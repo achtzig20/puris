@@ -66,16 +66,17 @@ export const DemandCapacityNotificationView = () => {
         <>
             <Stack spacing={2} alignItems='center' width='100%' height='100%'>
                 <h1 className="text-3xl font-semibold text-gray-700 mb-10">Demand And Capacity Notifications</h1>
-                <Tabs value={selectedTab} onChange={(_, value: number) => setSelectedTab(value)}>
-                    {tabs.map((tab, index) => <Tab key={index} label={tab} />)}
-                </Tabs>
-                <Button variant="contained" onClick={() => {
-                    setSelectedNotification(null);
-                    setModalOpen(true)
-                }
-                }>
-                    <Add></Add> Send Notification
-                </Button>
+                <Stack width='100%' direction="row" justifyContent="space-between">
+                    <Tabs value={selectedTab} onChange={(_, value: number) => setSelectedTab(value)}>
+                        {tabs.map((tab, index) => <Tab key={index} label={tab} />)}
+                    </Tabs>
+                    <Button variant="contained" onClick={() => {
+                        setSelectedNotification(null);
+                        setModalOpen(true)
+                    }}>
+                        <Add></Add> Send Notification
+                    </Button>
+                </Stack>
                 <Box width='100%' display='flex' marginTop='0 !important' paddingBottom='2rem'>
                     {tabs.map((_, index) => (
                         <TabPanel key={index} value={selectedTab} index={index}>
