@@ -20,7 +20,7 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 import { Tab, TabPanel, Tabs, Table } from '@catena-x/portal-shared-components';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Button, Stack } from '@mui/material';
 import { getDemandAndCapacityNotification } from '@services/demand-capacity-notification';
 import { useEffect, useState } from 'react';
 import { Add } from '@mui/icons-material';
@@ -54,12 +54,12 @@ export const DemandCapacityNotificationView = () => {
     }, [selectedTab]);
 
     const TabPanelContent = ({ notifications }: { notifications: DemandCapacityNotification[] }) => {
-        return notifications.length !== 0 ?
+        return (
             <DemandCapacityNotificationTable onRowSelected={(notification) => {
                 setModalOpen(true);
                 setSelectedNotification(notification);
-            }} notifications={notifications} /> :
-            <Typography>No notifications available</Typography>
+            }} notifications={notifications} />
+        );
     }
 
     return (
@@ -111,6 +111,7 @@ const DemandCapacityNotificationTable: React.FC<NotificationTableProps> = ({ not
                 onRowClick={(value) => {
                     onRowSelected(value.row);
                 }}
+                noRowsMsg='No Notifications found'
                 title="Demand and Capacity Notifications"
                 columns={[
                     { headerName: 'Text', field: 'text', width: 200 },
@@ -125,7 +126,6 @@ const DemandCapacityNotificationTable: React.FC<NotificationTableProps> = ({ not
                 ]}
                 rows={notifications ?? []}
                 getRowId={(row) => row.uuid}
-                noRowsMsg='No Notifications found'
             />
         </Box>
     );
