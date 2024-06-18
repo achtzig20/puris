@@ -36,4 +36,5 @@ export type DemandCapacityNotification = {
     expectedEndDateOfEffect: Date,
     affectedSitesBpnsSender: string[], // own sites
     affectedSitesBpnsRecipient: string[], // partners sites
+    contentChangedAt: Date,
 };

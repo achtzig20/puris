@@ -105,6 +105,10 @@ const DemandCapacityNotificationView = ({ demandCapacityNotification, partners }
                     ? demandCapacityNotification.affectedMaterialNumbers.join(', ')
                     : 'None'}
             </Grid>
+            <Grid display="grid" item xs={6}>
+                <FormLabel>Content Changed</FormLabel>
+                {new Date(demandCapacityNotification.contentChangedAt).toLocaleString()}
+            </Grid>
         </Grid>
     );
 };
