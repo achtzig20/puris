@@ -23,7 +23,7 @@ import { Close, Send } from '@mui/icons-material';
 import { Autocomplete, Box, Button, Dialog, DialogTitle, FormLabel, Grid, InputLabel, Stack } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { LabelledAutoComplete } from '@components/ui/LabelledAutoComplete';
-import { postDemandAndCapacityNotification } from '@services/demand-capacity-notification';
+import { postDemandAndCapacityNotification, putDemandAndCapacityNotification } from '@services/demand-capacity-notification';
 import { Notification } from '@models/types/data/notification';
 import { EFFECTS } from '@models/constants/effects';
 import { useAllPartners } from '@hooks/useAllPartners';
@@ -34,6 +34,7 @@ import { Site } from '@models/types/edc/site';
 import { useSites } from '@features/stock-view/hooks/useSites';
 import { usePartnerMaterials } from '@hooks/usePartnerMaterials';
 import { Partner } from '@models/types/edc/partner';
+import { ModalMode } from '@models/types/data/modal-mode';
 
 const isValidDemandCapacityNotification = (notification: Partial<DemandCapacityNotification>) =>
     notification.partnerBpnl &&
@@ -44,6 +45,7 @@ const isValidDemandCapacityNotification = (notification: Partial<DemandCapacityN
 
 type DemandCapacityNotificationInformationModalProps = {
     open: boolean;
+    mode: ModalMode
     demandCapacityNotification: DemandCapacityNotification | null;
     onClose: () => void;
     onSave: () => void;
@@ -109,11 +111,12 @@ const DemandCapacityNotificationView = ({ demandCapacityNotification, partners }
 
 export const DemandCapacityNotificationInformationModal = ({
     open,
+    mode,
     demandCapacityNotification,
     onClose,
     onSave,
 }: DemandCapacityNotificationInformationModalProps) => {
-    const [temporaryDemandCapacityNotification, setTemporaryDemandCapacityNotification] = useState<Partial<DemandCapacityNotification>>({});
+    const [temporaryDemandCapacityNotification, setTemporaryDemandCapacityNotification] = useState<Partial<DemandCapacityNotification>>(demandCapacityNotification ?? {});
     const { partners } = useAllPartners();
     const { partnerMaterials } = usePartnerMaterials(temporaryDemandCapacityNotification.partnerBpnl ?? `BPNL`);
 
@@ -123,11 +126,17 @@ export const DemandCapacityNotificationInformationModal = ({
     const { sites } = useSites();
 
     useEffect(() => {
-        setTemporaryDemandCapacityNotification((prevState) => ({
-            ...prevState,
-            affectedMaterialNumbers: [],
-            affectedSitesBpnsRecipient: [],
-        }));
+        setTemporaryDemandCapacityNotification(demandCapacityNotification ?? {});
+    }, [demandCapacityNotification]);
+
+    useEffect(() => {
+        if (temporaryDemandCapacityNotification.partnerBpnl) {
+            setTemporaryDemandCapacityNotification((prevState) => ({
+                ...prevState,
+                affectedMaterialNumbers: [],
+                affectedSitesBpnsRecipient: [],
+            }));
+        }
     }, [temporaryDemandCapacityNotification.partnerBpnl]);
 
     const handleSaveClick = () => {
@@ -136,29 +145,40 @@ export const DemandCapacityNotificationInformationModal = ({
             return;
         }
         setFormError(false);
-        postDemandAndCapacityNotification(temporaryDemandCapacityNotification)
-            .then(() => {
-                onSave();
-                setNotifications((ns) => [
-                    ...ns,
-                    {
-                        title: 'Notification Added',
-                        description: 'Notification has been added',
-                        severity: 'success',
-                    },
-                ]);
-            })
-            .catch((error) => {
-                setNotifications((ns) => [
-                    ...ns,
-                    {
-                        title: error.status === 409 ? 'Conflict' : 'Error requesting update',
-                        description: error.status === 409 ? 'DemandCapacityNotification conflicting with an existing one' : error.error,
-                        severity: 'error',
-                    },
-                ]);
-            })
-            .finally(handleClose);
+        if (mode === 'edit') {
+            putDemandAndCapacityNotification(temporaryDemandCapacityNotification)
+                .then(handleResponse)
+                .catch((error) => handleError(error))
+                .finally(handleClose);
+        } else if (mode === 'create') {
+            postDemandAndCapacityNotification(temporaryDemandCapacityNotification)
+                .then(handleResponse)
+                .catch((error) => handleError(error))
+                .finally(handleClose);
+        }
+    };
+
+    const handleError = (error: { status: number; error: string; }) => {
+        setNotifications((ns) => [
+            ...ns,
+            {
+                title: error.status === 409 ? 'Conflict' : 'Error requesting update',
+                description: error.status === 409 ? 'Demand Capacity Notification conflicting with an existing one' : error.error,
+                severity: 'error',
+            },
+        ]);
+    };
+
+    const handleResponse = () => {
+        onSave();
+        setNotifications((ns) => [
+            ...ns,
+            {
+                title: 'Notification Saved',
+                description: 'Notification has been saved',
+                severity: 'success',
+            },
+        ]);
     };
 
     const handleClose = () => {
@@ -173,7 +193,7 @@ export const DemandCapacityNotificationInformationModal = ({
                     Demand Capacity Notification Information
                 </DialogTitle>
                 <Stack padding="0 2rem 2rem" sx={{ width: '60rem' }}>
-                    {!demandCapacityNotification ? (
+                    {mode === 'create' || mode === 'edit' ? (
                         <Grid container spacing={1} padding=".25rem">
                             <>
                                 <Grid item xs={12}>
@@ -279,7 +299,7 @@ export const DemandCapacityNotificationInformationModal = ({
                                                 temporaryDemandCapacityNotification.startDateOfEffect > new Date() ||
                                                 (!!temporaryDemandCapacityNotification.expectedEndDateOfEffect &&
                                                     temporaryDemandCapacityNotification.startDateOfEffect >
-                                                        temporaryDemandCapacityNotification.expectedEndDateOfEffect))
+                                                    temporaryDemandCapacityNotification.expectedEndDateOfEffect))
                                         }
                                         value={temporaryDemandCapacityNotification?.startDateOfEffect ?? null}
                                         onValueChange={(date) =>
@@ -301,7 +321,7 @@ export const DemandCapacityNotificationInformationModal = ({
                                                 temporaryDemandCapacityNotification?.expectedEndDateOfEffect < new Date() ||
                                                 (!!temporaryDemandCapacityNotification.startDateOfEffect &&
                                                     temporaryDemandCapacityNotification?.expectedEndDateOfEffect <
-                                                        temporaryDemandCapacityNotification.startDateOfEffect))
+                                                    temporaryDemandCapacityNotification.startDateOfEffect))
                                         }
                                         value={temporaryDemandCapacityNotification?.expectedEndDateOfEffect ?? null}
                                         onValueChange={(date) =>
@@ -339,8 +359,7 @@ export const DemandCapacityNotificationInformationModal = ({
                                         value={temporaryDemandCapacityNotification.affectedMaterialNumbers ?? []}
                                         options={partnerMaterials?.map((partnerMaterial) => partnerMaterial.ownMaterialNumber) ?? []}
                                         getOptionLabel={(option) =>
-                                            `${
-                                                partnerMaterials?.find((material) => material.ownMaterialNumber === option)?.name
+                                            `${partnerMaterials?.find((material) => material.ownMaterialNumber === option)?.name
                                             } (${option})`
                                         }
                                         isOptionEqualToValue={(option, value) => option === value}
@@ -369,10 +388,9 @@ export const DemandCapacityNotificationInformationModal = ({
                                         }
                                         disabled={!temporaryDemandCapacityNotification?.partnerBpnl}
                                         getOptionLabel={(option) =>
-                                            `${
-                                                partners
-                                                    ?.reduce((acc: Site[], p) => [...acc, ...p.sites], [])
-                                                    .find((site) => site.bpns === option)?.name
+                                            `${partners
+                                                ?.reduce((acc: Site[], p) => [...acc, ...p.sites], [])
+                                                .find((site) => site.bpns === option)?.name
                                             } (${option})`
                                         }
                                         isOptionEqualToValue={(option, value) => option === value}
@@ -390,7 +408,7 @@ export const DemandCapacityNotificationInformationModal = ({
                                 </Grid>
                             </>
                         </Grid>
-                    ) : (
+                    ) : (demandCapacityNotification &&
                         <DemandCapacityNotificationView
                             demandCapacityNotification={demandCapacityNotification}
                             partners={partners}
@@ -400,14 +418,14 @@ export const DemandCapacityNotificationInformationModal = ({
                         <Button variant="outlined" color="primary" sx={{ display: 'flex', gap: '.25rem' }} onClick={handleClose}>
                             <Close></Close> Close
                         </Button>
-                        {!demandCapacityNotification ? (
+                        {mode !== 'view' ? (
                             <Button
                                 variant="contained"
                                 color="primary"
                                 sx={{ display: 'flex', gap: '.25rem' }}
                                 onClick={() => handleSaveClick()}
                             >
-                                <Send></Send> Send
+                                <Send></Send> {mode === 'create' ? 'Send' : 'Update'}
                             </Button>
                         ) : null}
                     </Box>

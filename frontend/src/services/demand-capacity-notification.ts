@@ -38,6 +38,22 @@ export const getDemandAndCapacityNotification = async (isIncoming: boolean) => {
     return res.json();
 }
 
+export const putDemandAndCapacityNotification = async (notification: Partial<DemandCapacityNotification>) => {
+    const res = await fetch(config.app.BACKEND_BASE_URL + config.app.ENDPOINT_DEMAND_AND_CAPACITY_NOTIFICATION, {
+        method: 'PUT',
+        body: JSON.stringify(notification),
+        headers: {
+            'Content-Type': 'application/json',
+            'X-API-KEY': config.app.BACKEND_API_KEY,
+        },
+    });
+    if (res.status >= 400) {
+        const error = await res.json();
+        throw error;
+    }
+    return res.json();
+}
+
 export const postDemandAndCapacityNotification = async (notification: Partial<DemandCapacityNotification>) => {
     const res = await fetch(config.app.BACKEND_BASE_URL + config.app.ENDPOINT_DEMAND_AND_CAPACITY_NOTIFICATION, {
         method: 'POST',

@@ -29,13 +29,15 @@ import { DemandCapacityNotification } from '@models/types/data/demand-capacity-n
 import { EFFECTS } from '@models/constants/effects';
 import { LEADING_ROOT_CAUSE } from '@models/constants/leading-root-causes';
 import { STATUS } from '@models/constants/status';
-
+import { ModalMode } from '@models/types/data/modal-mode';
+import { Edit, Visibility } from '@mui/icons-material';
 
 export const DemandCapacityNotificationView = () => {
 
     const [selectedTab, setSelectedTab] = useState<number>(0);
     const [demandCapacityNotification, setDemandCapacityNotification] = useState<DemandCapacityNotification[]>([]);
     const [modalOpen, setModalOpen] = useState<boolean>(false);
+    const [mode, setMode] = useState<ModalMode>('create');
     const [selectedNotification, setSelectedNotification] = useState<DemandCapacityNotification | null>(null);
 
     const tabs = ['Incoming', 'Outgoing'];
@@ -55,9 +57,10 @@ export const DemandCapacityNotificationView = () => {
 
     const TabPanelContent = ({ notifications }: { notifications: DemandCapacityNotification[] }) => {
         return (
-            <DemandCapacityNotificationTable onRowSelected={(notification) => {
-                setModalOpen(true);
+            <DemandCapacityNotificationTable onRowSelected={(notification, mode) => {
+                setMode(mode);
                 setSelectedNotification(notification);
+                setModalOpen(true);
             }} notifications={notifications} />
         );
     }
@@ -70,7 +73,7 @@ export const DemandCapacityNotificationView = () => {
                     <Tabs value={selectedTab} onChange={(_, value: number) => setSelectedTab(value)}>
                         {tabs.map((tab, index) => <Tab key={index} label={tab} />)}
                     </Tabs>
-                    <Button variant="contained" sx={{display: 'flex', gap: '.5rem'}} onClick={() => {
+                    <Button variant="contained" sx={{ display: 'flex', gap: '.5rem' }} onClick={() => {
                         setSelectedNotification(null);
                         setModalOpen(true)
                     }}>
@@ -88,9 +91,12 @@ export const DemandCapacityNotificationView = () => {
 
             <DemandCapacityNotificationInformationModal
                 open={modalOpen}
+                mode={mode}
                 demandCapacityNotification={selectedNotification}
-                onClose={() =>
-                    setModalOpen(false)
+                onClose={() => {
+                    setSelectedNotification(null);
+                    setModalOpen(false);
+                }
                 }
                 onSave={fetchAndLogNotification}
 
@@ -101,16 +107,13 @@ export const DemandCapacityNotificationView = () => {
 
 type NotificationTableProps = {
     notifications: DemandCapacityNotification[],
-    onRowSelected: (notification: DemandCapacityNotification) => void;
+    onRowSelected: (notification: DemandCapacityNotification, mode: ModalMode) => void;
 }
 
 const DemandCapacityNotificationTable: React.FC<NotificationTableProps> = ({ notifications, onRowSelected }) => {
     return (
         <Box width="100%">
             <Table
-                onRowClick={(value) => {
-                    onRowSelected(value.row);
-                }}
                 noRowsMsg='No Notifications found'
                 title="Demand and Capacity Notifications"
                 columns={[
@@ -122,6 +125,33 @@ const DemandCapacityNotificationTable: React.FC<NotificationTableProps> = ({ not
                     { headerName: ' Affected Sites Sender', field: 'affectedSitesBpnsSender', width: 200 },
                     { headerName: ' Affected Sites Recipient', field: 'affectedSitesBpnsRecipient', width: 200 },
                     { headerName: 'Status', field: 'status', width: 100, valueFormatter: (params) => STATUS.find((status) => status.key === params.value)?.value },
+                    {
+                        headerName: '', field: 'actions', width: 150, renderCell: (params) => (
+                            <strong>
+                                <Button
+                                    variant="contained"
+                                    size="small"
+                                    tabIndex={params.hasFocus ? 0 : -1}
+                                    style={{ marginRight: 5 }}
+                                    onClick={() => onRowSelected(params.row, 'view')}
+
+                                >
+                                    <Visibility></Visibility>
+
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    size="small"
+                                    style={{ marginRight: 5 }}
+                                    tabIndex={params.hasFocus ? 0 : -1}
+                                    onClick={() => { onRowSelected(params.row, 'edit'); }}
+                                >
+                                    <Edit></Edit>
+
+                                </Button>
+                            </strong>
+                        ),
+                    },
 
                 ]}
                 rows={notifications ?? []}
