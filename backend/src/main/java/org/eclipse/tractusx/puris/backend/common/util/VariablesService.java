@@ -42,6 +42,14 @@ public class VariablesService {
     @Value("${puris.baseurl}")
     private String purisBaseUrl;
 
+    /**
+     * The puris base url as defined in the property puris.baseurl,
+     * ending with a slash ('/').
+     */
+    public String getPurisBaseUrl() {
+        return purisBaseUrl.endsWith("/") ? purisBaseUrl : purisBaseUrl + "/";
+    }
+
     @Value("${puris.demonstrator.role}")
     /**
      * Must be set to "CUSTOMER" or "SUPPLIER" if
@@ -49,6 +57,17 @@ public class VariablesService {
      * defined in the DataInjectionCommandLineRunner
      */
     private String demoRole;
+
+    @Value("${server.servlet.context-path}")
+    private String contextPath;
+
+    /**
+     * The context path as defined in the property server.servlet.context-path,
+     * ending with a slash ('/').
+     */
+    public String getContextPath() {
+        return contextPath.replace("/", "") + "/";
+    }
 
     @Value("${puris.baseurl}" + "catena/edrendpoint")
     /**
@@ -111,6 +130,21 @@ public class VariablesService {
      * during asset creation.
      */
     private String deliverySubmodelAssetId;
+
+    /**
+     * The url under which this application's demand and capacity notification request endpoint can
+     * be reached by external machines.
+     */
+    public String getNotificationEndpoint() {
+        return getPurisBaseUrl() + getContextPath() + "demand-and-capacity-notification/request";
+    }
+
+    @Value("${puris.notification.apiassetid}")
+    /**
+     * The assetId that shall be assigned to the request API
+     * during asset creation.
+     */
+    private String notificationAssetId;
 
     @Value("${puris.frameworkagreement.credential}")
     /**
@@ -247,6 +281,10 @@ public class VariablesService {
 
     public String getDeliverySubmodelApiAssetId() {
         return deliverySubmodelAssetId + "@" + ownBpnl;
+    }
+
+    public String getNotificationApiAssetId() {
+        return notificationAssetId + "@" + ownBpnl;
     }
 
     public String getPartTypeSubmodelApiAssetId() {

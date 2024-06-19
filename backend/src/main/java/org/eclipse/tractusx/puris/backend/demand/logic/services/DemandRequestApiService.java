@@ -22,7 +22,7 @@ package org.eclipse.tractusx.puris.backend.demand.logic.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.tractusx.puris.backend.common.edc.domain.model.SubmodelType;
+import org.eclipse.tractusx.puris.backend.common.edc.domain.model.AssetType;
 import org.eclipse.tractusx.puris.backend.common.edc.logic.service.EdcAdapterService;
 import org.eclipse.tractusx.puris.backend.demand.logic.adapter.ShortTermMaterialDemandSammMapper;
 import org.eclipse.tractusx.puris.backend.demand.logic.dto.demandsamm.ShortTermMaterialDemand;
@@ -86,7 +86,7 @@ public class DemandRequestApiService {
             return null;
         }
 
-        var currentDemands = ownDemandService.findAllByFilters(Optional.of(material.getOwnMaterialNumber()), Optional.of(partner.getBpnl()), Optional.empty());
+        var currentDemands = ownDemandService.findAllByFilters(Optional.of(material.getOwnMaterialNumber()), Optional.of(partner.getBpnl()), Optional.empty(), Optional.empty());
         return sammMapper.ownDemandToSamm(currentDemands, partner, material);
     }
 
@@ -97,7 +97,7 @@ public class DemandRequestApiService {
                 mprService.triggerPartTypeRetrievalTask(partner);
                 mpr = mprService.find(material, partner);
             }
-            var data = edcAdapterService.doSubmodelRequest(SubmodelType.DEMAND, mpr, DirectionCharacteristic.INBOUND, 1);
+            var data = edcAdapterService.doSubmodelRequest(AssetType.DEMAND_SUBMODEL, mpr, DirectionCharacteristic.INBOUND, 1);
             var samm = objectMapper.treeToValue(data, ShortTermMaterialDemand.class);
             var demands = sammMapper.sammToReportedDemand(samm, partner);
             for (var demand : demands) {
@@ -109,7 +109,7 @@ public class DemandRequestApiService {
                 }
             }
             // delete older data:
-            var oldDemands = reportedDemandService.findAllByFilters(Optional.of(material.getOwnMaterialNumber()), Optional.of(partner.getBpnl()), Optional.empty());
+            var oldDemands = reportedDemandService.findAllByFilters(Optional.of(material.getOwnMaterialNumber()), Optional.of(partner.getBpnl()), Optional.empty(), Optional.empty());
             for (var oldDemand : oldDemands) {
                 reportedDemandService.delete(oldDemand.getUuid());
             }
