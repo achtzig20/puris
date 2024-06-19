@@ -59,10 +59,6 @@ type DemandCapacityNotificationViewProps = {
 const DemandCapacityNotificationView = ({ demandCapacityNotification, partners }: DemandCapacityNotificationViewProps) => {
     return (
         <Grid container spacing={3} padding=".25rem">
-            <Grid display="grid" item xs={12}>
-                <FormLabel>Text</FormLabel>
-                {demandCapacityNotification.text}
-            </Grid>
             <Grid display="grid" item xs={6}>
                 <FormLabel>Partner</FormLabel>
                 {partners?.find((p) => p.bpnl === demandCapacityNotification.partnerBpnl)?.name}
@@ -87,19 +83,19 @@ const DemandCapacityNotificationView = ({ demandCapacityNotification, partners }
                 <FormLabel>Expected End Date of Effect</FormLabel>
                 {new Date(demandCapacityNotification.expectedEndDateOfEffect).toLocaleString()}
             </Grid>
-            <Grid display="grid" item xs={12}>
+            <Grid display="grid" item xs={6}>
                 <FormLabel>Affected Sites Sender</FormLabel>
                 {demandCapacityNotification.affectedSitesBpnsSender && demandCapacityNotification.affectedSitesBpnsSender.length > 0
                     ? demandCapacityNotification.affectedSitesBpnsSender.join(', ')
                     : 'None'}
             </Grid>
-            <Grid display="grid" item xs={12}>
+            <Grid display="grid" item xs={6}>
                 <FormLabel>Affected Sites Recipient</FormLabel>
                 {demandCapacityNotification.affectedSitesBpnsRecipient && demandCapacityNotification.affectedSitesBpnsRecipient.length > 0
                     ? demandCapacityNotification.affectedSitesBpnsRecipient.join(', ')
                     : 'None'}
             </Grid>
-            <Grid display="grid" item xs={12}>
+            <Grid display="grid" item xs={6}>
                 <FormLabel>Affected Material Numbers</FormLabel>
                 {demandCapacityNotification.affectedMaterialNumbers && demandCapacityNotification.affectedMaterialNumbers.length > 0
                     ? demandCapacityNotification.affectedMaterialNumbers.join(', ')
@@ -108,6 +104,10 @@ const DemandCapacityNotificationView = ({ demandCapacityNotification, partners }
             <Grid display="grid" item xs={6}>
                 <FormLabel>Content Changed</FormLabel>
                 {new Date(demandCapacityNotification.contentChangedAt).toLocaleString()}
+            </Grid>
+            <Grid display="grid" item xs={12}>
+                <FormLabel>Text</FormLabel>
+                {demandCapacityNotification.text}
             </Grid>
         </Grid>
     );
@@ -200,21 +200,6 @@ export const DemandCapacityNotificationInformationModal = ({
                     {mode === 'create' || mode === 'edit' ? (
                         <Grid container spacing={1} padding=".25rem">
                             <>
-                                <Grid item xs={12}>
-                                    <FormLabel>Text</FormLabel>
-                                    <Textarea
-                                        minRows="5"
-                                        id="text"
-                                        value={temporaryDemandCapacityNotification?.text ?? ''}
-                                        onChange={(event) =>
-                                            setTemporaryDemandCapacityNotification({
-                                                ...temporaryDemandCapacityNotification,
-                                                text: event.target.value,
-                                            })
-                                        }
-                                        error={formError && !temporaryDemandCapacityNotification?.text}
-                                    />
-                                </Grid>
                                 <Grid item xs={6}>
                                     <LabelledAutoComplete
                                         sx={{ margin: '0' }}
@@ -408,6 +393,21 @@ export const DemandCapacityNotificationInformationModal = ({
                                             })
                                         }
                                         multiple={true}
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <FormLabel>Text</FormLabel>
+                                    <Textarea
+                                        minRows="5"
+                                        id="text"
+                                        value={temporaryDemandCapacityNotification?.text ?? ''}
+                                        onChange={(event) =>
+                                            setTemporaryDemandCapacityNotification({
+                                                ...temporaryDemandCapacityNotification,
+                                                text: event.target.value,
+                                            })
+                                        }
+                                        error={formError && !temporaryDemandCapacityNotification?.text}
                                     />
                                 </Grid>
                             </>

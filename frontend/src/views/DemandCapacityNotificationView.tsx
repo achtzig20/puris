@@ -20,8 +20,8 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 import { Tab, TabPanel, Tabs, Table } from '@catena-x/portal-shared-components';
-import { Box, Button, Stack } from '@mui/material';
-import { getDemandAndCapacityNotification } from '@services/demand-capacity-notification';
+import { Box, Button, Stack, IconButton, Tooltip } from '@mui/material';
+import { getDemandAndCapacityNotification, putDemandAndCapacityNotification } from '@services/demand-capacity-notification';
 import { useCallback, useEffect, useState } from 'react';
 import { Send } from '@mui/icons-material';
 import { DemandCapacityNotificationInformationModal } from '@features/notifications/components/NotificationInformationModal';
@@ -30,7 +30,8 @@ import { EFFECTS } from '@models/constants/effects';
 import { LEADING_ROOT_CAUSE } from '@models/constants/leading-root-causes';
 import { STATUS } from '@models/constants/status';
 import { ModalMode } from '@models/types/data/modal-mode';
-import { Edit, Visibility } from '@mui/icons-material';
+import { Edit, Visibility, ArrowOutward, Check } from '@mui/icons-material';
+import { timeAgo } from '@util/date-helper';
 
 export const DemandCapacityNotificationView = () => {
 
@@ -51,30 +52,41 @@ export const DemandCapacityNotificationView = () => {
         }
     }, [selectedTab]);
 
+    const resolveNotification = (notification: DemandCapacityNotification) => putDemandAndCapacityNotification(notification as DemandCapacityNotification).then(() => {
+        fetchAndLogNotification();
+    });
+
     useEffect(() => {
         fetchAndLogNotification();
     }, [selectedTab, fetchAndLogNotification]);
 
     const TabPanelContent = ({ notifications }: { notifications: DemandCapacityNotification[] }) => {
         return (
-            <DemandCapacityNotificationTable onRowSelected={(notification, mode) => {
-                setMode(mode);
-                setSelectedNotification(notification);
-                setModalOpen(true);
-            }} notifications={notifications} />
+            <DemandCapacityNotificationTable onRowSelected={(notification, action) => {
+                if (action === 'resolve') {
+                    notification.status = 'resolved';
+                    resolveNotification(notification);
+
+                } else {
+                    setMode(action);
+                    setModalOpen(true);
+                    setSelectedNotification(notification);
+                }
+            }} notifications={notifications} isIncoming={selectedTab === 0} />
         );
     }
 
     return (
         <>
             <Stack spacing={2} alignItems='center' width='100%' height='100%'>
-                <h1 className="text-3xl font-semibold text-gray-700 mb-10">Demand And Capacity Notifications</h1>
+                <h1 className="text-3xl font-semibold text-gray-700 mb-10"> Demand And Capacity Notifications </h1>
                 <Stack width='100%' direction="row" justifyContent="space-between">
                     <Tabs value={selectedTab} onChange={(_, value: number) => setSelectedTab(value)}>
                         {tabs.map((tab, index) => <Tab key={index} label={tab} />)}
                     </Tabs>
                     <Button variant="contained" sx={{ display: 'flex', gap: '.5rem' }} onClick={() => {
                         setSelectedNotification(null);
+                        setMode('create');
                         setModalOpen(true)
                     }}>
                         <Send></Send> Send Notification
@@ -106,50 +118,108 @@ export const DemandCapacityNotificationView = () => {
 };
 
 type NotificationTableProps = {
+    isIncoming: boolean;
     notifications: DemandCapacityNotification[],
-    onRowSelected: (notification: DemandCapacityNotification, mode: ModalMode) => void;
+    onRowSelected: (notification: DemandCapacityNotification, action: ModalMode | 'resolve') => void;
 }
 
-const DemandCapacityNotificationTable: React.FC<NotificationTableProps> = ({ notifications, onRowSelected }) => {
+const DemandCapacityNotificationTable: React.FC<NotificationTableProps> = ({ notifications, onRowSelected, isIncoming }) => {
     return (
         <Box width="100%">
             <Table
+                initialState={{
+                    sorting: {
+                        sortModel: [{ field: 'contentChangedAt', sort: 'desc' }],
+                    },
+                }}
+                getRowClassName={(params) => `notification--${params.row.status}`}
+                sx={{
+                    ".actionButton": {
+                        display: "none"
+                    },
+                    ".time-ago": {
+                        display: "block"
+                    },
+                    ".MuiDataGrid-row:hover": {
+                        ".actionButton": {
+                            display: "block"
+                        },
+                        ".time-ago": {
+                            display: "none"
+                        }
+                    },
+                    ".notification--resolved": {
+                        backgroundColor: "#f7f6f6"
+                    },
+                    ".notification--open": {
+                        fontWeight: 700
+                    }
+                }}
                 noRowsMsg='No Notifications found'
                 title="Demand and Capacity Notifications"
                 columns={[
                     { headerName: 'Text', field: 'text', width: 200 },
                     { headerName: 'Partner Bpnl', field: 'partnerBpnl', width: 200 },
                     { headerName: 'Leading Root Cause', field: 'leadingRootCause', width: 180, valueFormatter: (params) => LEADING_ROOT_CAUSE.find((cause) => cause.key === params.value)?.value },
-                    { headerName: 'Effect', field: 'effect', width: 180, valueFormatter: (params) => EFFECTS.find((effect) => effect.key === params.value)?.value, },
-                    { headerName: ' Affected Material Numbers', field: 'affectedMaterialNumbers', width: 200 },
-                    { headerName: ' Affected Sites Sender', field: 'affectedSitesBpnsSender', width: 200 },
-                    { headerName: ' Affected Sites Recipient', field: 'affectedSitesBpnsRecipient', width: 200 },
-                    { headerName: 'Status', field: 'status', width: 100, valueFormatter: (params) => STATUS.find((status) => status.key === params.value)?.value },
+                    { headerName: 'Effect', field: 'effect', width: 160, valueFormatter: (params) => EFFECTS.find((effect) => effect.key === params.value)?.value, },
+                    { headerName: ' Material Numbers', field: 'affectedMaterialNumbers', width: 200 },
+                    { headerName: ' Sites Sender', field: 'affectedSitesBpnsSender', width: 200 },
+                    { headerName: ' Sites Recipient', field: 'affectedSitesBpnsRecipient', width: 200 },
+                    { headerName: 'Status', field: 'status', width: 120, valueFormatter: (params) => STATUS.find((status) => status.key === params.value)?.value },
                     {
-                        headerName: '', field: 'actions', width: 150, renderCell: (params) => (
-                            <strong>
-                                <Button
-                                    variant="contained"
-                                    size="small"
-                                    tabIndex={params.hasFocus ? 0 : -1}
-                                    style={{ marginRight: 5 }}
-                                    onClick={() => onRowSelected(params.row, 'view')}
-
-                                >
-                                    <Visibility></Visibility>
-
-                                </Button>
-                                <Button
-                                    variant="contained"
-                                    size="small"
-                                    style={{ marginRight: 5 }}
-                                    tabIndex={params.hasFocus ? 0 : -1}
-                                    onClick={() => { onRowSelected(params.row, 'edit'); }}
-                                >
-                                    <Edit></Edit>
-
-                                </Button>
-                            </strong>
+                        headerName: 'Changed at', align: 'right', minWidth: 150, flex: 1, field: 'contentChangedAt', renderCell: (params) => (
+                            <>
+                                <span className='time-ago'>
+                                    {timeAgo(new Date, new Date(params.value))}</span>
+                                <span className='actionButton'>
+                                    <Tooltip title="View">
+                                        <IconButton
+                                            sx={{ mr: 1 }}
+                                            tabIndex={params.hasFocus ? 0 : -1}
+                                            onClick={() => onRowSelected(params.row, 'view')}
+                                            color='primary'
+                                        >
+                                            <Visibility></Visibility>
+                                        </IconButton>
+                                    </Tooltip>
+                                    {isIncoming ?
+                                        <Tooltip title="React">
+                                            <IconButton
+                                                sx={{ mr: 1 }}
+                                                tabIndex={params.hasFocus ? 0 : -1}
+                                                onClick={() => { onRowSelected(params.row, 'forward'); }}
+                                                color='primary'
+                                            >
+                                                <ArrowOutward></ArrowOutward>
+                                            </IconButton>
+                                        </Tooltip> :
+                                        <>
+                                            <Tooltip title="Edit">
+                                                <IconButton
+                                                    sx={{ mr: 1 }}
+                                                    tabIndex={params.hasFocus ? 0 : -1}
+                                                    onClick={() => { onRowSelected(params.row, 'edit'); }}
+                                                    color='primary'
+                                                >
+                                                    <Edit></Edit>
+                                                </IconButton>
+                                            </Tooltip>
+                                            {params.row.status !== 'resolved' &&
+                                                <Tooltip title="Resolve">
+                                                    <IconButton
+                                                        sx={{ mr: 1 }}
+                                                        tabIndex={params.hasFocus ? 0 : -1}
+                                                        onClick={() => { onRowSelected(params.row, 'resolve'); }}
+                                                        color='primary'
+                                                    >
+                                                        <Check></Check>
+                                                    </IconButton>
+                                                </Tooltip>
+                                            }
+                                        </>
+                                    }
+                                </span>
+                            </>
                         ),
                     },
 
