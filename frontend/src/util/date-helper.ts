@@ -30,13 +30,14 @@ export const timeAgo = (date1: Date, date2: Date) => {
     const minutes = Math.floor(diffInSeconds / 60);
     const seconds = diffInSeconds - minutes * 60;
     // Determine the appropriate format
+    const formatter = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
     if (days > 0) {
-        return `${days} day(s) ago`;
+        return formatter.format(-days, 'day');
     } else if (hours > 0) {
-        return `${hours} hour(s) ago`;
+        return formatter.format(-hours, 'hour');
     } else if (minutes > 0) {
-        return `${minutes} minute(s) ago`;
+        return formatter.format(-minutes, 'minute');
     } else {
-        return `${seconds} second(s) ago`;
+        return formatter.format(-seconds, 'second');
     }
 }
