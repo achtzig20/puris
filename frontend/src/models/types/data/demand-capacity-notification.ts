@@ -25,7 +25,8 @@ export type EffectType = "demand-reduction" | "demand-increase" | "capacity-redu
 export type StatusType = "resolved" | "open";
 
 export type DemandCapacityNotification = {
-    uuid: string,
+    notificationId: string,
+    relatedNotificationId: string;
     text: string,
     partnerBpnl: BPNL,
     affectedMaterialNumbers: string[],
@@ -34,7 +35,7 @@ export type DemandCapacityNotification = {
     status: StatusType,
     startDateOfEffect: Date,
     expectedEndDateOfEffect: Date,
-    affectedSitesBpnsSender: string[], // own sites
-    affectedSitesBpnsRecipient: string[], // partners sites
+    affectedSitesBpnsSender: string[],
+    affectedSitesBpnsRecipient: string[],
     contentChangedAt: Date,
 };

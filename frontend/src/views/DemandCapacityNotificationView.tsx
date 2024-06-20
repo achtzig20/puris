@@ -156,7 +156,7 @@ const DemandCapacityNotificationTable: React.FC<NotificationTableProps> = ({ not
                     }
                 }}
                 noRowsMsg='No Notifications found'
-                title="Demand and Capacity Notifications"
+                title={"Demand and Capacity Notifications"}
                 columns={[
                     { headerName: 'Text', field: 'text', width: 200 },
                     { headerName: 'Partner Bpnl', field: 'partnerBpnl', width: 200 },
@@ -187,7 +187,7 @@ const DemandCapacityNotificationTable: React.FC<NotificationTableProps> = ({ not
                                             <IconButton
                                                 sx={{ mr: 1 }}
                                                 tabIndex={params.hasFocus ? 0 : -1}
-                                                onClick={() => { onRowSelected(params.row, 'forward'); }}
+                                                onClick={() => { onRowSelected(params.row, 'react'); }}
                                                 color='primary'
                                             >
                                                 <ArrowOutward></ArrowOutward>
@@ -225,7 +225,7 @@ const DemandCapacityNotificationTable: React.FC<NotificationTableProps> = ({ not
 
                 ]}
                 rows={notifications ?? []}
-                getRowId={(row) => row.uuid}
+                getRowId={(row) => row.notificationId}
             />
         </Box>
     );

@@ -18,4 +18,4 @@ under the License.
 SPDX-License-Identifier: Apache-2.0
 */
 
-export type ModalMode = 'create' | 'edit' | 'view' | 'forward';
+export type ModalMode = 'create' | 'edit' | 'view' | 'react';

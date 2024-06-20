@@ -23,10 +23,10 @@ import { config } from '@models/constants/config';
 import { MaterialDescriptor } from '@models/types/data/material-descriptor';
 import { BPNL } from '@models/types/edc/bpn';
 
-export const usePartnerMaterials = (partnerBpnl: BPNL) => {
+export const usePartnerMaterials = (partnerBpnl: BPNL | undefined) => {
     const endpoint = `${config.app.ENDPOINT_PARTNER}/${partnerBpnl}/materials`;
     const { data: partnerMaterials, isLoading: isLoadingPartnerMaterial } = useFetch<MaterialDescriptor[]>(
-        `${config.app.BACKEND_BASE_URL}${endpoint}`
+        partnerBpnl !== undefined ? `${config.app.BACKEND_BASE_URL}${endpoint}` : undefined
     );
     return {
         partnerMaterials,
