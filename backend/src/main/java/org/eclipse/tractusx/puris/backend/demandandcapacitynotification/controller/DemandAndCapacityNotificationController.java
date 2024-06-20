@@ -263,14 +263,13 @@ public class DemandAndCapacityNotificationController {
         entity.setAffectedSitesSender(affectedSitesSender);
 
         if (dto.getRelatedNotificationId() != null) {
-            OwnDemandAndCapacityNotification relatedNotification = ownNotificationService.findById(dto.getRelatedNotificationId());
+            ReportedDemandAndCapacityNotification relatedNotification = reportedNotificationService.findByNotificationId(dto.getRelatedNotificationId());
             if (relatedNotification == null) {
                 throw new IllegalStateException(String.format(
-                        "Related notification for UUID %s could not be found",
+                        "Related notification for notificationId %s could not be found",
                         dto.getRelatedNotificationId()));
             }
         }
-
         return entity;
     }
 }
