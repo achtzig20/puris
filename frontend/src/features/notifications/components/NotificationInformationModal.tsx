@@ -67,25 +67,40 @@ export const DemandCapacityNotificationInformationModal = ({
 
     useEffect(() => {
         if (mode === 'react') {
-            setTemporaryDemandCapacityNotification({
-                ...demandCapacityNotification,
-                partnerBpnl: undefined,
-                affectedMaterialNumbers: [],
-                affectedSitesBpnsRecipient: [],
-                affectedSitesBpnsSender: [],
-            });
-
-            if (partners !== null) {
-                const newFilteredPartners = partners.filter((partner) => partner.bpnl !== demandCapacityNotification?.partnerBpnl);
-                setAvailablePartners(newFilteredPartners);
-            }
+            resetAndUpdateNotification();
         }
         else {
-            setTemporaryDemandCapacityNotification(demandCapacityNotification ?? {});
+            updateNotification();
         }
+        updateAvailablePartners();
     }, [demandCapacityNotification, mode, partners]);
 
     useEffect(() => {
+        resetAffectedFields();
+    }, [temporaryDemandCapacityNotification.partnerBpnl]);
+
+    const resetAndUpdateNotification = () => {
+        setTemporaryDemandCapacityNotification({
+            ...demandCapacityNotification,
+            partnerBpnl: undefined,
+            affectedMaterialNumbers: [],
+            affectedSitesBpnsRecipient: [],
+            affectedSitesBpnsSender: [],
+        });
+    };
+
+    const updateNotification = () => {
+        setTemporaryDemandCapacityNotification(demandCapacityNotification ?? {});
+    };
+
+    const updateAvailablePartners = () => {
+        if (partners !== null) {
+            const newFilteredPartners = partners.filter((partner) => partner.bpnl !== demandCapacityNotification?.partnerBpnl);
+            setAvailablePartners(newFilteredPartners);
+        }
+    };
+
+    const resetAffectedFields = () => {
         if (temporaryDemandCapacityNotification.partnerBpnl) {
             setTemporaryDemandCapacityNotification((prevState) => ({
                 ...prevState,
@@ -93,7 +108,7 @@ export const DemandCapacityNotificationInformationModal = ({
                 affectedSitesBpnsRecipient: [],
             }));
         }
-    }, [temporaryDemandCapacityNotification.partnerBpnl]);
+    };
 
     const handleSaveClick = () => {
         if (!isValidDemandCapacityNotification(temporaryDemandCapacityNotification)) {
