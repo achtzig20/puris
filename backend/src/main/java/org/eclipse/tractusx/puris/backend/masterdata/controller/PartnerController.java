@@ -220,8 +220,9 @@ public class PartnerController {
     @GetMapping("/all")
     @Operation(description = "Returns a list of all Partners. ")
     public ResponseEntity<List<PartnerDto>> listPartners() {
+        Partner ownPartnerEntity = partnerService.getOwnPartnerEntity();
         return new ResponseEntity<>(partnerService.findAll().
-            stream().map(partner -> modelMapper.map(partner, PartnerDto.class)).collect(Collectors.toList()),
+            stream().filter(partner -> !partner.getBpnl().equals(ownPartnerEntity.getBpnl())).map(partner -> modelMapper.map(partner, PartnerDto.class)).collect(Collectors.toList()),
             HttpStatusCode.valueOf(200));
     }
 
