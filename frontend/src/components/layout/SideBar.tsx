@@ -24,27 +24,28 @@ import Box from '@mui/material/Box';
 import MuiDrawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
 import List from '@mui/material/List';
-import Divider from '@mui/material/Divider';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import HomeIcon from '@mui/icons-material/Home';
-import CatalogIcon from '@mui/icons-material/Category';
-import StockIcon from '@mui/icons-material/Inventory';
-import HandshakeIcon from '@mui/icons-material/Handshake';
-import SyncAltIcon from '@mui/icons-material/SyncAlt';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import LogoutIcon from '@mui/icons-material/Logout';
-import MenuIcon from '@mui/icons-material/Menu';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import AuthenticationService from '@services/authentication-service';
 import { useAuth } from '@hooks/useAuth';
 import { OverridableComponent } from '@mui/material/OverridableComponent';
-import { SvgIconTypeMap } from '@mui/material';
+import { SvgIconTypeMap, Typography } from '@mui/material';
 import { Role } from '@models/types/auth/role';
-import { Link } from 'react-router-dom';
+import {
+    AutoStoriesOutlined,
+    ChevronLeftOutlined,
+    HandshakeOutlined,
+    HelpOutlineOutlined,
+    HomeOutlined,
+    Inventory2Outlined,
+    LogoutOutlined,
+    MenuOutlined,
+    NotificationsOutlined,
+    SyncAltOutlined,
+} from '@mui/icons-material';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 
 const openedMixin = (theme: Theme): CSSObject => ({
     width: theme.sidebarWidth,
@@ -61,6 +62,8 @@ const closedMixin = (theme: Theme): CSSObject => ({
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.leavingScreen,
     }),
+    overflowX: 'hidden',
+    boxSizing: 'border-box',
     width: `calc(${theme.spacing(7)} + 1px)`,
     position: 'relative',
 
@@ -72,8 +75,9 @@ const closedMixin = (theme: Theme): CSSObject => ({
 const DrawerHeader = styled('div')(({ theme }) => ({
     display: 'flex',
     alignItems: 'center',
-    paddingLeft: theme.spacing(2.5),
-    paddingRight: theme.spacing(2.5),
+    minHeight: '0 !important',
+    paddingLeft: theme.spacing(2),
+    paddingRight: theme.spacing(2),
     ...theme.mixins.toolbar,
 }));
 
@@ -103,25 +107,27 @@ type SideBarItemProps = (
       }
 ) & {
     name: string;
-    icon: React.ReactElement<OverridableComponent<SvgIconTypeMap<{}, 'svg'>>>;
+    icon: React.ReactElement<OverridableComponent<SvgIconTypeMap<object, 'svg'>>>;
     requiredRoles?: Role[];
 };
 
 const sideBarItems: SideBarItemProps[] = [
-    { name: 'Dashboard', icon: <HomeIcon />, path: '/dashboard' },
-    { name: 'Stocks', icon: <StockIcon />, path: '/stocks' },
-    { name: 'Catalog', icon: <CatalogIcon />, path: '/catalog', requiredRoles: ['PURIS_ADMIN'] },
-    { name: 'Negotiations', icon: <HandshakeIcon />, path: '/negotiations', requiredRoles: ['PURIS_ADMIN'] },
-    { name: 'Transfers', icon: <SyncAltIcon />, path: '/transfers', requiredRoles: ['PURIS_ADMIN'] },
-    { name: 'Notifications', icon: <NotificationsIcon />, path: '/notifications' },
-    { name: 'Logout', icon: <LogoutIcon />, action: AuthenticationService.logout, variant: 'button' },
+    { name: 'Dashboard', icon: <HomeOutlined />, path: '/dashboard' },
+    { name: 'Notifications', icon: <NotificationsOutlined />, path: '/notifications' },
+    { name: 'Stocks', icon: <Inventory2Outlined />, path: '/stocks' },
+    { name: 'Catalog', icon: <AutoStoriesOutlined />, path: '/catalog', requiredRoles: ['PURIS_ADMIN'] },
+    { name: 'Negotiations', icon: <HandshakeOutlined />, path: '/negotiations', requiredRoles: ['PURIS_ADMIN'] },
+    { name: 'Transfers', icon: <SyncAltOutlined />, path: '/transfers', requiredRoles: ['PURIS_ADMIN'] },
+    { name: 'User Guide', icon: <HelpOutlineOutlined />, path: '/user-guide' },
+    { name: 'Logout', icon: <LogoutOutlined />, action: AuthenticationService.logout, variant: 'button' },
 ];
 
 export default function MiniDrawer() {
+    const [open, setOpen] = React.useState(() => true);
+    const [activeRoute, setActiveRoute] = React.useState<string>('');
+    const { pathname } = useLocation();
     const theme = useTheme();
-    const [open, setOpen] = React.useState(true);
     const { hasRole } = useAuth();
-
     const handleDrawerOpen = () => {
         setOpen(true);
     };
@@ -131,69 +137,80 @@ export default function MiniDrawer() {
     };
 
     return (
-        <Box sx={{ display: 'flex' }}>
-            <Drawer variant="permanent" open={open}>
-                <DrawerHeader>
-                    {open ? (
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                            <img height="30px" src="puris-logo.svg" alt="Puris icon"></img>
+        <Drawer variant="permanent" open={open}>
+            <DrawerHeader>
+                {open ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', gap: '.5rem' }}>
+                        <img height="30px" src="puris-logo.svg" alt="Puris icon"></img>
 
-                            <IconButton onClick={handleDrawerClose}>
-                                {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-                            </IconButton>
-                        </Box>
-                    ) : (
-                        <IconButton sx={{ px: 0 }} onClick={handleDrawerOpen}>
-                            <MenuIcon />
+                        <IconButton sx={{ p: 0, borderRadius: 0 }} onClick={handleDrawerClose}>
+                            <ChevronLeftOutlined />
                         </IconButton>
-                    )}
-                </DrawerHeader>
-                <Divider />
-                <List>
-                    {sideBarItems.map((item) => {
-                        if (item.requiredRoles && !hasRole(item.requiredRoles)) return null;
+                    </Box>
+                ) : (
+                    <IconButton sx={{ p: 0, borderRadius: 0, mx: 'auto' }} onClick={handleDrawerOpen}>
+                        <MenuOutlined />
+                    </IconButton>
+                )}
+            </DrawerHeader>
+            <List>
+                {sideBarItems.map((item) => {
+                    if (item.requiredRoles && !hasRole(item.requiredRoles)) return null;
 
-                        return (
-                            <ListItem key={item.name} disablePadding sx={{ display: 'block' }}>
-                                <ListItemButton
+                    return (
+                        <ListItem key={item.name} disablePadding sx={{ display: 'block', px: 1, py: 0.5 }}>
+                            <ListItemButton
+                                LinkComponent={({ href, ...props }) => <Link to={href} {...props} />}
+                                sx={{
+                                    gap: open ? 1 : 0,
+                                    justifyContent: open ? 'initial' : 'center',
+                                    alignItems: 'center',
+                                    px: 2.5,
+                                    py: 0.5,
+                                    borderRadius: 2,
+                                    ':hover': {
+                                        backgroundColor: theme.palette.primary.main,
+                                        color: theme.palette.primary.contrastText,
+                                    },
+                                    ...(item.variant !== 'button' && pathname.startsWith(item.path)
+                                        ? {
+                                              backgroundColor: theme.palette.primary.dark,
+                                              color: theme.palette.primary.contrastText,
+                                          }
+                                        : {}),
+                                }}
+                                onClick={item.variant === 'button' ? item.action : undefined}
+                                {...('path' in item ? { href: item.path } : {})}
+                            >
+                                <ListItemIcon
                                     sx={{
-                                        minHeight: 48,
-                                        justifyContent: open ? 'initial' : 'center',
-                                        px: 2.5,
+                                        minWidth: 0,
+                                        justifyContent: 'center',
+                                        mx: open ? 0 : 'auto',
                                     }}
-                                    onClick={item.variant === 'button' ? item.action : undefined}
-                                    component={'path' in item ? 'a' : 'div'}
-                                    {...('path' in item ? { href: item.path } : {})}
                                 >
-                                    <ListItemIcon
-                                        sx={{
-                                            minWidth: 0,
-                                            mr: open ? 3 : 'auto',
-                                            justifyContent: 'center',
-                                        }}
-                                    >
-                                        {item.icon}
-                                    </ListItemIcon>
-                                    <ListItemText primary={item.name} sx={{ opacity: open ? 1 : 0 }} />
-                                </ListItemButton>
-                            </ListItem>
-                        );
-                    })}
-                </List>
-                <Divider />
-                <List>
-                    <ListItem disablePadding sx={{ display: 'block' }}>
-                        <ListItemButton sx={{ justifyContent: open ? 'initial' : 'center', px: 2.5 }} href="/user-guide">
-                            <ListItemText primary="User Guide" sx={{ opacity: open ? 1 : 0 }} />
-                        </ListItemButton>
-                    </ListItem>
-                    <ListItem disablePadding sx={{ display: 'block' }}>
-                        <ListItemButton sx={{ justifyContent: open ? 'initial' : 'center', px: 2.5 }} href="/aboutLicense">
-                            <ListItemText primary="About License" sx={{ opacity: open ? 1 : 0 }} />
-                        </ListItemButton>
-                    </ListItem>
-                </List>
-            </Drawer>
-        </Box>
+                                    {item.icon}
+                                </ListItemIcon>
+                                <ListItemText primary={item.name} sx={{ opacity: open ? 1 : 0 }} />
+                            </ListItemButton>
+                        </ListItem>
+                    );
+                })}
+            </List>
+            <List sx={{ marginTop: 'auto', p: 0 }}>
+                <ListItem disablePadding sx={{ display: 'block' }}>
+                    <ListItemButton
+                        sx={{
+                            justifyContent: 'center',
+                            textAlign: 'center',
+                            px: open ? 2.5 : 1,
+                        }}
+                        href="/aboutLicense"
+                    >
+                        <Typography variant={open ? 'body1' : 'body3'}>{open ? 'About License' : 'License'}</Typography>
+                    </ListItemButton>
+                </ListItem>
+            </List>
+        </Drawer>
     );
 }
