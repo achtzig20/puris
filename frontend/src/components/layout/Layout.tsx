@@ -18,7 +18,7 @@ under the License.
 
 SPDX-License-Identifier: Apache-2.0
 */
-import { ThemeProvider, createTheme } from "@mui/material/styles"
+import { ThemeProvider } from "@mui/material/styles"
 import { Outlet } from 'react-router-dom';
 import { Footer } from './Footer';
 import { Box, Stack } from '@mui/material';

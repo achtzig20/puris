@@ -29,8 +29,37 @@ body {
     width: 100%;
 }
 
+.MuiDataGrid-root {
+    border-radius: 0.75rem !important;
+    overflow: hidden;
+}
+
 .MuiDataGrid-root > .MuiBox-root h5 > span {
     display: none;
+}
+
+.MuiDataGrid-root > .MuiBox-root {
+    background-color: #081f4b;
+    color: white;
+}
+
+.MuiDataGrid-root > .MuiBox-root > .MuiBox-root {
+    min-height: unset;
+    padding: .5rem .75rem;
+}
+
+.MuiDataGrid-root > .MuiBox-root > .MuiBox-root h5 {
+    font-size: 1rem;
+}
+
+.MuiDataGrid-columnHeader, .MuiDataGrid-columnHeaders {
+    line-height: 1 !important;
+    height: auto !important;
+    min-height: unset !important;
+}
+
+.MuiDataGrid-row, .MuiDataGrid-row > * {
+    border: none !important;
 }
 
 .table-container {
