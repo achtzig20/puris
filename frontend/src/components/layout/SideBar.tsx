@@ -1,7 +1,6 @@
 /*
-Copyright (c) 2022 Volkswagen AG
-Copyright (c) 2022 Fraunhofer-Gesellschaft zur Foerderung der angewandten Forschung e.V. (represented by Fraunhofer ISST)
-Copyright (c) 2022 Contributors to the Eclipse Foundation
+Copyright (c) 2024 Volkswagen AG
+Copyright (c) 2024 Contributors to the Eclipse Foundation
 
 See the NOTICE file(s) distributed with this work for additional
 information regarding copyright ownership.
@@ -16,22 +15,82 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations
 under the License.
 
-SPDX-License-Identifier: Apache-2.0
+SPDX-License-Identifier: Apache-2.0 
 */
 
-import { Link, NavLink } from 'react-router-dom';
-
-import HomeIcon from '@/assets/icons/home.svg';
-import CatalogIcon from '@/assets/icons/catalog.svg';
-import StockIcon from '@/assets/icons/stock.svg';
-import { Typography } from '@catena-x/portal-shared-components';
-import { Role } from '@models/types/auth/role';
-import { useAuth } from '@hooks/useAuth';
-import { Handshake, Logout, SyncAlt } from '@mui/icons-material';
+import * as React from 'react';
+import { styled, useTheme, Theme, CSSObject } from '@mui/material/styles';
+import Box from '@mui/material/Box';
+import MuiDrawer from '@mui/material/Drawer';
+import IconButton from '@mui/material/IconButton';
+import List from '@mui/material/List';
+import Divider from '@mui/material/Divider';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import HomeIcon from '@mui/icons-material/Home';
+import CatalogIcon from '@mui/icons-material/Category';
+import StockIcon from '@mui/icons-material/Inventory';
+import HandshakeIcon from '@mui/icons-material/Handshake';
+import SyncAltIcon from '@mui/icons-material/SyncAlt';
 import NotificationsIcon from '@mui/icons-material/Notifications';
+import LogoutIcon from '@mui/icons-material/Logout';
+import MenuIcon from '@mui/icons-material/Menu';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import AuthenticationService from '@services/authentication-service';
+import { useAuth } from '@hooks/useAuth';
 import { OverridableComponent } from '@mui/material/OverridableComponent';
 import { SvgIconTypeMap } from '@mui/material';
-import AuthenticationService from '@services/authentication-service';
+import { Role } from '@models/types/auth/role';
+import { Link } from 'react-router-dom';
+
+const openedMixin = (theme: Theme): CSSObject => ({
+    width: theme.sidebarWidth,
+    transition: theme.transitions.create('width', {
+        easing: theme.transitions.easing.sharp,
+        duration: theme.transitions.duration.enteringScreen,
+    }),
+    overflowX: 'hidden',
+    position: 'relative',
+});
+
+const closedMixin = (theme: Theme): CSSObject => ({
+    transition: theme.transitions.create('width', {
+        easing: theme.transitions.easing.sharp,
+        duration: theme.transitions.duration.leavingScreen,
+    }),
+    width: `calc(${theme.spacing(7)} + 1px)`,
+    position: 'relative',
+
+    [theme.breakpoints.up('sm')]: {
+        width: `calc(${theme.spacing(8)} + 1px)`,
+    },
+});
+
+const DrawerHeader = styled('div')(({ theme }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    paddingLeft: theme.spacing(2.5),
+    paddingRight: theme.spacing(2.5),
+    ...theme.mixins.toolbar,
+}));
+
+const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(({ theme, open }) => ({
+    width: theme.sidebarWidth,
+    flexShrink: 0,
+    whiteSpace: 'nowrap',
+    boxSizing: 'border-box',
+    ...(open && {
+        ...openedMixin(theme),
+        '& .MuiDrawer-paper': openedMixin(theme),
+    }),
+    ...(!open && {
+        ...closedMixin(theme),
+        '& .MuiDrawer-paper': closedMixin(theme),
+    }),
+}));
 
 type SideBarItemProps = (
     | {
@@ -44,100 +103,97 @@ type SideBarItemProps = (
       }
 ) & {
     name: string;
-    icon: string | OverridableComponent<SvgIconTypeMap<object, "svg">>;
+    icon: React.ReactElement<OverridableComponent<SvgIconTypeMap<{}, 'svg'>>>;
     requiredRoles?: Role[];
 };
 
 const sideBarItems: SideBarItemProps[] = [
-    {
-        name: 'Dashboard',
-        icon: HomeIcon,
-        path: '/dashboard',
-    },
-    {
-        name: 'Stocks',
-        icon: StockIcon,
-        path: '/stocks',
-    },
-    {
-        name: 'Catalog',
-        icon: CatalogIcon,
-        path: '/catalog',
-        requiredRoles: ['PURIS_ADMIN'],
-    },
-    {
-        name: 'Negotiations',
-        icon: Handshake,
-        path: '/negotiations',
-        requiredRoles: ['PURIS_ADMIN'],
-    },
-    {
-        name: 'Transfers',
-        icon: SyncAlt,
-        path: '/transfers',
-        requiredRoles: ['PURIS_ADMIN'],
-    },
-    {
-        name: 'Notifications',
-        icon: NotificationsIcon,
-        path: '/notifications',
-    },
-    {
-        name: 'Logout',
-        icon: Logout,
-        action: AuthenticationService.logout,
-        variant: 'button',
-    },
+    { name: 'Dashboard', icon: <HomeIcon />, path: '/dashboard' },
+    { name: 'Stocks', icon: <StockIcon />, path: '/stocks' },
+    { name: 'Catalog', icon: <CatalogIcon />, path: '/catalog', requiredRoles: ['PURIS_ADMIN'] },
+    { name: 'Negotiations', icon: <HandshakeIcon />, path: '/negotiations', requiredRoles: ['PURIS_ADMIN'] },
+    { name: 'Transfers', icon: <SyncAltIcon />, path: '/transfers', requiredRoles: ['PURIS_ADMIN'] },
+    { name: 'Notifications', icon: <NotificationsIcon />, path: '/notifications' },
+    { name: 'Logout', icon: <LogoutIcon />, action: AuthenticationService.logout, variant: 'button' },
 ];
 
-const calculateClassName = ({ isActive = false, isPending = false, isTransitioning = false }) => {
-    const defaultClasses = 'flex items-center px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 active:bg-gray-300 w-full';
-    return `${defaultClasses}${isActive || isPending || isTransitioning ? ' bg-gray-300' : ''}`;
-}
-
-const SideBarItem = (props: SideBarItemProps) => {
+export default function MiniDrawer() {
+    const theme = useTheme();
+    const [open, setOpen] = React.useState(true);
     const { hasRole } = useAuth();
-    if (props.requiredRoles && !hasRole(props.requiredRoles)) {
-        return null;
-    }
-    return (
-        <li key={props.name}>
-            {props.variant === 'button' ? (
-                <button className={calculateClassName({})} onClick={props.action}>
-                    {typeof props.icon === 'string' ? <img className="mr-2" src={props.icon} alt="Icon" />  : <props.icon sx={{'marginRight': '.25rem'}} />} <span className="min-w-0 break-words">{props.name}</span>
-                </button>
-            ) : (
-                <NavLink to={props.path} className={calculateClassName}>
-                    {typeof props.icon === 'string' ? <img className="mr-2" src={props.icon} alt="Icon" />  : <props.icon sx={{'marginRight': '.25rem'}} />} <span className="min-w-0 break-words">{props.name}</span>
-                </NavLink>
-            )}
-        </li>
-    );
-}
 
-export const SideBar = () => {
+    const handleDrawerOpen = () => {
+        setOpen(true);
+    };
+
+    const handleDrawerClose = () => {
+        setOpen(false);
+    };
+
     return (
-        <aside className="flex flex-col flex-shrink-0 gap-5 h-full w-64 border-r py-5 px-3 overflow-y-auto">
-            <header className="flex justify-center">
-                <Typography variant="h2" className="text-3xl font-semibold text-center text-blue-800">
-                    PURIS
-                </Typography>
-            </header>
-            <nav>
-                <ul className="flex flex-col gap-3">
-                    {sideBarItems.map((item) => (
-                        <SideBarItem key={item.name} {...item} />
-                    ))}
-                </ul>
-            </nav>
-            <footer className="flex flex-col items-center justify-center mt-auto">
-                <Link to="/user-guide" className="hover:text-gray-500">
-                    User Guide
-                </Link>
-                <Link to="/aboutLicense" className="hover:text-gray-500">
-                    About License
-                </Link>
-            </footer>
-        </aside>
+        <Box sx={{ display: 'flex' }}>
+            <Drawer variant="permanent" open={open}>
+                <DrawerHeader>
+                    {open ? (
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                            <img height="30px" src="puris-logo.svg" alt="Puris icon"></img>
+
+                            <IconButton onClick={handleDrawerClose}>
+                                {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+                            </IconButton>
+                        </Box>
+                    ) : (
+                        <IconButton sx={{ px: 0 }} onClick={handleDrawerOpen}>
+                            <MenuIcon />
+                        </IconButton>
+                    )}
+                </DrawerHeader>
+                <Divider />
+                <List>
+                    {sideBarItems.map((item) => {
+                        if (item.requiredRoles && !hasRole(item.requiredRoles)) return null;
+
+                        return (
+                            <ListItem key={item.name} disablePadding sx={{ display: 'block' }}>
+                                <ListItemButton
+                                    sx={{
+                                        minHeight: 48,
+                                        justifyContent: open ? 'initial' : 'center',
+                                        px: 2.5,
+                                    }}
+                                    onClick={item.variant === 'button' ? item.action : undefined}
+                                    component={'path' in item ? 'a' : 'div'}
+                                    {...('path' in item ? { href: item.path } : {})}
+                                >
+                                    <ListItemIcon
+                                        sx={{
+                                            minWidth: 0,
+                                            mr: open ? 3 : 'auto',
+                                            justifyContent: 'center',
+                                        }}
+                                    >
+                                        {item.icon}
+                                    </ListItemIcon>
+                                    <ListItemText primary={item.name} sx={{ opacity: open ? 1 : 0 }} />
+                                </ListItemButton>
+                            </ListItem>
+                        );
+                    })}
+                </List>
+                <Divider />
+                <List>
+                    <ListItem disablePadding sx={{ display: 'block' }}>
+                        <ListItemButton sx={{ justifyContent: open ? 'initial' : 'center', px: 2.5 }} href="/user-guide">
+                            <ListItemText primary="User Guide" sx={{ opacity: open ? 1 : 0 }} />
+                        </ListItemButton>
+                    </ListItem>
+                    <ListItem disablePadding sx={{ display: 'block' }}>
+                        <ListItemButton sx={{ justifyContent: open ? 'initial' : 'center', px: 2.5 }} href="/aboutLicense">
+                            <ListItemText primary="About License" sx={{ opacity: open ? 1 : 0 }} />
+                        </ListItemButton>
+                    </ListItem>
+                </List>
+            </Drawer>
+        </Box>
     );
 }

@@ -18,9 +18,10 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
- 
+
 body {
-    @apply text-gray-700;
+    margin: 0;
+    padding: 0;
 }
 
 [role='tabpanel'] {
@@ -64,7 +65,7 @@ input[type='time'] {
 }
 
 input[type='time']:hover {
-    border-color: rgba(0, 0, 0, 0.87)
+    border-color: rgba(0, 0, 0, 0.87);
 }
 
 input[type='time']:focus,
