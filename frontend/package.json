@@ -19,6 +19,8 @@
     },
     "dependencies": {
         "@catena-x/portal-shared-components": "^2.1.31",
+        "@emotion/react": "^11.13.5",
+        "@emotion/styled": "^11.13.5",
         "@mui/icons-material": "^5.14.12",
         "@mui/material": "^5.14.12",
         "keycloak-js": "^25.0.6",
