@@ -26,29 +26,27 @@ import { ConfidentialBanner } from '@components/ConfidentialBanner';
 export const NegotiationView = () => {
     const { negotiations } = useNegotiations();
     return (
-        <div className="flex flex-col items-center w-full h-full">
-            <Box width="100%" sx={{ display: 'flex', flexDirection: 'column', gap: 3}}>
-                <ConfidentialBanner />
-                <Table
-                    title="Negotiation history"
-                    columns={[
-                        { headerName: 'Negotiation Id', field: '@id', flex: 1 },
-                        { headerName: 'Agreement Id', field: 'contractAgreementId', flex: 1 },
-                        { headerName: 'Type', field: 'type', flex: 1 },
-                        { headerName: 'State', field: 'state', flex: 1 },
-                        { headerName: 'CounterParty', field: 'counterPartyId', flex: 1 },
-                        { headerName: 'Counterparty EDC URL', field: 'counterPartyAddress', flex: 1 },
-                        {
-                            headerName: 'Timestamp',
-                            field: 'createdAt',
-                            flex: 1,
-                            valueFormatter: (params) => new Date(params.value).toLocaleString(),
-                        },
-                    ]}
-                    rows={negotiations ?? []}
-                    getRowId={(row) => row['@id']}
-                />
-            </Box>
-        </div>
+        <Box width="100%" sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <ConfidentialBanner />
+            <Table
+                title="Negotiation history"
+                columns={[
+                    { headerName: 'Negotiation Id', field: '@id', flex: 1 },
+                    { headerName: 'Agreement Id', field: 'contractAgreementId', flex: 1 },
+                    { headerName: 'Type', field: 'type', flex: 0.75 },
+                    { headerName: 'State', field: 'state', flex: 0.75 },
+                    { headerName: 'CounterParty', field: 'counterPartyId', flex: 0.75 },
+                    { headerName: 'Counterparty EDC URL', field: 'counterPartyAddress', flex: 1.15 },
+                    {
+                        headerName: 'Timestamp',
+                        field: 'createdAt',
+                        flex: 1,
+                        valueFormatter: (params) => new Date(params.value).toLocaleString(),
+                    },
+                ]}
+                rows={negotiations ?? []}
+                getRowId={(row) => row['@id']}
+            />
+        </Box>
     );
 };

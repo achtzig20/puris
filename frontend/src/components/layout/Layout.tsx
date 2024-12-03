@@ -18,19 +18,26 @@ under the License.
 
 SPDX-License-Identifier: Apache-2.0
 */
-import { ThemeProvider } from "@mui/material/styles"
+import { ThemeProvider } from '@mui/material/styles';
 import { Outlet } from 'react-router-dom';
 import { Footer } from './Footer';
 import { Box, Stack } from '@mui/material';
-import theme from "../../theme";
-import SideBar from "./SideBar";
+import theme from '../../theme';
+import SideBar from './SideBar';
 
 export const Layout = () => {
     return (
         <ThemeProvider theme={theme}>
-            <Box display="flex" height="100vh" width="100%">
+            <Box display="flex" height="100vh" width="100%" sx={{ backgroundColor: '#f4f4f4' }}>
                 <SideBar />
-                <Stack padding="1.25rem 1rem" overflow="auto" flexGrow={1} spacing={5}>
+                <Stack
+                    padding="1.25rem 1rem"
+                    overflow="auto"
+                    flexGrow={1}
+                    spacing={5}
+                    fontFamily={theme.typography.fontFamily}
+                    fontSize={theme.typography.body1.fontSize}
+                >
                     <Box flexGrow={1}>
                         <Outlet />
                     </Box>

@@ -45,7 +45,7 @@ import {
     NotificationsOutlined,
     SyncAltOutlined,
 } from '@mui/icons-material';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 const openedMixin = (theme: Theme): CSSObject => ({
     width: theme.sidebarWidth,
@@ -124,7 +124,6 @@ const sideBarItems: SideBarItemProps[] = [
 
 export default function MiniDrawer() {
     const [open, setOpen] = React.useState(() => true);
-    const [activeRoute, setActiveRoute] = React.useState<string>('');
     const { pathname } = useLocation();
     const theme = useTheme();
     const { hasRole } = useAuth();
@@ -160,6 +159,7 @@ export default function MiniDrawer() {
                     return (
                         <ListItem key={item.name} disablePadding sx={{ display: 'block', px: 1, py: 0.5 }}>
                             <ListItemButton
+                                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                                 LinkComponent={({ href, ...props }) => <Link to={href} {...props} />}
                                 sx={{
                                     gap: open ? 1 : 0,
@@ -200,6 +200,7 @@ export default function MiniDrawer() {
             <List sx={{ marginTop: 'auto', p: 0 }}>
                 <ListItem disablePadding sx={{ display: 'block' }}>
                     <ListItemButton
+                        LinkComponent={({ href, ...props }) => <Link to={href} {...props} />}
                         sx={{
                             justifyContent: 'center',
                             textAlign: 'center',

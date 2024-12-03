@@ -31,7 +31,9 @@ export const ConfidentialBanner = () => {
                 width: '100%',
                 display: 'flex',
                 justifyContent: 'center',
-                py: 1
+                py: 1,
+                px: 3,
+                boxSizing: 'border-box'
             }}
         >
             <Typography variant="body3">

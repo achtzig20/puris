@@ -217,7 +217,7 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                     onPartnerSitesChange={(sites) => dispatch({ type: 'selectedPartnerSites', payload: sites })}
                 />
                 <Box width="100%" marginTop="1rem">
-                    <Typography variant="h5" component="h2">
+                    <Typography variant="h3" component="h2">
                         Production Information
                         {state.selectedMaterial && state.selectedSite && <> for {state.selectedMaterial.description} ({state.selectedMaterial.ownMaterialNumber})</>}
                     </Typography>
@@ -259,7 +259,7 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                             marginBlock="0.5rem"
                             paddingLeft=".5rem"
                         >
-                            <Typography variant="h5" component="h2">
+                            <Typography variant="h3" component="h2">
                                 {`${capitalize(getPartnerType(type))} Information ${
                                     state.selectedMaterial ? `for ${state.selectedMaterial.description} (${state.selectedMaterial.ownMaterialNumber})` : ''
                                 }`}

@@ -23,27 +23,30 @@ import { useState } from 'react';
 import { Tab, TabPanel, Tabs } from '@catena-x/portal-shared-components';
 import { ConfidentialBanner } from '@components/ConfidentialBanner';
 import { StockDetailsView } from '@features/stock-view/components/StockDetailsView';
+import { Box, Stack, Typography } from '@mui/material';
 
 export const StockView = () => {
     const [selectedTab, setSelectedTab] = useState<number>(0);
     return (
         <>
             <ConfidentialBanner />
-            <div className="flex flex-col items-center w-full h-full p-5">
-                <h1 className="text-3xl font-semibold text-gray-700 mb-10">View and manage stocks</h1>
-                <Tabs value={selectedTab} onChange={(_, value: number) => setSelectedTab(value)}>
-                    <Tab label="Material Stocks"></Tab>
-                    <Tab label="Product Stocks"></Tab>
-                </Tabs>
-                <div className="flex w-full">
+            <Stack alignItems='center' width='100%' paddingTop={2} spacing={1}>
+                <Stack spacing={1} sx={{backgroundColor: 'white', padding: 2, borderRadius: 2, width: '100%', marginInline: 1}}>
+                    <Typography variant='h1'>View and manage stocks</Typography>
+                    <Tabs value={selectedTab} onChange={(_, value: number) => setSelectedTab(value)}>
+                        <Tab label="Material Stocks"></Tab>
+                        <Tab label="Product Stocks"></Tab>
+                    </Tabs>
+                </Stack>
+                <Box width='100%'>
                     <TabPanel value={selectedTab} index={0}>
                         <StockDetailsView type="material" />
                     </TabPanel>
                     <TabPanel value={selectedTab} index={1}>
                         <StockDetailsView type="product" />
                     </TabPanel>
-                </div>
-            </div>
+                </Box>
+            </Stack>
         </>
     );
 };
