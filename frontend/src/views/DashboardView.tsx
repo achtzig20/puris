@@ -28,21 +28,25 @@ import { useState } from 'react';
 export const DashboardView = () => {
     const [selectedTab, setSelectedTab] = useState<number>(0);
     return (
-        <Stack spacing={2} alignItems='center' width='100%' height='100%'>
+        <Stack spacing={2} width="100%" height="100%">
             <ConfidentialBanner />
-            <Typography variant="h1">Dashboard</Typography>
-            <Tabs value={selectedTab} onChange={(_, value: number) => setSelectedTab(value)}>
-                <Tab label="Customer"></Tab>
-                <Tab label="Supplier"></Tab>
-            </Tabs>
-            <Box width='100%' display='flex' marginTop='0 !important' paddingBottom='2rem'>
-                <TabPanel value={selectedTab} index={0}>
-                    <Dashboard type='customer'/>
-                </TabPanel>
-                <TabPanel value={selectedTab} index={1}>
-                    <Dashboard type='supplier'/>
-                </TabPanel>
-            </Box>
+            <Stack p={2} sx={{ backgroundColor: 'white', flexGrow: 1, borderRadius: '1rem' }}>
+                <Stack spacing={1} sx={{ p: 2, width: '100%' }}>
+                    <Typography variant="h1">Dashboard</Typography>
+                    <Tabs value={selectedTab} onChange={(_, value: number) => setSelectedTab(value)}>
+                        <Tab label="Customer"></Tab>
+                        <Tab label="Supplier"></Tab>
+                    </Tabs>
+                </Stack>
+                <Box width="100%" display="flex" marginTop="0 !important" paddingBottom="2rem">
+                    <TabPanel value={selectedTab} index={0}>
+                        <Dashboard type="customer" />
+                    </TabPanel>
+                    <TabPanel value={selectedTab} index={1}>
+                        <Dashboard type="supplier" />
+                    </TabPanel>
+                </Box>
+            </Stack>
         </Stack>
     );
 };
