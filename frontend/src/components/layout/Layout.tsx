@@ -28,7 +28,7 @@ import SideBar from './SideBar';
 export const Layout = () => {
     return (
         <ThemeProvider theme={theme}>
-            <Box display="flex" height="100vh" width="100%" sx={{ backgroundColor: '#f4f4f4' }}>
+            <Box display="flex" height="100vh" width="100%" sx={{ backgroundColor: '#f5f5f7' }}>
                 <SideBar />
                 <Stack
                     padding="1.25rem 1rem"

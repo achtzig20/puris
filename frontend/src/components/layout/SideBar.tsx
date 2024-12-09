@@ -140,7 +140,7 @@ export default function MiniDrawer() {
             <DrawerHeader>
                 {open ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', gap: '.5rem' }}>
-                        <img height="30px" src="puris-logo.svg" alt="Puris icon"></img>
+                        <img height="30px" src="/puris-logo.svg" alt="Puris icon"></img>
 
                         <IconButton sx={{ p: 0, borderRadius: 0 }} onClick={handleDrawerClose}>
                             <ChevronLeftOutlined />

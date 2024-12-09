@@ -19,7 +19,7 @@ SPDX-License-Identifier: Apache-2.0
 */
 import { Box, Button } from '@mui/material';
 
-const weekdays = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+export const weekdays = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 
 export const createDateColumnHeaders = (numberOfDays: number) => {
     return Object.keys(Array.from({ length: numberOfDays })).map((_, index) => {

@@ -39,7 +39,7 @@ export const TableWithRowHeader = ({ rows, title, ...tableProps }: TableWithRowH
                     sortingMode={'server'}
                 />
                 <Box sx={{width: '100%', display: 'flex', overflowX: 'auto'}}>
-                    <Table title=" " {...tableProps} rows={rows} density='standard' disableColumnFilter disableColumnMenu sortingMode={'server'} showCellVerticalBorder showColumnVerticalBorder />
+                    <Table title="" {...tableProps} rows={rows} density='standard' disableColumnFilter disableColumnMenu sortingMode={'server'} showCellVerticalBorder showColumnVerticalBorder />
                 </Box>
             </div>
         </Box>
