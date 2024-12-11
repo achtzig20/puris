@@ -79,7 +79,7 @@ export const StockUpdateForm = <T extends StockType>({ items, type, selectedItem
     };
 
     return (
-        <Box sx={{ backgroundColor: 'white', borderRadius: 2, padding: 2, width: '100%' }}>
+        <Box sx={{ px: 2, width: '100%' }}>
             <form>
                 <Grid container marginInline="auto" spacing={1}>
                     <Grid item xs={6}>

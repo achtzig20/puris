@@ -28,10 +28,10 @@ import { Box, Stack, Typography } from '@mui/material';
 export const StockView = () => {
     const [selectedTab, setSelectedTab] = useState<number>(0);
     return (
-        <>
+        <Stack width="100%" height="100%" spacing={2}>
             <ConfidentialBanner />
-            <Stack alignItems='center' width='100%' paddingTop={2} spacing={1}>
-                <Stack spacing={1} sx={{backgroundColor: 'white', padding: 2, borderRadius: 2, width: '100%', marginInline: 1}}>
+            <Stack width='100%' p={2}  sx={{backgroundColor: 'white', borderRadius: "1rem", flexGrow: 1}}>
+                <Stack spacing={1} sx={{p: 2, width: '100%'}}>
                     <Typography variant='h1'>View and manage stocks</Typography>
                     <Tabs value={selectedTab} onChange={(_, value: number) => setSelectedTab(value)}>
                         <Tab label="Material Stocks"></Tab>
@@ -47,6 +47,6 @@ export const StockView = () => {
                     </TabPanel>
                 </Box>
             </Stack>
-        </>
+        </Stack>
     );
 };
