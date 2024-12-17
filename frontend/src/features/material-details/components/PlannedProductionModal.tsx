@@ -19,19 +19,20 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 import { useEffect, useMemo, useState } from 'react';
-import { Input, PageSnackbar, PageSnackbarStack, Table } from '@catena-x/portal-shared-components';
+import { Input, Table } from '@catena-x/portal-shared-components';
 import { UNITS_OF_MEASUREMENT } from '@models/constants/uom';
 import { Production } from '@models/types/data/production';
 import { Box, Button, Dialog, DialogTitle, FormLabel, Grid, Stack, capitalize } from '@mui/material';
 import { getUnitOfMeasurement, isValidOrderReference } from '@util/helpers';
 import { usePartners } from '@features/stock-view/hooks/usePartners';
 import { deleteProduction, postProductionRange } from '@services/productions-service';
-import { Notification } from '@models/types/data/notification';
 import { Close, Delete, Save } from '@mui/icons-material';
 import { DateTime } from '@components/ui/DateTime';
 import { ModalMode } from '@models/types/data/modal-mode';
 import { LabelledAutoComplete } from '@components/ui/LabelledAutoComplete';
 import { GridItem } from '@components/ui/GridItem';
+import { useSites } from '@features/stock-view/hooks/useSites';
+import { useNotifications } from '@contexts/notificationContext';
 
 const createProductionColumns = (handleDelete?: (row: Production) => void) => {
     const columns = [
@@ -132,7 +133,8 @@ const isValidProduction = (production: Partial<Production>) =>
 export const PlannedProductionModal = ({ open, mode, onClose, onSave, production, productions }: PlannedProductionModalProps) => {
     const [temporaryProduction, setTemporaryProduction] = useState<Partial<Production>>(production ?? {});
     const { partners } = usePartners('product', temporaryProduction?.material?.materialNumberSupplier ?? null);
-    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const { sites } = useSites();
+    const { notify } = useNotifications();
     const [formError, setFormError] = useState(false);
     const dailyProductions = useMemo(
         () =>
@@ -156,24 +158,18 @@ export const PlannedProductionModal = ({ open, mode, onClose, onSave, production
         postProductionRange([temporaryProduction])
             .then(() => {
                 onSave();
-                setNotifications((ns) => [
-                    ...ns,
-                    {
-                        title: 'Production Created',
-                        description: 'The Production has been saved successfully',
-                        severity: 'success',
-                    },
-                ]);
+                notify({
+                    title: 'Production Created',
+                    description: 'The Production has been saved successfully',
+                    severity: 'success',
+                });
             })
             .catch((error) => {
-                setNotifications((ns) => [
-                    ...ns,
-                    {
-                        title: error.status === 409 ? 'Conflict' : 'Error requesting update',
-                        description: error.status === 409 ? 'Date conflicting with another Production' : error.error,
-                        severity: 'error',
-                    },
-                ]);
+                notify({
+                    title: error.status === 409 ? 'Conflict' : 'Error requesting update',
+                    description: error.status === 409 ? 'Date conflicting with another Production' : error.error,
+                    severity: 'error',
+                });
             })
             .finally(onClose);
     };
@@ -186,15 +182,29 @@ export const PlannedProductionModal = ({ open, mode, onClose, onSave, production
     return (
         <>
             <Dialog open={open && production !== null} onClose={onClose}>
-                <DialogTitle variant='h3' textAlign="center">
+                <DialogTitle variant="h3" textAlign="center">
                     {capitalize(mode)} Production Information
                 </DialogTitle>
-                <Stack padding="0 2rem 2rem" sx={{ width: '50rem' }}>
+                <Stack padding="0 2rem 2rem" sx={{ width: '60rem' }}>
                     <Grid container spacing={2} padding=".25rem">
                         {mode === 'create' ? (
                             <>
                                 <GridItem label="Material Number" value={temporaryProduction.material?.materialNumberSupplier ?? ''} />
-                                <GridItem label="Site" value={temporaryProduction.productionSiteBpns ?? ''} />
+                                <Grid item xs={6}>
+                                    <LabelledAutoComplete
+                                        id="productionSiteBpns"
+                                        options={sites ?? []}
+                                        getOptionLabel={(option) => option.name ?? ''}
+                                        error={formError}
+                                        isOptionEqualToValue={(option, value) => option?.bpns === value.bpns}
+                                        onChange={(_, value) =>
+                                            setTemporaryProduction({ ...temporaryProduction, productionSiteBpns: value?.bpns ?? undefined })
+                                        }
+                                        value={sites?.find((s) => s.bpns === temporaryProduction.productionSiteBpns) ?? null}
+                                        label="Production Site"
+                                        placeholder="Select a Site"
+                                    />
+                                </Grid>
                                 <Grid item xs={6} display="flex" alignItems="end">
                                     <DateTime
                                         label="Estimated Completion Time"
@@ -339,19 +349,6 @@ export const PlannedProductionModal = ({ open, mode, onClose, onSave, production
                     </Box>
                 </Stack>
             </Dialog>
-            <PageSnackbarStack>
-                {notifications.map((notification, index) => (
-                    <PageSnackbar
-                        key={index}
-                        open={!!notification}
-                        severity={notification?.severity}
-                        title={notification?.title}
-                        description={notification?.description}
-                        autoClose={true}
-                        onCloseNotification={() => setNotifications((ns) => ns.filter((_, i) => i !== index) ?? [])}
-                    />
-                ))}
-            </PageSnackbarStack>
         </>
     );
 };

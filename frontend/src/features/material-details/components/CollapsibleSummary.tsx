@@ -1,32 +1,29 @@
-import { CalendarWeek } from '@util/date-helpers';
-import { Expandable } from './ProductionSummary';
 import { ReactNode, useState } from 'react';
-import { Box, Button, Stack, useTheme } from '@mui/material';
-import SummaryPanel from './SummaryPanel';
+import { Button, Stack, useTheme } from '@mui/material';
+import { SummaryPanel } from './SummaryPanel';
 import { ChevronRightOutlined, SubdirectoryArrowRightOutlined } from '@mui/icons-material';
+import { Summary, SummaryType } from '../util/summary-service';
 
-type CollapsibleSummaryProps = {
+type CollapsibleSummaryProps<TType extends SummaryType> = {
     variant?: 'default' | 'sub';
+    summary: Summary<TType>;
     renderTitle: () => ReactNode;
-    calendarWeeks: Expandable<CalendarWeek>[];
-    onExpandedChange: (state: boolean, index: number) => void;
     children?: ReactNode;
 };
 
-export default function CollapsibleSummary({
+export function CollapsibleSummary<TType extends SummaryType>({
+    summary,
     renderTitle,
-    calendarWeeks,
-    onExpandedChange,
     children,
     variant = 'default',
-}: CollapsibleSummaryProps) {
+}: CollapsibleSummaryProps<TType>) {
     const theme = useTheme();
     const [isExpanded, setIsExpanded] = useState(false);
     return (
-        <Stack width="fit-content" minWidth="100%">
+        <>
             <Button
                 variant="text"
-                sx={{ flexGrow: 1, padding: 0, borderRadius: 0, textTransform: 'none' }}
+                sx={{ flexGrow: 1, padding: 0, borderRadius: 0, textTransform: 'none', mindWidth: "100%", position: 'sticky', left: 0, display: 'flex' }}
                 onClick={() => setIsExpanded((prev) => !prev)}
             >
                 <Stack
@@ -47,19 +44,10 @@ export default function CollapsibleSummary({
                     {renderTitle()}
                 </Stack>
             </Button>
-            <Box
-                sx={{
-                    display: 'grid',
-                    gridTemplateRows: isExpanded ? '1fr' : '0',
-                    overflowY: 'hidden',
-                    transition: 'all 300ms',
-                }}
-            >
-                <Box width="100%">
-                    <SummaryPanel calendarWeeks={calendarWeeks} onExpandedChange={onExpandedChange} />
-                    {children}
-                </Box>
-            </Box>
-        </Stack>
+
+            <SummaryPanel sx={{display: isExpanded ? 'flex' : 'none'}} summary={summary} />
+
+            {isExpanded ? children : null}
+        </>
     );
 }

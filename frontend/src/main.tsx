@@ -24,9 +24,12 @@ import './index.css';
 import { RouterProvider } from 'react-router-dom';
 import { router } from './router.tsx';
 import { AuthContextProvider } from '@contexts/authContext.tsx';
+import { NotificationContextProvider } from '@contexts/notificationContext.tsx';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <AuthContextProvider>
-        <RouterProvider router={router} />
+        <NotificationContextProvider>
+            <RouterProvider router={router} />
+        </NotificationContextProvider>
     </AuthContextProvider>
 );

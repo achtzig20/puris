@@ -1,19 +1,26 @@
 import { CloseFullscreenOutlined, OpenInFullOutlined } from '@mui/icons-material';
 import { Box, Grid, IconButton, Stack, Typography, useTheme } from '@mui/material';
 import { CalendarWeek, incrementDate } from '@util/date-helpers';
-import { weekdays } from '../util/helpers';
 import { useState } from 'react';
+import { Summary, SummaryType } from '../util/summary-service';
 
-type CalendarWeekSummaryProps = {
+type CalendarWeekSummaryProps<TType extends SummaryType> = {
     cw: CalendarWeek;
+    summary: Summary<TType>;
     isExpanded: boolean;
     showHeader: boolean;
     onToggleExpanded?: (state: boolean) => void;
 };
 
-export default function CalendarWeekSummary({ cw, isExpanded, onToggleExpanded, showHeader = false }: CalendarWeekSummaryProps) {
+export function CalendarWeekSummary<TType extends SummaryType>({
+    cw,
+    summary,
+    isExpanded,
+    onToggleExpanded,
+    showHeader = false,
+}: CalendarWeekSummaryProps<TType>) {
     const theme = useTheme();
-    const [weekDates, setWeekDates] = useState<Date[]>(() =>
+    const [weekDates] = useState<Date[]>(() =>
         Array.from(new Array(7).keys()).map((key) => incrementDate(cw.startDate, key))
     );
     return (
@@ -22,7 +29,7 @@ export default function CalendarWeekSummary({ cw, isExpanded, onToggleExpanded, 
                 <Stack
                     direction="row"
                     width="100%"
-                    height="2rem"
+                    height="2.25rem"
                     sx={{ backgroundColor: isExpanded ? theme.palette.primary.main : theme.palette.primary.dark, position: 'relative' }}
                     justifyContent="center"
                     alignItems="center"
@@ -31,7 +38,7 @@ export default function CalendarWeekSummary({ cw, isExpanded, onToggleExpanded, 
                         .toString()
                         .padStart(2, '0')}`}</Typography>
                     <IconButton
-                        sx={{ position: 'absolute', top: 0, right: 0, color: theme.palette.primary.contrastText, fontSize: '1rem' }}
+                        sx={{ position: 'absolute', top: '0.125rem', right: '0.125rem', color: theme.palette.primary.contrastText, fontSize: '1rem' }}
                         onClick={() => onToggleExpanded?.(!isExpanded)}
                     >
                         {isExpanded ? <CloseFullscreenOutlined /> : <OpenInFullOutlined />}
@@ -41,7 +48,7 @@ export default function CalendarWeekSummary({ cw, isExpanded, onToggleExpanded, 
             <Grid container columns={8} flex={1} height="100%">
                 {isExpanded ? (
                     <>
-                        {weekDates.map((date, index) => (
+                        {weekDates.map((date) => (
                             <Grid key={date.toLocaleDateString()} item xs={1} height="100%">
                                 <Stack height="100%">
                                     {showHeader && (
@@ -53,22 +60,33 @@ export default function CalendarWeekSummary({ cw, isExpanded, onToggleExpanded, 
                                             spacing={0.25}
                                             sx={{ backgroundColor: '#f5f5f5' }}
                                         >
-                                            <Typography variant="body2" fontWeight={500}>
-                                                {weekdays[date.getDay()]}
+                                            <Typography variant="body2">
+                                                {date.toLocaleDateString(undefined, {weekday: 'long'})}
                                             </Typography>
-                                            <Typography variant="body3" color="#777">
+                                            <Typography variant="body2" color="#777">
                                                 {date.toLocaleDateString()}
                                             </Typography>
                                         </Stack>
                                     )}
                                     <Box flex={1} display="flex" justifyContent="center" alignItems="center">
-                                        <Typography variant="body2">0</Typography>
+                                        <Typography variant="body2">
+                                            {summary.dailySummaries[date.toLocaleDateString()]?.primaryValueTotal}
+                                        </Typography>
                                     </Box>
                                     <Box flex={1} display="flex" justifyContent="center" alignItems="center">
-                                        <Typography variant="body2">0</Typography>
+                                        <Typography variant="body2">
+                                            {summary.dailySummaries[date.toLocaleDateString()]?.deliveryTotal}
+                                        </Typography>
                                     </Box>
                                     <Box flex={1} display="flex" justifyContent="center" alignItems="center">
-                                        <Typography variant="body2">0</Typography>
+                                        <Typography
+                                            variant="body2"
+                                            color={
+                                                summary.dailySummaries[date.toLocaleDateString()]?.stockTotal < 0 ? '#f44336bb' : 'inherit'
+                                            }
+                                        >
+                                            {summary.dailySummaries[date.toLocaleDateString()]?.stockTotal}
+                                        </Typography>
                                     </Box>
                                 </Stack>
                             </Grid>
@@ -100,13 +118,40 @@ export default function CalendarWeekSummary({ cw, isExpanded, onToggleExpanded, 
                             </Box>
                         )}
                         <Box flex={1} display="flex" justifyContent="center" alignItems="center">
-                            <Typography variant="body2">0</Typography>
+                            <Typography variant="body2">
+                                {weekDates.reduce(
+                                    (total, date) => total + (summary.dailySummaries[date.toLocaleDateString()]?.primaryValueTotal ?? 0),
+                                    0
+                                )}
+                            </Typography>
                         </Box>
                         <Box flex={1} display="flex" justifyContent="center" alignItems="center">
-                            <Typography variant="body2">0</Typography>
+                            <Typography variant="body2">
+                                {weekDates.reduce(
+                                    (total, date) => total + (summary.dailySummaries[date.toLocaleDateString()]?.deliveryTotal ?? 0),
+                                    0
+                                )}
+                            </Typography>
                         </Box>
                         <Box flex={1} display="flex" justifyContent="center" alignItems="center">
-                            <Typography variant="body2">0</Typography>
+                            <Typography
+                                variant="body2"
+                                color={
+                                    ([...weekDates]
+                                        .reverse()
+                                        .map((date) => summary.dailySummaries[date.toLocaleDateString()]?.stockTotal)
+                                        .find((sum) => sum) ?? 0) < 0
+                                        ? '#f44336bb'
+                                        : 'inherit'
+                                }
+                            >
+                                {
+                                    [...weekDates]
+                                        .reverse()
+                                        .map((date) => summary.dailySummaries[date.toLocaleDateString()])
+                                        .find((sum) => sum)?.stockTotal
+                                }
+                            </Typography>
                         </Box>
                     </Stack>
                 </Grid>

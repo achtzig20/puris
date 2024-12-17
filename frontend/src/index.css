@@ -212,6 +212,10 @@ label:has(+* input[aria-invalid=true]) {
     border-radius: 2rem;
 }
 
+.date-picker .MuiFormControl-root {
+    width: 100% !important;
+}
+
 .date-time-picker .MuiOutlinedInput-root fieldset,
 .date-picker .MuiOutlinedInput-root fieldset {
     border: none !important;

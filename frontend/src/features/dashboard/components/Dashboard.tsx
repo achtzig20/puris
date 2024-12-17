@@ -18,7 +18,7 @@ under the License.
 
 SPDX-License-Identifier: Apache-2.0
 */
-import { usePartnerStocks } from '@features/stock-view/hooks/usePartnerStocks';
+
 import { useStocks } from '@features/stock-view/hooks/useStocks';
 import { MaterialDescriptor } from '@models/types/data/material-descriptor';
 import { Site } from '@models/types/edc/site';
@@ -28,27 +28,28 @@ import { DemandTable } from './DemandTable';
 import { ProductionTable } from './ProductionTable';
 import { Box, Button, capitalize, Stack, Typography } from '@mui/material';
 import { Delivery } from '@models/types/data/delivery';
-import { DeliveryInformationModal } from './DeliveryInformationModal';
-import { getPartnerType } from '../util/helpers';
-import { LoadingButton, PageSnackbar, PageSnackbarStack } from '@catena-x/portal-shared-components';
+import { PageSnackbar, PageSnackbarStack } from '@catena-x/portal-shared-components';
 import { Refresh } from '@mui/icons-material';
 import { Demand } from '@models/types/data/demand';
-import { DemandCategoryModal } from './DemandCategoryModal';
 import { DEMAND_CATEGORY } from '@models/constants/demand-category';
-import { useDemand } from '../hooks/useDemand';
-import { useReportedDemand } from '../hooks/useReportedDemand';
 import { Production } from '@models/types/data/production';
-import { PlannedProductionModal } from './PlannedProductionModal';
-import { useProduction } from '../hooks/useProduction';
-import { useReportedProduction } from '../hooks/useReportedProduction';
 
 import { requestReportedStocks, scheduleErpUpdateStocks } from '@services/stocks-service';
-import { useDelivery } from '../hooks/useDelivery';
 import { requestReportedDeliveries } from '@services/delivery-service';
 import { requestReportedProductions } from '@services/productions-service';
 import { requestReportedDemands } from '@services/demands-service';
 import { ModalMode } from '@models/types/data/modal-mode';
 import { Notification } from '@models/types/data/notification.ts';
+import { useReportedStocks } from '@features/stock-view/hooks/useReportedStocks';
+import { useDemand } from '@features/material-details/hooks/useDemand';
+import { useReportedDemand } from '@features/material-details/hooks/useReportedDemand';
+import { useProduction } from '@features/material-details/hooks/useProduction';
+import { useReportedProduction } from '@features/material-details/hooks/useReportedProduction';
+import { useDelivery } from '@features/material-details/hooks/useDelivery';
+import { getPartnerType } from '@features/material-details/util/helpers';
+import { DemandCategoryModal } from '@features/material-details/components/DemandCategoryModal';
+import { PlannedProductionModal } from '@features/material-details/components/PlannedProductionModal';
+import { DeliveryInformationModal } from '@features/material-details/components/DeliveryInformationModal';
 
 const NUMBER_OF_DAYS = 28;
 
@@ -92,7 +93,7 @@ const initialState: DashboardState = {
 export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
     const [state, dispatch] = useReducer(reducer, initialState);
     const { stocks } = useStocks(type === 'customer' ? 'material' : 'product');
-    const { partnerStocks } = usePartnerStocks(
+    const { reportedStocks } = useReportedStocks(
         type === 'customer' ? 'material' : 'product',
         state.selectedMaterial?.ownMaterialNumber ?? null
     );
@@ -203,6 +204,7 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
         p.material ??= {
             materialFlag: true,
             productFlag: false,
+            ownMaterialNumber: state.selectedMaterial?.ownMaterialNumber ?? '',
             materialNumberSupplier: state.selectedMaterial?.ownMaterialNumber ?? '',
             materialNumberCustomer: null,
             materialNumberCx: null,
@@ -312,7 +314,7 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                                         <DemandTable
                                             key={ps.bpns}
                                             numberOfDays={NUMBER_OF_DAYS}
-                                            stocks={partnerStocks}
+                                            stocks={reportedStocks}
                                             site={ps}
                                             onDeliveryClick={(delivery, mode) => openDeliveryDialog(delivery, mode, 'incoming', ps)}
                                             onDemandClick={openDemandDialog}
@@ -324,7 +326,7 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                                         <ProductionTable
                                             key={ps.bpns}
                                             numberOfDays={NUMBER_OF_DAYS}
-                                            stocks={partnerStocks ?? []}
+                                            stocks={reportedStocks ?? []}
                                             site={ps}
                                             onDeliveryClick={(delivery, mode) => openDeliveryDialog(delivery, mode, 'outgoing', ps)}
                                             onProductionClick={openProductionDialog}

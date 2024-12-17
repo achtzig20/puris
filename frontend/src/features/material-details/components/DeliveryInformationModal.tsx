@@ -17,7 +17,7 @@ under the License.
 
 SPDX-License-Identifier: Apache-2.0
 */
-import { Input, PageSnackbar, PageSnackbarStack, Table } from '@catena-x/portal-shared-components';
+import { Input, Table } from '@catena-x/portal-shared-components';
 import { DateTime } from '@components/ui/DateTime';
 import { usePartners } from '@features/stock-view/hooks/usePartners';
 import { UNITS_OF_MEASUREMENT } from '@models/constants/uom';
@@ -27,13 +27,14 @@ import { Box, Button, Dialog, DialogTitle, FormLabel, Grid, Stack, capitalize } 
 import { deleteDelivery, postDelivery } from '@services/delivery-service';
 import { getUnitOfMeasurement, isValidOrderReference } from '@util/helpers';
 import { useEffect, useMemo, useState } from 'react';
-import { Notification } from '@models/types/data/notification';
 import { INCOTERMS } from '@models/constants/incoterms';
 import { ARRIVAL_TYPES, DEPARTURE_TYPES } from '@models/constants/event-type';
 import { ModalMode } from '@models/types/data/modal-mode';
 import { Site } from '@models/types/edc/site';
 import { LabelledAutoComplete } from '@components/ui/LabelledAutoComplete';
 import { GridItem } from '@components/ui/GridItem';
+import { useSites } from '@features/stock-view/hooks/useSites';
+import { useNotifications } from '@contexts/notificationContext';
 
 const createDeliveryColumns = (handleDelete: (row: Delivery) => void) => {
     return [
@@ -245,8 +246,9 @@ export const DeliveryInformationModal = ({
     deliveries,
 }: DeliveryInformationModalProps) => {
     const [temporaryDelivery, setTemporaryDelivery] = useState<Partial<Delivery>>(delivery ?? {});
-    const { partners } = usePartners('product', temporaryDelivery?.ownMaterialNumber ?? null);
-    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const { partners } = usePartners(direction === 'incoming' ? 'product' : 'material', temporaryDelivery?.ownMaterialNumber ?? null);
+    const { sites } = useSites();
+    const { notify } = useNotifications();
     const [formError, setFormError] = useState(false);
     const dailyDeliveries = useMemo(
         () =>
@@ -275,24 +277,20 @@ export const DeliveryInformationModal = ({
         postDelivery(temporaryDelivery)
             .then(() => {
                 onSave();
-                setNotifications((ns) => [
-                    ...ns,
-                    {
+                notify({
                         title: 'Delivery Added',
                         description: 'The Delivery has been added',
                         severity: 'success',
                     },
-                ]);
+                );
             })
             .catch((error) => {
-                setNotifications((ns) => [
-                    ...ns,
-                    {
+                notify({
                         title: error.status === 409 ? 'Conflict' : 'Error requesting update',
                         description: error.status === 409 ? 'Delivery conflicting with an existing one' : error.error,
                         severity: 'error',
                     },
-                ]);
+                );
             })
             .finally(() => onClose());
     };
@@ -318,17 +316,41 @@ export const DeliveryInformationModal = ({
                 <DialogTitle variant="h3" textAlign="center">
                     {capitalize(mode)} Delivery Information
                 </DialogTitle>
-                <Stack padding="0 2rem 2rem" sx={{ width: '80rem' }}>
+                <Stack padding="0 2rem 2rem" sx={{ width: '60rem' }}>
                     <Grid container spacing={1} padding=".25rem">
                         {mode === 'create' ? (
                             <>
                                 <GridItem label="Material Number" value={temporaryDelivery.ownMaterialNumber ?? ''} />
-                                <GridItem
-                                    label={direction === 'incoming' ? 'Destination Site' : 'Origin Site'}
-                                    value={
-                                        (direction === 'incoming' ? temporaryDelivery.destinationBpns : temporaryDelivery.originBpns) ?? ''
-                                    }
-                                />
+                                <Grid item xs={6}>
+                                    <LabelledAutoComplete
+                                        id="partnerBpns"
+                                        options={sites ?? []}
+                                        getOptionLabel={(option) => option.name ?? ''}
+                                        isOptionEqualToValue={(option, value) => option?.bpns === value.bpns}
+                                        onChange={(_, value) =>
+                                            setTemporaryDelivery({
+                                                ...temporaryDelivery,
+                                                ...(direction === 'outgoing'
+                                                    ? { originBpns: value?.bpns ?? undefined }
+                                                    : { destinationBpns: value?.bpns ?? undefined }),
+                                            })
+                                        }
+                                        value={
+                                            sites?.find(
+                                                    (s) =>
+                                                        (direction === 'outgoing'
+                                                            ? s.bpns === temporaryDelivery.originBpns
+                                                            : s.bpns === temporaryDelivery.destinationBpns)
+                                                ) ?? null
+                                        }
+                                        label={`${direction === 'outgoing' ? 'Origin' : 'Destination'}*`}
+                                        placeholder={`Select a ${direction === 'outgoing' ? 'Origin' : 'Destination'} Site`}
+                                        error={
+                                            formError &&
+                                            (direction === 'outgoing' ? !temporaryDelivery.originBpns : !temporaryDelivery.destinationBpns)
+                                        }
+                                    />
+                                </Grid>
                                 <Grid item xs={6}>
                                     <LabelledAutoComplete
                                         id="departure-type"
@@ -601,19 +623,6 @@ export const DeliveryInformationModal = ({
                     </Box>
                 </Stack>
             </Dialog>
-            <PageSnackbarStack>
-                {notifications.map((notification, index) => (
-                    <PageSnackbar
-                        key={index}
-                        open={!!notification}
-                        severity={notification?.severity}
-                        title={notification?.title}
-                        description={notification?.description}
-                        autoClose={true}
-                        onCloseNotification={() => setNotifications((ns) => ns.filter((_, i) => i !== index) ?? [])}
-                    />
-                ))}
-            </PageSnackbarStack>
         </>
     );
 };

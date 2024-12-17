@@ -91,11 +91,13 @@ public class ProductionController {
     @GetMapping()
     @ResponseBody
     @Operation(summary = "Get all planned productions for the given Material", description = "Get all planned productions for the given material number. Optionally the production site can be filtered by its bpns.")
-    public List<ProductionDto> getAllProductions(@Parameter(description = "encoded in base64") String ownMaterialNumber, Optional<String> site) {
+    public List<ProductionDto> getAllProductions(@Parameter(description = "encoded in base64") String ownMaterialNumber,
+            Optional<String> site) {
         if (ownMaterialNumber != null) {
             ownMaterialNumber = new String(Base64.getDecoder().decode(ownMaterialNumber));
         }
-        return ownProductionService.findAllByFilters(Optional.of(ownMaterialNumber), Optional.empty(), site, Optional.empty())
+        return ownProductionService
+                .findAllByFilters(Optional.of(ownMaterialNumber), Optional.empty(), site, Optional.empty())
                 .stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
@@ -115,12 +117,13 @@ public class ProductionController {
         }
 
         if (productionDto.getMaterial() == null || productionDto.getMaterial().getMaterialNumberSupplier() == null ||
-            productionDto.getMaterial().getMaterialNumberSupplier().isEmpty()) {
+                productionDto.getMaterial().getMaterialNumberSupplier().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Production Information misses material identification.");
         }
 
-        if (productionDto.getPartner() == null || productionDto.getPartner().getBpnl() == null || productionDto.getPartner().getBpnl().isEmpty()) {
+        if (productionDto.getPartner() == null || productionDto.getPartner().getBpnl() == null
+                || productionDto.getPartner().getBpnl().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Production Information misses partner identification.");
         }
@@ -161,12 +164,14 @@ public class ProductionController {
             return convertToEntity(dto);
         }).collect(Collectors.toList());
         try {
-            return ownProductionService.createAll(productions).stream().map(this::convertToDto).collect(Collectors.toList());
+            return ownProductionService.createAll(productions).stream().map(this::convertToDto)
+                    .collect(Collectors.toList());
         } catch (KeyAlreadyExistsException e) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "One or more productions already exist. Use PUT instead.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "One or more productions already exist. Use PUT instead.");
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "One or more productions are invalid.");
-        }      
+        }
     }
 
     @PutMapping()
@@ -205,11 +210,9 @@ public class ProductionController {
 
     @GetMapping("reported")
     @ResponseBody
-    @Operation(
-        summary = "Get all productions of partners for a material", 
-        description = "Get all productions of partners for a material number. Optionally the partners can be filtered by their bpnl and the production site can be filtered by its bpns."
-    )
-    public List<ProductionDto> getAllProductionsForPartner(@Parameter(description = "encoded in base64") String ownMaterialNumber, Optional<String> bpnl,
+    @Operation(summary = "Get all productions of partners for a material", description = "Get all productions of partners for a material number. Optionally the partners can be filtered by their bpnl and the production site can be filtered by its bpns.")
+    public List<ProductionDto> getAllProductionsForPartner(
+            @Parameter(description = "encoded in base64") String ownMaterialNumber, Optional<String> bpnl,
             Optional<String> site) {
         if (ownMaterialNumber != null) {
             ownMaterialNumber = new String(Base64.getDecoder().decode(ownMaterialNumber));
@@ -220,25 +223,25 @@ public class ProductionController {
 
     @GetMapping("reported/refresh")
     @ResponseBody
-    @Operation(
-        summary = "Refreshes all reported productions", 
-        description = "Refreshes all reported productions from the production request API."
-    )
+    @Operation(summary = "Refreshes all reported productions", description = "Refreshes all reported productions from the production request API.")
     public ResponseEntity<List<PartnerDto>> refreshReportedProductions(
-        @RequestParam @Parameter(description = "encoded in base64") String ownMaterialNumber) {
+            @RequestParam @Parameter(description = "encoded in base64") String ownMaterialNumber) {
+        if (ownMaterialNumber != null) {
+            ownMaterialNumber = new String(Base64.getDecoder().decode(ownMaterialNumber));
+        }
         if (!materialPattern.matcher(ownMaterialNumber).matches()) {
             return new ResponseEntity<>(HttpStatusCode.valueOf(400));
         }
         Material materialEntity = materialService.findByOwnMaterialNumber(ownMaterialNumber);
         List<Partner> allSupplierPartnerEntities = mprService.findAllSuppliersForOwnMaterialNumber(ownMaterialNumber);
         for (Partner supplierPartner : allSupplierPartnerEntities) {
-            executorService.submit(() ->
-            productionRequestApiService.doReportedProductionRequest(supplierPartner, materialEntity));
+            executorService.submit(
+                    () -> productionRequestApiService.doReportedProductionRequest(supplierPartner, materialEntity));
         }
 
         return ResponseEntity.ok(allSupplierPartnerEntities.stream()
-            .map(partner -> modelMapper.map(partner, PartnerDto.class))
-            .toList());
+                .map(partner -> modelMapper.map(partner, PartnerDto.class))
+                .toList());
     }
 
     private ProductionDto convertToDto(OwnProduction entity) {

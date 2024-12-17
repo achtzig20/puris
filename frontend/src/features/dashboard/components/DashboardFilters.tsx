@@ -26,8 +26,8 @@ import { useSites } from '@features/stock-view/hooks/useSites';
 import { MaterialDescriptor } from '@models/types/data/material-descriptor';
 import { Site } from '@models/types/edc/site';
 import { Autocomplete, capitalize, Grid, InputLabel } from '@mui/material';
-import { getPartnerType } from '../util/helpers';
 import { LabelledAutoComplete } from '@components/ui/LabelledAutoComplete';
+import { getPartnerType } from '@features/material-details/util/helpers';
 
 type DashboardFiltersProps = {
     type: 'customer' | 'supplier';

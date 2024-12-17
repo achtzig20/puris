@@ -629,5 +629,4 @@ public class StockViewController {
     private PartnerDto convertToDto(Partner entity) {
         return modelMapper.map(entity, PartnerDto.class);
     }
-
 }

@@ -33,7 +33,7 @@ import { ErrorView } from '@views/errors/ErrorView';
 import { RouteGuard } from '@components/RouteGuard';
 import { UserGuideView } from '@views/UserGuideView';
 import { DemandCapacityNotificationView } from '@views/DemandCapacityNotificationView';
-import MaterialDetailView from '@views/MaterialDetailView';
+import { MaterialDetailView } from '@views/MaterialDetailView';
 
 export const router = createBrowserRouter([
     {
