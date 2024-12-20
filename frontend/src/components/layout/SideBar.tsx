@@ -45,6 +45,7 @@ import {
     NotificationsOutlined,
     SyncAltOutlined,
 } from '@mui/icons-material';
+import { visuallyHidden } from '@mui/utils';
 import { Link, useLocation } from 'react-router-dom';
 
 const openedMixin = (theme: Theme): CSSObject => ({
@@ -144,11 +145,13 @@ export default function MiniDrawer() {
 
                         <IconButton sx={{ p: 0, borderRadius: 0 }} onClick={handleDrawerClose}>
                             <ChevronLeftOutlined />
+                            <Typography variant="body1" sx={visuallyHidden}>Collapse Sidebar</Typography>
                         </IconButton>
                     </Box>
                 ) : (
                     <IconButton sx={{ p: 0, borderRadius: 0, mx: 'auto' }} onClick={handleDrawerOpen}>
                         <MenuOutlined />
+                        <Typography variant="body1" sx={visuallyHidden}>Expand Sidebar</Typography>
                     </IconButton>
                 )}
             </DrawerHeader>
@@ -159,7 +162,6 @@ export default function MiniDrawer() {
                     return (
                         <ListItem key={item.name} disablePadding sx={{ display: 'block', px: 1, py: 0.5 }}>
                             <ListItemButton
-                                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                                 LinkComponent={({ href, ...props }) => <Link to={href} {...props} />}
                                 sx={{
                                     gap: open ? 1 : 0,

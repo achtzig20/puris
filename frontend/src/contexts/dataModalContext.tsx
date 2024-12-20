@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useCallback, useContext, useReducer, useState } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useMemo, useReducer, useState } from 'react';
 import { DataCategory, DataCategoryTypeMap } from '@features/material-details/hooks/useMaterialDetails';
 import { Site } from '@models/types/edc/site';
 import { ModalMode } from '@models/types/data/modal-mode';
@@ -20,6 +20,7 @@ type DataModalContext = {
         site?: Site | null
     ) => void;
     addOnSaveListener: (callback: (category: DataCategory) => void) => void;
+    removeOnSaveListener: (callback: (category: DataCategory) => void) => void; 
 };
 
 const dataModalContext = createContext<DataModalContext | null>(null);
@@ -32,10 +33,14 @@ type DataModalProviderProps = {
 export const DataModalProvider = ({ children, material }: DataModalProviderProps) => {
     const [state, dispatch] = useReducer(reducer, initialState);
     const [onSaveListeners, setOnSaveListeners] = useState<((category: DataCategory) => void)[]>([]);
-    const materialNumber = material?.ownMaterialNumber ?? '';
+    const materialNumber = useMemo(() => material?.ownMaterialNumber ?? '', [material]);
 
     const addOnSaveListener = useCallback((callback: (category: DataCategory) => void) => {
         setOnSaveListeners((prev) => [...prev, callback]);
+    }, []);
+
+    const removeOnSaveListener = useCallback((callback: (category: DataCategory) => void) => {
+        setOnSaveListeners((prev) => prev.filter(cb => cb === callback));
     }, []);
 
     const onSave = useCallback((category: DataCategory) => {
@@ -100,7 +105,7 @@ export const DataModalProvider = ({ children, material }: DataModalProviderProps
     );
     return (
         <>
-            <dataModalContext.Provider value={{ openDialog, addOnSaveListener }}>{children}</dataModalContext.Provider>
+            <dataModalContext.Provider value={{ openDialog, addOnSaveListener, removeOnSaveListener }}>{children}</dataModalContext.Provider>
             <DemandCategoryModal
                 {...state.demandDialogOptions}
                 onClose={() => dispatch({ type: 'demandDialogOptions', payload: { open: false, mode: state.demandDialogOptions.mode } })}

@@ -6,7 +6,7 @@ import { useSites } from '@features/stock-view/hooks/useSites';
 import { useStocks } from '@features/stock-view/hooks/useStocks';
 import { Partner } from '@models/types/edc/partner';
 import { DirectionType } from '@models/types/erp/directionType';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Expandable } from '../models/expandable';
 import { useReportedProduction } from './useReportedProduction';
 import { useReportedDemand } from './useReportedDemand';
@@ -40,7 +40,7 @@ export function useMaterialDetails(materialNumber: string, direction: DirectionT
         materialNumber ?? null
     );
 
-    const refresh = (categoriesToRefresh: DataCategory[]) => {
+    const refresh = useCallback((categoriesToRefresh: DataCategory[]) => {
         categoriesToRefresh.forEach(category => {
             switch(category) {
                 case 'production':
@@ -59,7 +59,7 @@ export function useMaterialDetails(materialNumber: string, direction: DirectionT
                     return;
             }
         })
-    }
+    }, [refreshDelivery, refreshDemand, refreshProduction, refreshStocks]);
 
     const isLoading =
         isLoadingProductions ||

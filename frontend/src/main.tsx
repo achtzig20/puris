@@ -25,11 +25,18 @@ import { RouterProvider } from 'react-router-dom';
 import { router } from './router.tsx';
 import { AuthContextProvider } from '@contexts/authContext.tsx';
 import { NotificationContextProvider } from '@contexts/notificationContext.tsx';
+import { TitleContextProvider } from '@contexts/titleProvider.tsx';
+import { ThemeProvider } from '@mui/material';
+import theme from './theme.tsx';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <AuthContextProvider>
-        <NotificationContextProvider>
-            <RouterProvider router={router} />
-        </NotificationContextProvider>
+        <ThemeProvider theme={theme}>
+            <TitleContextProvider>
+                <NotificationContextProvider>
+                    <RouterProvider router={router} />
+                </NotificationContextProvider>
+            </TitleContextProvider>
+        </ThemeProvider>
     </AuthContextProvider>
 );

@@ -4,7 +4,7 @@ import { Box, capitalize, Stack, Typography } from '@mui/material';
 import { MaterialDetailsHeader } from './MaterialDetailsHeader';
 import { SummaryPanel } from './SummaryPanel';
 import { CollapsibleSummary } from './CollapsibleSummary';
-import { useMaterialDetails } from '../hooks/useMaterialDetails';
+import { DataCategory, useMaterialDetails } from '../hooks/useMaterialDetails';
 import { useNotifications } from '@contexts/notificationContext';
 import { useDataModal } from '@contexts/dataModalContext';
 import { ReactNode, useEffect, useState } from 'react';
@@ -47,7 +47,7 @@ type MaterialDetailsProps = {
 export function MaterialDetails({ material, direction }: MaterialDetailsProps) {
     const [isRefreshing, setIsRefreshing] = useState(false);
     const { notify } = useNotifications();
-    const { addOnSaveListener } = useDataModal();
+    const { addOnSaveListener, removeOnSaveListener } = useDataModal();
     const {
         productions,
         demands,
@@ -70,8 +70,10 @@ export function MaterialDetails({ material, direction }: MaterialDetailsProps) {
     const groupedStocks = groupBy(stocks ?? [], (stock) => stock.stockLocationBpns);
 
     useEffect(() => {
-        addOnSaveListener((category) => refresh([category]));
-    }, [addOnSaveListener, refresh]);
+        const callback = (category: DataCategory) => refresh([category])
+        addOnSaveListener(callback);
+        return () => removeOnSaveListener(callback);
+    }, [addOnSaveListener, refresh, removeOnSaveListener]);
 
     if (isLoading) {
         return <Typography variant="body1">Loading...</Typography>;

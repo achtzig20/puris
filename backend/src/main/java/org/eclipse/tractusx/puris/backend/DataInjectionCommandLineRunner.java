@@ -254,7 +254,7 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
 
         Site secondSite = new Site(
             supplierSiteLaBpns,
-            "Semiconductor Supplier Inc. Secondary Site",
+            "Wolfsburg",
             "BPNA2222222222AA",
             "Sunset Blvd. 345",
             "90001 Los Angeles",
@@ -365,7 +365,7 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
             "http://customer-control-plane:8184/api/v1/dsp",
             "BPNL4444444444XX",
             "BPNS4444444444XX",
-            "Control Unit Creator Production Site",
+            "München",
             "BPNA4444444444AA",
             "13th Street 47",
             "10011 New York",
@@ -390,7 +390,7 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
             "http://supplier-control-plane:9184/api/v1/dsp",
             "BPNL1234567890ZZ",
             supplierSiteNyBpns,
-            "Semiconductor Supplier Inc. Production Site",
+            "Los Angeles",
             "BPNA1234567890AA",
             "Wall Street 101",
             "10001 New York",
@@ -403,7 +403,7 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
 
         Site secondSite = new Site(
             supplierSiteLaBpns,
-            "Semiconductor Supplier Inc. Secondary Site",
+            "Wolfsburg",
             "BPNA2222222222AA",
             "Sunset Blvd. 345",
             "90001 Los Angeles",
