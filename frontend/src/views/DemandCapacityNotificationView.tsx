@@ -73,6 +73,8 @@ export const DemandCapacityNotificationView = () => {
             <Stack spacing={2} alignItems='center' width='100%' height='100%'>
                 <ConfidentialBanner />
                 <Stack width='100%' direction="row" justifyContent="space-between" alignItems="center">
+                <ConfidentialBanner />
+                <Stack width='100%' direction="row" justifyContent="space-between" alignItems="center">
                     <Tabs value={selectedTab} onChange={(_, value: number) => setSelectedTab(value)}>
                         {tabs.map((tab, index) => <Tab key={index} label={tab} />)}
                     </Tabs>
@@ -120,6 +122,14 @@ const DemandCapacityNotificationTable: React.FC<NotificationTableProps> = ({ not
                 noRowsMsg='No Notifications found'
                 title="Demand and Capacity Notifications"
                 columns={[
+                    { headerName: 'Partner Bpnl', field: 'partnerBpnl', flex: 1 },
+                    { headerName: 'Leading Root Cause', field: 'leadingRootCause', flex: 1, valueFormatter: (params) => LEADING_ROOT_CAUSE.find((cause) => cause.key === params.value)?.value },
+                    { headerName: 'Effect', field: 'effect', flex: 1, valueFormatter: (params) => EFFECTS.find((effect) => effect.key === params.value)?.value, },
+                    { headerName: ' Affected Material Numbers', field: 'affectedMaterialNumbers', flex: 1 },
+                    { headerName: ' Affected Sites Sender', field: 'affectedSitesBpnsSender', flex: 1 },
+                    { headerName: ' Affected Sites Recipient', field: 'affectedSitesBpnsRecipient', flex: 1 },
+                    { headerName: 'Text', field: 'text', flex: 1.25 },
+                    { headerName: 'Status', field: 'status', flex: 0.5, valueFormatter: (params) => STATUS.find((status) => status.key === params.value)?.value },
                     { headerName: 'Partner Bpnl', field: 'partnerBpnl', flex: 1 },
                     { headerName: 'Leading Root Cause', field: 'leadingRootCause', flex: 1, valueFormatter: (params) => LEADING_ROOT_CAUSE.find((cause) => cause.key === params.value)?.value },
                     { headerName: 'Effect', field: 'effect', flex: 1, valueFormatter: (params) => EFFECTS.find((effect) => effect.key === params.value)?.value, },

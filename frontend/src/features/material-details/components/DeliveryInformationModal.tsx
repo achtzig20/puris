@@ -24,6 +24,7 @@ import { UNITS_OF_MEASUREMENT } from '@models/constants/uom';
 import { Delivery } from '@models/types/data/delivery';
 import { Close, Delete, Save } from '@mui/icons-material';
 import { Box, Button, Dialog, DialogTitle, FormLabel, Grid, Stack, capitalize } from '@mui/material';
+import { Box, Button, Dialog, DialogTitle, FormLabel, Grid, Stack, capitalize } from '@mui/material';
 import { deleteDelivery, postDelivery } from '@services/delivery-service';
 import { getUnitOfMeasurement, isValidOrderReference } from '@util/helpers';
 import { useEffect, useMemo, useState } from 'react';
@@ -314,6 +315,7 @@ export const DeliveryInformationModal = ({
         <>
             <Dialog open={open && delivery !== null} onClose={handleClose}>
                 <DialogTitle variant="h3" textAlign="center">
+                <DialogTitle variant="h3" textAlign="center">
                     {capitalize(mode)} Delivery Information
                 </DialogTitle>
                 <Stack padding="0 2rem 2rem" sx={{ width: '60rem' }}>
@@ -461,6 +463,7 @@ export const DeliveryInformationModal = ({
                                                         (direction === 'incoming'
                                                             ? s.bpns === temporaryDelivery.originBpns
                                                             : s.bpns === temporaryDelivery.destinationBpns)
+                                                            : s.bpns === temporaryDelivery.destinationBpns)
                                                 ) ?? null
                                         }
                                         label={`${direction === 'incoming' ? 'Origin' : 'Destination'}*`}
@@ -484,6 +487,7 @@ export const DeliveryInformationModal = ({
                                                 quantity: e.target.value ? parseFloat(e.target.value) : undefined,
                                             }))
                                         }
+                                        sx={{ marginTop: '.5rem' }}
                                         sx={{ marginTop: '.5rem' }}
                                     />
                                 </Grid>
@@ -517,6 +521,7 @@ export const DeliveryInformationModal = ({
                                         onChange={(event) =>
                                             setTemporaryDelivery({ ...temporaryDelivery, trackingNumber: event.target.value })
                                         }
+                                        sx={{ marginTop: '.5rem' }}
                                         sx={{ marginTop: '.5rem' }}
                                     />
                                 </Grid>

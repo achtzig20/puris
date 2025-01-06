@@ -21,6 +21,7 @@ import { Input, Textarea } from '@catena-x/portal-shared-components';
 import { DateTime } from '@components/ui/DateTime';
 import { Close, Send } from '@mui/icons-material';
 import { Autocomplete, Box, Button, Dialog, DialogTitle, FormLabel, Grid, InputLabel, Stack, Typography } from '@mui/material';
+import { Autocomplete, Box, Button, Dialog, DialogTitle, FormLabel, Grid, InputLabel, Stack, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { LabelledAutoComplete } from '@components/ui/LabelledAutoComplete';
 import { postDemandAndCapacityNotification } from '@services/demand-capacity-notification';
@@ -60,9 +61,13 @@ const DemandCapacityNotificationView = ({ demandCapacityNotification, partners }
             <Grid display="grid" item xs={6}>
                 <FormLabel>Partner</FormLabel>
                 <Typography variant="body2">{partners?.find((p) => p.bpnl === demandCapacityNotification.partnerBpnl)?.name}</Typography>
+                <Typography variant="body2">{partners?.find((p) => p.bpnl === demandCapacityNotification.partnerBpnl)?.name}</Typography>
             </Grid>
             <Grid display="grid" item xs={6}>
                 <FormLabel>Leading Root Cause</FormLabel>
+                <Typography variant="body2">
+                    {LEADING_ROOT_CAUSE.find((dt) => dt.key === demandCapacityNotification.leadingRootCause)?.value}
+                </Typography>
                 <Typography variant="body2">
                     {LEADING_ROOT_CAUSE.find((dt) => dt.key === demandCapacityNotification.leadingRootCause)?.value}
                 </Typography>
@@ -70,21 +75,30 @@ const DemandCapacityNotificationView = ({ demandCapacityNotification, partners }
             <Grid display="grid" item xs={6}>
                 <FormLabel>Status</FormLabel>
                 <Typography variant="body2">{STATUS.find((dt) => dt.key === demandCapacityNotification.status)?.value}</Typography>
+                <Typography variant="body2">{STATUS.find((dt) => dt.key === demandCapacityNotification.status)?.value}</Typography>
             </Grid>
             <Grid display="grid" item xs={6}>
                 <FormLabel>Effect</FormLabel>
+                <Typography variant="body2">{EFFECTS.find((dt) => dt.key === demandCapacityNotification.effect)?.value}</Typography>
                 <Typography variant="body2">{EFFECTS.find((dt) => dt.key === demandCapacityNotification.effect)?.value}</Typography>
             </Grid>
             <Grid display="grid" item xs={6}>
                 <FormLabel>Start Date of Effect</FormLabel>
                 <Typography variant="body2">{new Date(demandCapacityNotification.startDateOfEffect).toLocaleString()}</Typography>
+                <Typography variant="body2">{new Date(demandCapacityNotification.startDateOfEffect).toLocaleString()}</Typography>
             </Grid>
             <Grid display="grid" item xs={6}>
                 <FormLabel>Expected End Date of Effect</FormLabel>
                 <Typography variant="body2">{new Date(demandCapacityNotification.expectedEndDateOfEffect).toLocaleString()}</Typography>
+                <Typography variant="body2">{new Date(demandCapacityNotification.expectedEndDateOfEffect).toLocaleString()}</Typography>
             </Grid>
             <Grid display="grid" item xs={12}>
                 <FormLabel>Affected Sites Sender</FormLabel>
+                <Typography variant="body2">
+                    {demandCapacityNotification.affectedSitesBpnsSender && demandCapacityNotification.affectedSitesBpnsSender.length > 0
+                        ? demandCapacityNotification.affectedSitesBpnsSender.join(', ')
+                        : 'None'}
+                </Typography>
                 <Typography variant="body2">
                     {demandCapacityNotification.affectedSitesBpnsSender && demandCapacityNotification.affectedSitesBpnsSender.length > 0
                         ? demandCapacityNotification.affectedSitesBpnsSender.join(', ')
@@ -99,9 +113,24 @@ const DemandCapacityNotificationView = ({ demandCapacityNotification, partners }
                         ? demandCapacityNotification.affectedSitesBpnsRecipient.join(', ')
                         : 'None'}
                 </Typography>
+                <Typography variant="body2">
+                    {demandCapacityNotification.affectedSitesBpnsRecipient &&
+                    demandCapacityNotification.affectedSitesBpnsRecipient.length > 0
+                        ? demandCapacityNotification.affectedSitesBpnsRecipient.join(', ')
+                        : 'None'}
+                </Typography>
             </Grid>
             <Grid display="grid" item xs={12}>
                 <FormLabel>Affected Material Numbers</FormLabel>
+                <Typography variant="body2">
+                    {demandCapacityNotification.affectedMaterialNumbers && demandCapacityNotification.affectedMaterialNumbers.length > 0
+                        ? demandCapacityNotification.affectedMaterialNumbers.join(', ')
+                        : 'None'}
+                </Typography>
+            </Grid>
+            <Grid display="grid" item xs={12}>
+                <FormLabel>Text</FormLabel>
+                <Typography variant="body2">{demandCapacityNotification.text}</Typography>
                 <Typography variant="body2">
                     {demandCapacityNotification.affectedMaterialNumbers && demandCapacityNotification.affectedMaterialNumbers.length > 0
                         ? demandCapacityNotification.affectedMaterialNumbers.join(', ')
@@ -174,6 +203,7 @@ export const DemandCapacityNotificationInformationModal = ({
     return (
         <>
             <Dialog open={open} onClose={handleClose}>
+                <DialogTitle variant="h3" textAlign="center">
                 <DialogTitle variant="h3" textAlign="center">
                     Demand Capacity Notification Information
                 </DialogTitle>
@@ -376,6 +406,21 @@ export const DemandCapacityNotificationInformationModal = ({
                                             })
                                         }
                                         multiple={true}
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <FormLabel>Text</FormLabel>
+                                    <Textarea
+                                        minRows="5"
+                                        id="text"
+                                        value={temporaryDemandCapacityNotification?.text ?? ''}
+                                        onChange={(event) =>
+                                            setTemporaryDemandCapacityNotification({
+                                                ...temporaryDemandCapacityNotification,
+                                                text: event.target.value,
+                                            })
+                                        }
+                                        error={formError && !temporaryDemandCapacityNotification?.text}
                                     />
                                 </Grid>
                                 <Grid item xs={12}>

@@ -24,10 +24,12 @@ import { Box } from '@mui/material';
 type TableWithRowHeaderProps = TableProps;
 
 export const TableWithRowHeader = ({ rows, title, ...tableProps }: TableWithRowHeaderProps) => {
+export const TableWithRowHeader = ({ rows, title, ...tableProps }: TableWithRowHeaderProps) => {
     return (
         <Box sx={{width: '100%'}}>
             <div className="table-container">
                 <Table
+                    title={title}
                     title={title}
                     columns={[{ field: 'name', headerName: '', width: 180 }]}
                     rows={rows}
