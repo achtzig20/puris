@@ -52,23 +52,5 @@ export const TransferView = () => {
                 noRowsMsg="No transfers found"
             />
         </Box>
-        <Box width="100%" sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <ConfidentialBanner />
-            <Table
-                title="Transfer history"
-                columns={[
-                    { headerName: 'Transfer Id', field: '@id', flex: 1 },
-                    { headerName: 'Correlation Id', field: 'correlationId', flex: 1 },
-                    { headerName: 'State', field: 'state', flex: 0.75 },
-                    { headerName: 'Type', field: 'type', flex: 0.75 },
-                    { headerName: 'Asset Id', field: 'assetId', flex: 1 },
-                    { headerName: 'Contract Id', field: 'contractId', flex: 1 },
-                    { headerName: 'Connector Id', field: 'connectorId', flex: 1 },
-                ]}
-                rows={transfers ?? []}
-                getRowId={(row) => row['@id']}
-                noRowsMsg="No transfers found"
-            />
-        </Box>
     );
 };

@@ -22,7 +22,6 @@ import { Datepicker, Input, Table } from '@catena-x/portal-shared-components';
 import { UNITS_OF_MEASUREMENT } from '@models/constants/uom';
 import { Demand } from '@models/types/data/demand';
 import { Box, Button, Dialog, DialogTitle, FormLabel, Grid, Stack } from '@mui/material';
-import { Box, Button, Dialog, DialogTitle, FormLabel, Grid, Stack } from '@mui/material';
 import { getUnitOfMeasurement } from '@util/helpers';
 import { usePartners } from '@features/stock-view/hooks/usePartners';
 import { deleteDemand, postDemand } from '@services/demands-service';
@@ -196,7 +195,6 @@ export const DemandCategoryModal = ({ open, mode, onClose, onSave, demand, deman
         <>
             <Dialog open={open && demand !== null} onClose={handleClose}>
                 <DialogTitle variant="h3" textAlign="center">
-                <DialogTitle variant="h3" textAlign="center">
                     Demand Information
                 </DialogTitle>
                 <Stack padding="0 2rem 2rem" sx={{ width: '60rem' }}>
@@ -219,20 +217,6 @@ export const DemandCategoryModal = ({ open, mode, onClose, onSave, demand, deman
                                 />
                             </Grid>
                             <Grid item xs={6}>
-                                <FormLabel sx={{ marginBottom: '.5rem', display: 'block' }}>Day*</FormLabel>
-                                <div className="date-picker">
-                                    <Datepicker
-                                        id="day"
-                                        label=""
-                                        hiddenLabel
-                                        placeholder="Pick a Day"
-                                        locale="de"
-                                        error={formError && !temporaryDemand?.day}
-                                        readOnly={false}
-                                        value={temporaryDemand?.day}
-                                        onChangeItem={(value) => setTemporaryDemand((curr) => ({ ...curr, day: value ?? undefined }))}
-                                    />
-                                </div>
                                 <FormLabel sx={{ marginBottom: '.5rem', display: 'block' }}>Day*</FormLabel>
                                 <div className="date-picker">
                                     <Datepicker
@@ -283,7 +267,6 @@ export const DemandCategoryModal = ({ open, mode, onClose, onSave, demand, deman
                                                 : { ...curr, quantity: 0 }
                                         )
                                     }
-                                    sx={{ marginTop: '.5rem' }}
                                     sx={{ marginTop: '.5rem' }}
                                 />
                             </Grid>

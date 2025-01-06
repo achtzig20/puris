@@ -16,20 +16,8 @@ License for the specific language governing permissions and limitations
 under the License.
 
 SPDX-License-Identifier: Apache-2.0 
-SPDX-License-Identifier: Apache-2.0 
 */
 
-import * as React from 'react';
-import { styled, useTheme, Theme, CSSObject } from '@mui/material/styles';
-import Box from '@mui/material/Box';
-import MuiDrawer from '@mui/material/Drawer';
-import IconButton from '@mui/material/IconButton';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import AuthenticationService from '@services/authentication-service';
 import * as React from 'react';
 import { styled, useTheme, Theme, CSSObject } from '@mui/material/styles';
 import Box from '@mui/material/Box';
@@ -121,19 +109,10 @@ type SideBarItemProps = (
 ) & {
     name: string;
     icon: React.ReactElement<OverridableComponent<SvgIconTypeMap<object, 'svg'>>>;
-    icon: React.ReactElement<OverridableComponent<SvgIconTypeMap<object, 'svg'>>>;
     requiredRoles?: Role[];
 };
 
 const sideBarItems: SideBarItemProps[] = [
-    { name: 'Dashboard', icon: <HomeOutlined />, path: '/dashboard' },
-    { name: 'Notifications', icon: <NotificationsOutlined />, path: '/notifications' },
-    { name: 'Stocks', icon: <Inventory2Outlined />, path: '/stocks' },
-    { name: 'Catalog', icon: <AutoStoriesOutlined />, path: '/catalog', requiredRoles: ['PURIS_ADMIN'] },
-    { name: 'Negotiations', icon: <HandshakeOutlined />, path: '/negotiations', requiredRoles: ['PURIS_ADMIN'] },
-    { name: 'Transfers', icon: <SyncAltOutlined />, path: '/transfers', requiredRoles: ['PURIS_ADMIN'] },
-    { name: 'User Guide', icon: <HelpOutlineOutlined />, path: '/user-guide' },
-    { name: 'Logout', icon: <LogoutOutlined />, action: AuthenticationService.logout, variant: 'button' },
     { name: 'Dashboard', icon: <HomeOutlined />, path: '/dashboard' },
     { name: 'Notifications', icon: <NotificationsOutlined />, path: '/notifications' },
     { name: 'Stocks', icon: <Inventory2Outlined />, path: '/stocks' },
@@ -148,19 +127,7 @@ export default function MiniDrawer() {
     const [open, setOpen] = React.useState(() => true);
     const { pathname } = useLocation();
     const theme = useTheme();
-export default function MiniDrawer() {
-    const [open, setOpen] = React.useState(() => true);
-    const { pathname } = useLocation();
-    const theme = useTheme();
     const { hasRole } = useAuth();
-    const handleDrawerOpen = () => {
-        setOpen(true);
-    };
-
-    const handleDrawerClose = () => {
-        setOpen(false);
-    };
-
     const handleDrawerOpen = () => {
         setOpen(true);
     };

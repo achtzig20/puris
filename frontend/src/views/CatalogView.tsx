@@ -44,14 +44,6 @@ const PermissionList = ({ permission }: { permission: CatalogPermission }) => {
                             {permissionString}
                         </div>
                     );
-                    const permissionString = `${constraint['odrl:leftOperand']['@id']} ${getCatalogOperator(
-                        constraint['odrl:operator']['@id']
-                    )} ${constraint['odrl:rightOperand']}`;
-                    return (
-                        <div key={constraint['@type']} title={permissionString}>
-                            {permissionString}
-                        </div>
-                    );
                 })}
         </Stack>
     );
@@ -77,20 +69,16 @@ const CatalogList = ({ catalog, title }: CatalogListProps) => {
             title={title}
             columns={[
                 { headerName: 'Asset ID', field: 'assetId', flex: 2 },
-                { headerName: 'Asset ID', field: 'assetId', flex: 2 },
                 {
                     headerName: 'Asset Type',
                     field: 'assetType',
                     flex: 1,
-                    flex: 1,
                     renderCell: (row) => <div title={row.row.assetType}>{row.row.assetType.split('#')[1]}</div>,
                 },
-                { headerName: 'Version', field: 'assetVersion', flex: 0.5 },
                 { headerName: 'Version', field: 'assetVersion', flex: 0.5 },
                 {
                     headerName: 'Action',
                     field: 'permission.action',
-                    flex: 0.5,
                     flex: 0.5,
                     renderCell: (row) => {
                         const actionString = row.row.permission['odrl:action']['@id'];
@@ -101,7 +89,6 @@ const CatalogList = ({ catalog, title }: CatalogListProps) => {
                 {
                     headerName: 'Usage Policies',
                     field: 'permission',
-                    flex: 2,
                     flex: 2,
                     renderCell: (row) => <PermissionList permission={row.row.permission} />,
                 },
@@ -127,47 +114,15 @@ export const CatalogView = () => {
             <ConfidentialBanner />
             <Stack spacing={1} direction="row" alignItems="center" sx={{ borderRadius: 2, backgroundColor: 'white', p: '.5rem .5rem' }}>
                 <Autocomplete
-        <Stack spacing={2}>
-            <ConfidentialBanner />
-            <Stack spacing={1} direction="row" alignItems="center" sx={{ borderRadius: 2, backgroundColor: 'white', p: '.5rem .5rem' }}>
-                <Autocomplete
                     id="partner"
                     value={partner}
                     options={partners ?? []}
                     getOptionLabel={(option) => option?.name ?? ''}
                     sx={{ width: '32rem' }}
                     renderInput={(params) => <Input hiddenLabel {...params} placeholder="Select a Partner" />}
-                    sx={{ width: '32rem' }}
-                    renderInput={(params) => <Input hiddenLabel {...params} placeholder="Select a Partner" />}
                     onChange={(_, newValue) => (partnerRef.current = newValue)}
                     isOptionEqualToValue={(option, value) => option?.uuid === value?.uuid}
                 />
-                <Button onClick={() => setPartner(partnerRef?.current)}>Get Catalog</Button>
-            </Stack>
-            {!isLoadingCatalog ? (
-                catalog && catalog.length > 0 ? (
-                    <Box width="100%">
-                        <CatalogList title={`Catalog for ${partner?.name}`} catalog={catalog} />
-                    </Box>
-                ) : catalogError != null ? (
-                    <Box display="flex" justifyContent="center" paddingTop="5rem">
-                        <Typography variant="body1" color="red">
-                            There was an error retrieving the Catalog from {partner?.name}
-                        </Typography>
-                    </Box>
-                ) : (
-                    partner != null && (
-                        <Box display="flex" justifyContent="center" paddingTop="5rem">
-                            <Typography variant="body1"> {`No Catalog available for ${partner?.name}`} </Typography>
-                        </Box>
-                    )
-                )
-            ) : (
-                <Box display="flex" justifyContent="center" paddingTop="5rem">
-                    <Typography variant="body1"> Loading Catalog... </Typography>
-                </Box>
-            )}
-        </Stack>
                 <Button onClick={() => setPartner(partnerRef?.current)}>Get Catalog</Button>
             </Stack>
             {!isLoadingCatalog ? (

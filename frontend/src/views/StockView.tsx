@@ -35,17 +35,7 @@ export const StockView = () => {
     }, [setTitle])
     return (
         <Stack width="100%" height="100%" spacing={2}>
-        <Stack width="100%" height="100%" spacing={2}>
             <ConfidentialBanner />
-            <Stack width='100%' p={2}  sx={{backgroundColor: 'white', borderRadius: "1rem", flexGrow: 1}}>
-                <Stack spacing={1} sx={{p: 2, width: '100%'}}>
-                    <Typography variant='h1'>View and manage stocks</Typography>
-                    <Tabs value={selectedTab} onChange={(_, value: number) => setSelectedTab(value)}>
-                        <Tab label="Material Stocks"></Tab>
-                        <Tab label="Product Stocks"></Tab>
-                    </Tabs>
-                </Stack>
-                <Box width='100%'>
             <Stack width='100%' p={2}  sx={{backgroundColor: 'white', borderRadius: "1rem", flexGrow: 1}}>
                 <Stack spacing={1} sx={{p: 2, width: '100%'}}>
                     <Typography variant='h1'>View and manage stocks</Typography>
@@ -61,9 +51,6 @@ export const StockView = () => {
                     <TabPanel value={selectedTab} index={1}>
                         <StockDetailsView type="product" />
                     </TabPanel>
-                </Box>
-            </Stack>
-        </Stack>
                 </Box>
             </Stack>
         </Stack>

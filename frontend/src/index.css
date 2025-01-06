@@ -1,7 +1,6 @@
 /*
-Copyright (c) 2022 Volkswagen AG
-Copyright (c) 2022 Fraunhofer-Gesellschaft zur Foerderung der angewandten Forschung e.V. (represented by Fraunhofer ISST)
-Copyright (c) 2022 Contributors to the Eclipse Foundation
+Copyright (c) 2024 Volkswagen AG
+Copyright (c) 2024 Contributors to the Eclipse Foundation
 
 See the NOTICE file(s) distributed with this work for additional
 information regarding copyright ownership.
@@ -41,45 +40,8 @@ body {
     background-color: white;
 }
 
-/* Datagrid styles */
-
-.MuiDataGrid-root {
-    border-radius: 0.75rem !important;
-    overflow: hidden;
-    background-color: white;
-}
-
 .MuiDataGrid-root > .MuiBox-root h5 > span {
     display: none;
-}
-
-.MuiDataGrid-root > .MuiBox-root {
-    background-color: #081f4b;
-    color: white;
-    
-}
-
-.MuiDataGrid-root > .MuiBox-root > .MuiBox-root {
-    min-height: unset;
-    padding: .5rem .75rem;
-    min-height: 2.5rem;
-}
-
-.MuiDataGrid-root > .MuiBox-root > .MuiBox-root h5 {
-    font-size: 1rem;
-}
-
-.MuiDataGrid-columnHeader, .MuiDataGrid-columnHeaders {
-    background-color: #f7f7f7;
-    color: #444;
-    border: none !important;
-    line-height: 1 !important;
-    height: auto !important;
-    min-height: 2.25rem !important;
-}
-
-.MuiDataGrid-row, .MuiDataGrid-row > * {
-    border: none !important;
 }
 
 .MuiDataGrid-root > .MuiBox-root {
@@ -238,11 +200,8 @@ input[type='time'] {
     box-sizing: border-box;
     border: none;
     background-color: transparent;
-    border: none;
-    background-color: transparent;
 }
 
-/* Textarea styles */
 /* Textarea styles */
 
 textarea {
@@ -251,17 +210,12 @@ textarea {
     border-radius: 1rem;
     background-color: #f5f5f5;
     border: none;
-    border-radius: 1rem;
-    background-color: #f5f5f5;
-    border: none;
 }
-
 
 textarea:focus {
     outline: 2px solid #2563eb;
     border-color: #2563eb;
 }
-
 
 /* Markdown styles */
 

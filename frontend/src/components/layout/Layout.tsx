@@ -12,8 +12,6 @@ https://www.apache.org/licenses/LICENSE-2.0.
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT
 WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations
 under the License.
@@ -21,12 +19,9 @@ under the License.
 SPDX-License-Identifier: Apache-2.0
 */
 import { ThemeProvider } from '@mui/material/styles';
-import { ThemeProvider } from '@mui/material/styles';
 import { Outlet } from 'react-router-dom';
 import { Footer } from './Footer';
 import { Box, Stack } from '@mui/material';
-import theme from '../../theme';
-import SideBar from './SideBar';
 import theme from '../../theme';
 import SideBar from './SideBar';
 

@@ -18,12 +18,10 @@ under the License.
 SPDX-License-Identifier: Apache-2.0
 */
 
-
 import { useEffect, useMemo, useState } from 'react';
 import { Input, Table } from '@catena-x/portal-shared-components';
 import { UNITS_OF_MEASUREMENT } from '@models/constants/uom';
 import { Production } from '@models/types/data/production';
-import { Box, Button, Dialog, DialogTitle, FormLabel, Grid, Stack, capitalize } from '@mui/material';
 import { Box, Button, Dialog, DialogTitle, FormLabel, Grid, Stack, capitalize } from '@mui/material';
 import { getUnitOfMeasurement, isValidOrderReference } from '@util/helpers';
 import { usePartners } from '@features/stock-view/hooks/usePartners';
@@ -249,7 +247,6 @@ export const PlannedProductionModal = ({ open, mode, onClose, onSave, production
                                                 quantity: e.target.value ? parseFloat(e.target.value) : undefined,
                                             }))
                                         }
-                                        sx={{ marginTop: '.5rem' }}
                                         sx={{ marginTop: '.5rem' }}
                                     />
                                 </Grid>

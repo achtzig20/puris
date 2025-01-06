@@ -58,7 +58,6 @@ type DashboardState = {
     selectedSite: Site | null;
     selectedPartnerSites: Site[] | null;
     deliveryDialogOptions: { open: boolean; mode: ModalMode; direction: 'incoming' | 'outgoing'; site: Site | null };
-    deliveryDialogOptions: { open: boolean; mode: ModalMode; direction: 'incoming' | 'outgoing'; site: Site | null };
     demandDialogOptions: { open: boolean; mode: ModalMode };
     productionDialogOptions: { open: boolean; mode: ModalMode };
     delivery: Delivery | null;
@@ -114,7 +113,6 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
 
     const handleRefresh = () => {
         dispatch({ type: 'isRefreshing', payload: true });
-        dispatch({ type: 'isRefreshing', payload: true });
         Promise.all([
             requestReportedStocks(type === 'customer' ? 'material' : 'product', state.selectedMaterial?.ownMaterialNumber ?? null),
             requestReportedDeliveries(state.selectedMaterial?.ownMaterialNumber ?? null),
@@ -147,46 +145,12 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                 ]);
             })
             .finally(() => dispatch({ type: 'isRefreshing', payload: false }));
-                : requestReportedDemands(state.selectedMaterial?.ownMaterialNumber ?? null),
-        ])
-            .then(() => {
-                setNotifications((ns) => [
-                    ...ns,
-                    {
-                        title: 'Update requested',
-                        description: `Requested update from partners for ${state.selectedMaterial?.ownMaterialNumber}. Please reload dialog later.`,
-                        severity: 'success',
-                    },
-                ]);
-            })
-            .catch((error: unknown) => {
-                const msg =
-                    error !== null && typeof error === 'object' && 'message' in error && typeof error.message === 'string'
-                        ? error.message
-                        : 'Unknown Error';
-                setNotifications((ns) => [
-                    ...ns,
-                    {
-                        title: 'Error requesting update',
-                        description: msg,
-                        severity: 'error',
-                    },
-                ]);
-            })
-            .finally(() => dispatch({ type: 'isRefreshing', payload: false }));
     };
-    // };
     // };
     const handleScheduleErpUpdate = () => {
         dispatch({ type: 'isErpRefreshing', payload: true });
         if (state.selectedPartnerSites) {
-        if (state.selectedPartnerSites) {
             const promises: Promise<void>[] = state.selectedPartnerSites.map((ps: Site) => {
-                return scheduleErpUpdateStocks(
-                    type === 'customer' ? 'material' : 'product',
-                    ps.belongsToPartnerBpnl,
-                    state.selectedMaterial?.ownMaterialNumber ?? null
-                );
                 return scheduleErpUpdateStocks(
                     type === 'customer' ? 'material' : 'product',
                     ps.belongsToPartnerBpnl,
@@ -195,7 +159,6 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
             });
             Promise.all(promises)
                 .then(() => {
-                    setNotifications((ns) => [
                     setNotifications((ns) => [
                         ...ns,
                         {
@@ -211,11 +174,6 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                             ? error.message
                             : 'Unknown Error';
                     setNotifications((ns) => [
-                    const msg =
-                        error !== null && typeof error === 'object' && 'message' in error && typeof error.message === 'string'
-                            ? error.message
-                            : 'Unknown Error';
-                    setNotifications((ns) => [
                         ...ns,
                         {
                             title: 'Error scheduling ERP update',
@@ -224,7 +182,6 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                         },
                     ]);
                 })
-                .finally(() => dispatch({ type: 'isErpRefreshing', payload: false }));
                 .finally(() => dispatch({ type: 'isErpRefreshing', payload: false }));
         }
     };
@@ -265,7 +222,6 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
     return (
         <>
             <Stack spacing={3} useFlexGap>
-            <Stack spacing={3} useFlexGap>
                 <DashboardFilters
                     type={type}
                     material={state.selectedMaterial}
@@ -277,14 +233,7 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                 />
                 <Box width="100%" marginTop="1rem">
                     <Typography variant="h3" component="h2">
-                    <Typography variant="h3" component="h2">
                         Production Information
-                        {state.selectedMaterial && state.selectedSite && (
-                            <>
-                                {' '}
-                                for {state.selectedMaterial.description} ({state.selectedMaterial.ownMaterialNumber})
-                            </>
-                        )}
                         {state.selectedMaterial && state.selectedSite && (
                             <>
                                 {' '}
@@ -331,18 +280,13 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                             paddingLeft=".5rem"
                         >
                             <Typography variant="h3" component="h2">
-                            <Typography variant="h3" component="h2">
                                 {`${capitalize(getPartnerType(type))} Information ${
-                                    state.selectedMaterial
-                                        ? `for ${state.selectedMaterial.description} (${state.selectedMaterial.ownMaterialNumber})`
-                                        : ''
                                     state.selectedMaterial
                                         ? `for ${state.selectedMaterial.description} (${state.selectedMaterial.ownMaterialNumber})`
                                         : ''
                                 }`}
                             </Typography>
                             <Box marginLeft="auto" display="flex" gap="1rem">
-                                {state.selectedPartnerSites?.length && (
                                 {state.selectedPartnerSites?.length && (
                                     <Button
                                         variant="contained"
@@ -353,8 +297,6 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                                     </Button>
                                 )}
                                 {state.selectedPartnerSites?.length && (
-                                )}
-                                {state.selectedPartnerSites?.length && (
                                     <Button
                                         variant="contained"
                                         onClick={handleRefresh}
@@ -362,7 +304,6 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                                     >
                                         <Refresh></Refresh> Refresh
                                     </Button>
-                                )}
                                 )}
                             </Box>
                         </Box>
@@ -416,16 +357,12 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
                 onClose={() =>
                     dispatch({ type: 'productionDialogOptions', payload: { open: false, mode: state.productionDialogOptions.mode } })
                 }
-                onClose={() =>
-                    dispatch({ type: 'productionDialogOptions', payload: { open: false, mode: state.productionDialogOptions.mode } })
-                }
                 onSave={refreshProduction}
                 production={state.production}
                 productions={(state.productionDialogOptions.mode === 'view' ? reportedProductions : productions) ?? []}
             />
             <DeliveryInformationModal
                 {...state.deliveryDialogOptions}
-                onClose={() => dispatch({ type: 'deliveryDialogOptions', payload: { ...state.deliveryDialogOptions, open: false } })}
                 onClose={() => dispatch({ type: 'deliveryDialogOptions', payload: { ...state.deliveryDialogOptions, open: false } })}
                 onSave={refreshDelivery}
                 delivery={state.delivery}
@@ -446,5 +383,4 @@ export const Dashboard = ({ type }: { type: 'customer' | 'supplier' }) => {
             </PageSnackbarStack>
         </>
     );
-};
 };
