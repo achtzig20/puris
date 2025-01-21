@@ -1,8 +1,28 @@
-import { IconButton, Stack, SxProps, Theme, Typography, useTheme } from '@mui/material';
-import { InfoOutlined } from '@mui/icons-material';
+/*
+Copyright (c) 2025 Volkswagen AG
+Copyright (c) 2025 Contributors to the Eclipse Foundation
+
+See the NOTICE file(s) distributed with this work for additional
+information regarding copyright ownership.
+
+This program and the accompanying materials are made available under the
+terms of the Apache License, Version 2.0 which is available at
+https://www.apache.org/licenses/LICENSE-2.0.
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+License for the specific language governing permissions and limitations
+under the License.
+
+SPDX-License-Identifier: Apache-2.0
+*/
+
+import { Stack, SxProps, Theme, Typography, useTheme } from '@mui/material';
 import { CalendarWeekSummary } from '../../material-details/components/CalendarWeekSummary';
 import { Summary, SummaryType } from '../util/summary-service';
 import { useCalendarWeeks } from '@contexts/calendarWeekContext';
+import { InfoButton } from '@components/ui/InfoButton';
 
 type SummaryPanelProps<TType extends SummaryType> = {
     sx?: SxProps<Theme>
@@ -42,21 +62,15 @@ export function SummaryPanel<TType extends SummaryType>({ sx = {}, title, summar
                 )}
                 <Stack direction="row" alignItems="center" gap={0.75} flexGrow={1} padding=".75rem .5rem">
                     {summary.type === 'production' ? 'Planned Production' : 'Material Demand'}
-                    <IconButton sx={{ padding: 0, fontSize: '1rem', color: '#999' }}>
-                        <InfoOutlined />
-                    </IconButton>
+                    <InfoButton text={summary.type === 'production' ? 'The planned production output for the material on the given date' : 'The estimated demand for the material on the given date.'}></InfoButton>
                 </Stack>
                 <Stack direction="row" alignItems="center" gap={0.75} flexGrow={1} padding=".75rem .5rem">
                     {summary.type === 'production' ? 'Outgoing Shipments' : 'Incoming Deliveries'}
-                    <IconButton sx={{ padding: 0, fontSize: '1rem', color: '#999' }}>
-                        <InfoOutlined />
-                    </IconButton>
+                    <InfoButton text={`The total quantity of ${summary.type === 'production' ? 'outgoing shipments departing' : 'incoming deliveries arriving'} on the given date.`}></InfoButton>
                 </Stack>
                 <Stack direction="row" alignItems="center" gap={0.75} flexGrow={1} padding=".75rem .5rem">
                     Projected Item Stock
-                    <IconButton sx={{ padding: 0, fontSize: '1rem', color: '#999' }}>
-                        <InfoOutlined />
-                    </IconButton>
+                    <InfoButton text="The projected item stock for the material on a given date. The summary for projected item stock reflects the item stock at the end of the calendar week."></InfoButton>
                 </Stack>
             </Stack>
             <Stack direction="row" width="100%">

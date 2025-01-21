@@ -42,7 +42,7 @@ const createDemandColumns = (handleDelete?: (row: Demand) => void) => {
             disableColumnMenu: true,
             headerAlign: 'center',
             type: 'string',
-            width: 120,
+            flex: 1,
             renderCell: (data: { row: Demand }) => {
                 return (
                     <Box display="flex" textAlign="center" alignItems="center" justifyContent="center" width="100%" height="100%">
@@ -58,7 +58,7 @@ const createDemandColumns = (handleDelete?: (row: Demand) => void) => {
             disableColumnMenu: true,
             headerAlign: 'center',
             type: 'string',
-            width: 200,
+            flex: 1,
             renderCell: (data: { row: Demand }) => {
                 return (
                     <Box display="flex" textAlign="center" alignItems="center" justifyContent="center" width="100%" height="100%">
@@ -74,7 +74,7 @@ const createDemandColumns = (handleDelete?: (row: Demand) => void) => {
             disableColumnMenu: true,
             headerAlign: 'center',
             type: 'string',
-            width: 200,
+            flex: 1,
             renderCell: (data: { row: Demand }) => {
                 return (
                     <Box display="flex" textAlign="center" alignItems="center" justifyContent="center" width="100%" height="100%">
@@ -90,7 +90,7 @@ const createDemandColumns = (handleDelete?: (row: Demand) => void) => {
             disableColumnMenu: true,
             headerAlign: 'center',
             type: 'string',
-            width: 200,
+            flex: 1,
             renderCell: (data: { row: Demand }) => {
                 return (
                     <Box display="flex" textAlign="center" alignItems="center" justifyContent="center" width="100%" height="100%">

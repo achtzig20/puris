@@ -35,6 +35,7 @@ import { LabelledAutoComplete } from '@components/ui/LabelledAutoComplete';
 import { GridItem } from '@components/ui/GridItem';
 import { useSites } from '@features/stock-view/hooks/useSites';
 import { useNotifications } from '@contexts/notificationContext';
+import { DirectionType } from '@models/types/erp/directionType';
 
 const createDeliveryColumns = (handleDelete: (row: Delivery) => void) => {
     return [
@@ -227,7 +228,7 @@ const isValidDelivery = (delivery: Partial<Delivery>) =>
 type DeliveryInformationModalProps = {
     open: boolean;
     mode: ModalMode;
-    direction: 'incoming' | 'outgoing';
+    direction: DirectionType;
     site: Site | null;
     onClose: () => void;
     onSave: () => void;
@@ -246,7 +247,7 @@ export const DeliveryInformationModal = ({
     deliveries,
 }: DeliveryInformationModalProps) => {
     const [temporaryDelivery, setTemporaryDelivery] = useState<Partial<Delivery>>(delivery ?? {});
-    const { partners } = usePartners(direction === 'incoming' ? 'product' : 'material', temporaryDelivery?.ownMaterialNumber ?? null);
+    const { partners } = usePartners(direction === DirectionType.Inbound ? 'product' : 'material', temporaryDelivery?.ownMaterialNumber ?? null);
     const { sites } = useSites();
     const { notify } = useNotifications();
     const [formError, setFormError] = useState(false);
@@ -254,14 +255,14 @@ export const DeliveryInformationModal = ({
         () =>
             deliveries?.filter(
                 (d) =>
-                    (direction === 'incoming' &&
-                        d.destinationBpns === site?.bpns &&
+                    (direction === DirectionType.Inbound &&
+                        (!site || d.destinationBpns === site?.bpns) &&
                         new Date(d.dateOfArrival).toLocaleDateString() === new Date(delivery!.dateOfArrival).toLocaleDateString()) ||
-                    (direction === 'outgoing' &&
-                        d.originBpns === site?.bpns &&
+                    (direction === DirectionType.Outbound &&
+                        (!site || d.originBpns === site?.bpns) &&
                         new Date(d.dateOfDeparture).toLocaleDateString() === new Date(delivery!.dateOfDeparture).toLocaleDateString())
             ) ?? [],
-        [deliveries, delivery, direction, site?.bpns]
+        [deliveries, delivery, direction, site]
     );
 
     const handleSaveClick = () => {
@@ -330,7 +331,7 @@ export const DeliveryInformationModal = ({
                                         onChange={(_, value) =>
                                             setTemporaryDelivery({
                                                 ...temporaryDelivery,
-                                                ...(direction === 'outgoing'
+                                                ...(direction === DirectionType.Outbound
                                                     ? { originBpns: value?.bpns ?? undefined }
                                                     : { destinationBpns: value?.bpns ?? undefined }),
                                             })
@@ -338,16 +339,16 @@ export const DeliveryInformationModal = ({
                                         value={
                                             sites?.find(
                                                     (s) =>
-                                                        (direction === 'outgoing'
+                                                        (direction === DirectionType.Outbound
                                                             ? s.bpns === temporaryDelivery.originBpns
                                                             : s.bpns === temporaryDelivery.destinationBpns)
                                                 ) ?? null
                                         }
-                                        label={`${direction === 'outgoing' ? 'Origin' : 'Destination'}*`}
-                                        placeholder={`Select a ${direction === 'outgoing' ? 'Origin' : 'Destination'} Site`}
+                                        label={`${direction === DirectionType.Outbound ? 'Origin' : 'Destination'}*`}
+                                        placeholder={`Select a ${direction === DirectionType.Outbound ? 'Origin' : 'Destination'} Site`}
                                         error={
                                             formError &&
-                                            (direction === 'outgoing' ? !temporaryDelivery.originBpns : !temporaryDelivery.destinationBpns)
+                                            (direction === DirectionType.Outbound ? !temporaryDelivery.originBpns : !temporaryDelivery.destinationBpns)
                                         }
                                     />
                                 </Grid>
@@ -448,7 +449,7 @@ export const DeliveryInformationModal = ({
                                         onChange={(_, value) =>
                                             setTemporaryDelivery({
                                                 ...temporaryDelivery,
-                                                ...(direction === 'incoming'
+                                                ...(direction === DirectionType.Inbound
                                                     ? { originBpns: value?.bpns ?? undefined }
                                                     : { destinationBpns: value?.bpns ?? undefined }),
                                             })
@@ -458,16 +459,16 @@ export const DeliveryInformationModal = ({
                                                 ?.find((s) => s.bpnl === temporaryDelivery?.partnerBpnl)
                                                 ?.sites.find(
                                                     (s) =>
-                                                        (direction === 'incoming'
+                                                        (direction === DirectionType.Inbound
                                                             ? s.bpns === temporaryDelivery.originBpns
                                                             : s.bpns === temporaryDelivery.destinationBpns)
                                                 ) ?? null
                                         }
-                                        label={`${direction === 'incoming' ? 'Origin' : 'Destination'}*`}
-                                        placeholder={`Select a ${direction === 'incoming' ? 'Origin' : 'Destination'} Site`}
+                                        label={`${direction === DirectionType.Inbound ? 'Origin' : 'Destination'}*`}
+                                        placeholder={`Select a ${direction === DirectionType.Inbound ? 'Origin' : 'Destination'} Site`}
                                         error={
                                             formError &&
-                                            (direction === 'incoming' ? !temporaryDelivery.originBpns : !temporaryDelivery.destinationBpns)
+                                            (direction === DirectionType.Inbound ? !temporaryDelivery.originBpns : !temporaryDelivery.destinationBpns)
                                         }
                                     />
                                 </Grid>
@@ -529,7 +530,7 @@ export const DeliveryInformationModal = ({
                                                 : null
                                         }
                                         options={INCOTERMS.filter((i) =>
-                                            direction === 'incoming' ? i.responsibility !== 'supplier' : i.responsibility !== 'customer'
+                                            direction === DirectionType.Inbound ? i.responsibility !== 'supplier' : i.responsibility !== 'customer'
                                         )}
                                         getOptionLabel={(option) => option?.value ?? ''}
                                         label="Incoterm*"
@@ -585,16 +586,20 @@ export const DeliveryInformationModal = ({
                             <Grid item xs={12}>
                                 {
                                     <Table
-                                        title={`${capitalize(direction ?? '')} Deliveries ${
-                                            temporaryDelivery?.dateOfDeparture
-                                                ? ' on ' +
-                                                  new Date(temporaryDelivery?.dateOfDeparture).toLocaleDateString('en-UK', {
+                                        title={`${direction === DirectionType.Outbound ? 'Outgoing Shipments' : 'Incoming Deliveries'} on ${
+                                            direction === DirectionType.Outbound
+                                                ? new Date(temporaryDelivery.dateOfDeparture!).toLocaleDateString('en-UK', {
                                                       weekday: 'long',
                                                       day: '2-digit',
                                                       month: '2-digit',
                                                       year: 'numeric',
                                                   })
-                                                : ''
+                                                : new Date(temporaryDelivery.dateOfArrival!).toLocaleDateString('en-UK', {
+                                                    weekday: 'long',
+                                                    day: '2-digit',
+                                                    month: '2-digit',
+                                                    year: 'numeric',
+                                                })
                                         }`}
                                         density="standard"
                                         getRowId={(row) => row.uuid}

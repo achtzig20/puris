@@ -1,6 +1,6 @@
 /*
-Copyright (c) 2024 Volkswagen AG
-Copyright (c) 2024 Contributors to the Eclipse Foundation
+Copyright (c) 2025 Volkswagen AG
+Copyright (c) 2025 Contributors to the Eclipse Foundation
 
 See the NOTICE file(s) distributed with this work for additional
 information regarding copyright ownership.
@@ -18,19 +18,19 @@ under the License.
 SPDX-License-Identifier: Apache-2.0
 */
 
-import Grid from '@mui/material/Grid';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
+import { InfoOutlined } from '@mui/icons-material';
+import { IconButton, Tooltip } from '@mui/material';
 
-type GridItemProps = { label: string; value: string };
+type InfoButtonProps = {
+    text: string;
+};
 
-export const GridItem = ({ label, value }: GridItemProps) => (
-    <Grid item xs={6}>
-        <Stack>
-            <Typography variant="body1">{label}:</Typography>
-            <Typography variant="body2" padding="1rem .5rem !important">
-                {value}
-            </Typography>
-        </Stack>
-    </Grid>
-);
+export function InfoButton({ text }: InfoButtonProps) {
+    return (
+        <Tooltip title={text}>
+            <IconButton sx={{ padding: 0, fontSize: '1rem', color: '#999' }}>
+                <InfoOutlined />
+            </IconButton>
+        </Tooltip>
+    );
+}

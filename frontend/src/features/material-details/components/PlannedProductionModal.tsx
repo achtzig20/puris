@@ -40,7 +40,7 @@ const createProductionColumns = (handleDelete?: (row: Production) => void) => {
             field: 'estimatedTimeOfCompletion',
             headerName: 'Completion Time',
             headerAlign: 'center',
-            width: 150,
+            flex: 1.5,
             renderCell: (data: { row: Production }) => (
                 <Box display="flex" textAlign="center" alignItems="center" justifyContent="center" width="100%" height="100%">
                     {new Date(data.row.estimatedTimeOfCompletion).toLocaleTimeString('de-DE')}
@@ -51,7 +51,7 @@ const createProductionColumns = (handleDelete?: (row: Production) => void) => {
             field: 'quantity',
             headerName: 'Quantity',
             headerAlign: 'center',
-            width: 120,
+            flex: 1.2,
             renderCell: (data: { row: Production }) => (
                 <Box display="flex" textAlign="center" alignItems="center" justifyContent="center" width="100%" height="100%">
                     {`${data.row.quantity} ${getUnitOfMeasurement(data.row.measurementUnit)}`}
@@ -62,7 +62,7 @@ const createProductionColumns = (handleDelete?: (row: Production) => void) => {
             field: 'partner',
             headerName: 'Partner',
             headerAlign: 'center',
-            width: 200,
+            flex: 2,
             renderCell: (data: { row: Production }) => (
                 <Box display="flex" textAlign="center" alignItems="center" justifyContent="center" width="100%" height="100%">
                     {data.row.partner?.name}
@@ -73,7 +73,7 @@ const createProductionColumns = (handleDelete?: (row: Production) => void) => {
             field: 'customerOrderNumber',
             headerName: 'Order Reference',
             headerAlign: 'center',
-            width: 200,
+            flex: 2,
             renderCell: (data: { row: Production }) => (
                 <Box display="flex" textAlign="center" alignItems="center" justifyContent="center" width="100%" height="100%">
                     {data.row.customerOrderNumber ? (
