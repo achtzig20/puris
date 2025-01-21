@@ -80,6 +80,9 @@ export function groupBy<TItem>(arr: TItem[], callback: (item: TItem, index: numb
     }, {});
 }
 
+/**
+ * This type utility unwraps all properties of a given complex type to improve usability.
+ */
 export type Prettify<T> = {
     [K in keyof T]: T[K];
   // eslint-disable-next-line @typescript-eslint/ban-types

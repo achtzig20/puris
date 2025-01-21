@@ -34,12 +34,12 @@ type NotificationProviderProps = {
 
 export const NotificationContextProvider = ({ children }: NotificationProviderProps) => {
     const [notifications, setNotifications] = useState<Notification[]>([]);
-  const notify = (notification: Notification) => {
-    setNotifications(ns => [...ns, notification]);
-  }
+    const notify = (notification: Notification) => {
+        setNotifications((ns) => [...ns, notification]);
+    };
     return (
         <>
-            <notificationContext.Provider value={{notify}}>{children}</notificationContext.Provider>
+            <notificationContext.Provider value={{ notify }}>{children}</notificationContext.Provider>
             <PageSnackbarStack>
                 {notifications.map((notification, index) => (
                     <PageSnackbar
@@ -58,9 +58,9 @@ export const NotificationContextProvider = ({ children }: NotificationProviderPr
 };
 
 export function useNotifications() {
-  const context = useContext(notificationContext);
-  if (context === null) {
-    throw new Error('useNotifcations must be used within a NotificationContextProvider');
-  }
-  return context;
+    const context = useContext(notificationContext);
+    if (context === null) {
+        throw new Error('useNotifcations must be used within a NotificationContextProvider');
+    }
+    return context;
 }

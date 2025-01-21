@@ -45,7 +45,6 @@ export const AuthContextProvider = ({ children }: AuthProviderProps) => {
     useEffect(() => {
         const initializeAuth = async () => {
             await AuthenticationService.init();
-            console.log('auth init');
             setAuth({
                 isInitialized: true,
                 isAuthenticated: AuthenticationService.isAuthenticated() || false,
@@ -55,7 +54,6 @@ export const AuthContextProvider = ({ children }: AuthProviderProps) => {
             });
         };
         AuthenticationService.onAuthSuccess(() => {
-            console.log('auth success');
             setAuth({
                 isInitialized: true,
                 isAuthenticated: true,

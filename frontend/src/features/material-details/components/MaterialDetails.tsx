@@ -27,7 +27,7 @@ import { CollapsibleSummary } from './CollapsibleSummary';
 import { DataCategory, useMaterialDetails } from '../hooks/useMaterialDetails';
 import { useNotifications } from '@contexts/notificationContext';
 import { useDataModal } from '@contexts/dataModalContext';
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { groupBy } from '@util/helpers';
 import { DirectionType } from '@models/types/erp/directionType';
 import { createSummary } from '../util/summary-service';
@@ -82,13 +82,13 @@ export function MaterialDetails({ material, direction }: MaterialDetailsProps) {
         isLoading,
         refresh,
     } = useMaterialDetails(material.ownMaterialNumber ?? '', direction);
-    const incomingDeliveries = deliveries?.filter((d) => sites?.some((site) => site.bpns === d.destinationBpns));
-    const outgoingShipments = deliveries?.filter((d) => sites?.some((site) => site.bpns === d.originBpns));
-    const groupedProductions = groupBy(productions ?? [], (prod) => prod.productionSiteBpns);
-    const groupedDemands = groupBy(demands ?? [], (dem) => dem.demandLocationBpns);
-    const groupedIncomingDeliveries = groupBy(incomingDeliveries ?? [], (del) => del.destinationBpns);
-    const groupedOutgoingShipments = groupBy(outgoingShipments ?? [], (del) => del.originBpns);
-    const groupedStocks = groupBy(stocks ?? [], (stock) => stock.stockLocationBpns);
+    const incomingDeliveries = useMemo(() => deliveries?.filter((d) => sites?.some((site) => site.bpns === d.destinationBpns)), [deliveries, sites]);
+    const outgoingShipments = useMemo(() => deliveries?.filter((d) => sites?.some((site) => site.bpns === d.originBpns)), [deliveries, sites]);
+    const groupedProductions = useMemo(() => groupBy(productions ?? [], (prod) => prod.productionSiteBpns), [productions]);
+    const groupedDemands = useMemo(() => groupBy(demands ?? [], (dem) => dem.demandLocationBpns), [demands]);
+    const groupedIncomingDeliveries = useMemo(() => groupBy(incomingDeliveries ?? [], (del) => del.destinationBpns), [incomingDeliveries]);
+    const groupedOutgoingShipments = useMemo(() => groupBy(outgoingShipments ?? [], (del) => del.originBpns), [outgoingShipments]);
+    const groupedStocks = useMemo(() => groupBy(stocks ?? [], (stock) => stock.stockLocationBpns), [stocks]);
 
     useEffect(() => {
         const callback = (category: DataCategory) => refresh([category]);
@@ -214,7 +214,7 @@ export function MaterialDetails({ material, direction }: MaterialDetailsProps) {
                     onRefresh={handleRefresh}
                     onScheduleUpdate={handleScheduleUpdate}
                 />
-                <Stack spacing={10}>
+                <Stack spacing={5}>
                     <SummaryContainer>
                         <SummaryPanel title={`${capitalize(summary.type ?? '')} Summary`} summary={summary} showHeader />
                         {expandablePartners.map((partner) => (
@@ -224,9 +224,7 @@ export function MaterialDetails({ material, direction }: MaterialDetailsProps) {
                                 renderTitle={() => (
                                     <>
                                         <Typography variant="body1">{partner.name}</Typography>
-                                        <Typography variant="body3" color="#ccc">
-                                            ({partner.bpnl})
-                                        </Typography>
+                                        <Typography variant="body3" color="#ccc">({partner.bpnl})</Typography>
                                     </>
                                 )}
                             >
@@ -237,13 +235,9 @@ export function MaterialDetails({ material, direction }: MaterialDetailsProps) {
                                         variant="sub"
                                         renderTitle={() => (
                                             <>
-                                                <Typography variant="body2" color="#ccc">
-                                                    {partner.name}/
-                                                </Typography>
+                                                <Typography variant="body2" color="#ccc">{partner.name}/</Typography>
                                                 <Typography variant="body1">{site.name}</Typography>
-                                                <Typography variant="body3" color="#ccc">
-                                                    ({site.bpns})
-                                                </Typography>
+                                                <Typography variant="body3" color="#ccc">({site.bpns})</Typography>
                                             </>
                                         )}
                                     />

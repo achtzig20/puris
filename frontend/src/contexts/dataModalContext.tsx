@@ -142,9 +142,7 @@ export const DataModalProvider = ({ children, material }: DataModalProviderProps
             />
             <PlannedProductionModal
                 {...state.productionDialogOptions}
-                onClose={() =>
-                    dispatch({ type: 'productionDialogOptions', payload: { open: false, mode: state.productionDialogOptions.mode } })
-                }
+                onClose={() => dispatch({ type: 'productionDialogOptions', payload: { open: false, mode: state.productionDialogOptions.mode } })}
                 onSave={() => onSave('production')}
                 production={state.production}
                 productions={state.productions}
@@ -168,7 +166,7 @@ export function useDataModal() {
     return context;
 }
 
-type DashboardState = {
+type ModalState = {
     deliveryDialogOptions: { open: boolean; mode: ModalMode; direction: DirectionType; site: Site | null };
     demandDialogOptions: { open: boolean; mode: ModalMode };
     productionDialogOptions: { open: boolean; mode: ModalMode };
@@ -180,16 +178,16 @@ type DashboardState = {
     productions: Production[];
 };
 
-type DashboardAction = {
-    type: keyof DashboardState;
-    payload: DashboardState[keyof DashboardState];
+type ModalAction = {
+    type: keyof ModalState;
+    payload: ModalState[keyof ModalState];
 };
 
-const reducer = (state: DashboardState, action: DashboardAction): DashboardState => {
+const reducer = (state: ModalState, action: ModalAction): ModalState => {
     return { ...state, [action.type]: action.payload };
 };
 
-const initialState: DashboardState = {
+const initialState: ModalState = {
     deliveryDialogOptions: { open: false, mode: 'edit', direction: DirectionType.Inbound, site: null },
     demandDialogOptions: { open: false, mode: 'edit' },
     productionDialogOptions: { open: false, mode: 'edit' },

@@ -56,6 +56,17 @@ function getDateValue<TType extends SummaryType>(type: TType, entity: SummaryTyp
     );
 }
 
+/**
+ * Creates a material details summary for a given role and timespan. The summary includes the daily sums of primary values, deliveries, and stocks as well as 
+ * the individual corresponding positions.
+ * 
+ * @param type the type of summary to create (production for supplier, demand for customer)
+ * @param primaryValues the list of demands or productions for customers and suppliers respectively
+ * @param deliveries the list of incoming deliveries and outgoing shipments for customers and suppliers respectively
+ * @param stocks the list of stocks for the material
+ * @param timespan the timespan in days to create the summary for
+ * @returns 
+ */
 export function createSummary<TType extends SummaryType>(
     type: TType,
     primaryValues: SummaryTypeMap[TType][],

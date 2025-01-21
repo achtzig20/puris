@@ -43,7 +43,16 @@ export function CollapsibleSummary<TType extends SummaryType>({
         <>
             <Button
                 variant="text"
-                sx={{ flexGrow: 1, padding: 0, borderRadius: 0, textTransform: 'none', mindWidth: "100%", position: 'sticky', left: 0, display: 'flex' }}
+                sx={{
+                    flexGrow: 1,
+                    padding: 0,
+                    borderRadius: 0,
+                    textTransform: 'none',
+                    mindWidth: '100%',
+                    position: 'sticky',
+                    left: 0,
+                    display: 'flex',
+                }}
                 onClick={() => setIsExpanded((prev) => !prev)}
             >
                 <Stack
@@ -64,9 +73,7 @@ export function CollapsibleSummary<TType extends SummaryType>({
                     {renderTitle()}
                 </Stack>
             </Button>
-
-            <SummaryPanel sx={{display: isExpanded ? 'flex' : 'none'}} summary={summary} />
-
+            <SummaryPanel sx={{ display: isExpanded ? 'flex' : 'none' }} summary={summary} />
             {isExpanded ? children : null}
         </>
     );

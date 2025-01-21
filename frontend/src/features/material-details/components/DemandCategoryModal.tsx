@@ -186,6 +186,7 @@ export const DemandCategoryModal = ({ open, mode, onClose, onSave, demand, deman
     const handleDelete = (row: Demand) => {
         if (row.uuid) deleteDemand(row.uuid).then(onSave);
     };
+
     useEffect(() => {
         if (demand) {
             setTemporaryDemand(demand);

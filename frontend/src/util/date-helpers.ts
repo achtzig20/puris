@@ -24,6 +24,11 @@ export type CalendarWeek = {
   startDate: Date;
 }
 
+/**
+ * Calculates the calendar week for a given date.
+ * @param date the date for which to calculate the calendar week
+ * @returns the calendar week
+ */
 export function getCalendarWeek(date: Date): CalendarWeek {
   const targetDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   targetDate.setUTCDate(targetDate.getUTCDate() + 4 - (targetDate.getUTCDay() || 7));
@@ -37,6 +42,12 @@ export function getCalendarWeek(date: Date): CalendarWeek {
   return { week, isoYear, startDate: startOfTargetWeek };
 }
 
+/**
+ * Increments the calendar week by a given amount.
+ * @param cw the calendar week to increment
+ * @param amount the amount by which to increment the calendar week
+ * @returns the incremented calendar week
+ */
 export function incrementCalendarWeek(cw: CalendarWeek, amount: number) {
   const {week, isoYear} = cw;
 
@@ -73,6 +84,12 @@ export function incrementCalendarWeek(cw: CalendarWeek, amount: number) {
   return { week: newWeekNumber, isoYear: newIsoYear, startDate: nextWeekStart };
 }
 
+/**
+ * Increments a date by a given amount of days.
+ * @param date the date to increment
+ * @param days the amount of days by which to increment the date
+ * @returns the incremented date
+ */
 export function incrementDate(date: Date, days: number) {
   const newDate = new Date(date);
   newDate.setDate(newDate.getDate() + days);

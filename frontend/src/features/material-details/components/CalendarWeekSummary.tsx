@@ -21,11 +21,10 @@ SPDX-License-Identifier: Apache-2.0
 import { CloseFullscreenOutlined, OpenInFullOutlined } from '@mui/icons-material';
 import { Box, Button, Grid, IconButton, Stack, Typography, useTheme } from '@mui/material';
 import { CalendarWeek, incrementDate } from '@util/date-helpers';
-import { useState } from 'react';
+import { useMemo } from 'react';
 import { Summary, SummaryType } from '../util/summary-service';
 import { useDataModal } from '@contexts/dataModalContext';
 import { DirectionType } from '@models/types/erp/directionType';
-import { DataCategoryTypeMap } from '../hooks/useMaterialDetails';
 import { Demand } from '@models/types/data/demand';
 import { Production } from '@models/types/data/production';
 import { Delivery } from '@models/types/data/delivery';
@@ -47,7 +46,7 @@ export function CalendarWeekSummary<TType extends SummaryType>({
 }: CalendarWeekSummaryProps<TType>) {
     const theme = useTheme();
     const { openDialog } = useDataModal();
-    const [weekDates] = useState<Date[]>(() => Array.from(new Array(7).keys()).map((key) => incrementDate(cw.startDate, key)));
+    const weekDates = useMemo(() => Array.from(new Array(7).keys()).map((key) => incrementDate(cw.startDate, key)), [cw.startDate]);
     return (
         <Stack flex={isExpanded ? 50 : 10} sx={{ borderRight: '1px solid #e5e5e5', minWidth: isExpanded ? '34rem' : '9rem' }}>
             {showHeader && (
@@ -104,17 +103,21 @@ export function CalendarWeekSummary<TType extends SummaryType>({
                                             variant="text"
                                             sx={{ padding: 0 }}
                                             onClick={() =>
-                                                openDialog(
-                                                    summary.type === 'demand' ? 'demand' : 'production',
-                                                    summary.type === 'demand'
-                                                        ? ({ day: date } as Partial<Demand>)
-                                                        : ({ estimatedTimeOfCompletion: date } as Partial<Production>),
-                                                    summary.type === 'demand'
-                                                        ? (summary.dailySummaries[date.toLocaleDateString()]?.primaryValues as Demand[])
-                                                        : (summary.dailySummaries[date.toLocaleDateString()]?.primaryValues as Production[]),
-                                                    'view',
-                                                    summary.type === 'production' ? DirectionType.Outbound : DirectionType.Inbound
-                                                )
+                                                summary.type === 'demand'
+                                                    ? openDialog(
+                                                          'demand',
+                                                          { day: date },
+                                                          summary.dailySummaries[date.toLocaleDateString()]?.primaryValues as Demand[],
+                                                          'view',
+                                                          DirectionType.Inbound
+                                                      )
+                                                    : openDialog(
+                                                          'production',
+                                                          { estimatedTimeOfCompletion: date },
+                                                          summary.dailySummaries[date.toLocaleDateString()]?.primaryValues as Production[],
+                                                          'view',
+                                                          DirectionType.Outbound
+                                                      )
                                             }
                                         >
                                             <Typography variant="body2">

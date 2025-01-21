@@ -17,55 +17,5 @@ under the License.
 
 SPDX-License-Identifier: Apache-2.0
 */
-import { Box, Button } from '@mui/material';
-
-export const createDateColumnHeaders = (numberOfDays: number) => {
-    return Object.keys(Array.from({ length: numberOfDays })).map((_, index) => {
-        const date = new Date();
-        date.setDate(date.getDate() + index);
-        return {
-            field: `${index}`,
-            headerName: date.toISOString(),
-            headerAlign: 'center' as const,
-            sortable: false,
-            disableColumnMenu: true,
-            width: 100,
-            renderHeader: (data: { colDef: { headerName?: string } }) => {
-                return (
-                    <Box display="flex" justifyContent="center" alignItems="center" flexDirection="column" gap=".25rem">
-                        <Box lineHeight="1">{date.toLocaleDateString(undefined, { weekday: 'long'}).slice(0, 2)}</Box>
-                        <Box lineHeight="1">
-                            {new Date(data.colDef.headerName!).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                        </Box>
-                    </Box>
-                );
-            },
-            renderCell: (data: { value?: number, field: string } & { row: { id: number | string } }) => {
-                return (
-                    <Box
-                        display="flex"
-                        flexDirection="column"
-                        textAlign="center"
-                        alignItems="center"
-                        justifyContent="center"
-                        width="100%"
-                        height="100%"
-                    >
-                        {(data.row.id === 'delivery' || data.row.id === 'shipment' || data.row.id === 'plannedProduction' || data.row.id === 'demand') &&
-                        data.value !== 0 ? (
-                            <Button variant="text">
-                                {data.value}
-                            </Button>
-                        ) : (<>
-                            {(data.value ?? 0) > 0 ? data.value : 0}
-                            <Box fontStyle='italic'>{data.row.id === 'itemStock' && data.field === '0' && '(current)'}</Box></>
-                        )}
-                    </Box>
-                );
-            },
-            type: 'number',
-        };
-    });
-};
 
 export const getPartnerType = (type: 'customer' | 'supplier') => (type === 'customer' ? 'supplier' : 'customer');

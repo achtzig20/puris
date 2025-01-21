@@ -67,14 +67,12 @@ services:
         condition: service_healthy
     ports:
       - "127.0.0.1:8081:8081" # expose port of server.port
-      - "127.0.0.1:5005:5005" # expose port for debugging
     env_file:
       - ./tractus-x-edc/config/customer/puris-backend.properties
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-all:5432/puris_customer
       SPRING_DATASOURCE_USERNAME: ${PG_USER}
       SPRING_DATASOURCE_PASSWORD: ${PG_PW}
-      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,address=*:5005,server=y,suspend=n
     networks:
       - miw-net
     extra_hosts:
@@ -227,14 +225,12 @@ services:
         condition: service_healthy
     ports:
       - "127.0.0.1:8082:8082"
-      - "127.0.0.1:5006:5006"
     env_file:
       - ./tractus-x-edc/config/supplier/puris-backend.properties
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-all:5432/puris_supplier
       SPRING_DATASOURCE_USERNAME: ${PG_USER}
       SPRING_DATASOURCE_PASSWORD: ${PG_PW}
-      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,address=*:5006,server=y,suspend=n
     networks:
       - miw-net
     extra_hosts:
