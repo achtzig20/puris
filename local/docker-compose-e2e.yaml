@@ -1,0 +1,36 @@
+services:
+  cypress-chrome:
+    image: "cypress/included:14.2.0"
+    command: "--browser chrome"
+    container_name: cypress-chrome
+    working_dir: /testing
+    volumes:
+      - .:/testing
+    environment:
+      - CYPRESS_baseUrl=http://localhost:3000
+      - CYPRESS_viewportWidth=1920
+      - CYPRESS_viewportHeight=1080
+    network_mode: "host"
+  cypress-firefox:
+    image: "cypress/included:14.2.0"
+    command: "--browser firefox"
+    container_name: cypress-firefox
+    working_dir: /testing
+    volumes:
+      - .:/testing
+    environment:
+      - CYPRESS_baseUrl=http://localhost:3000
+      - CYPRESS_viewportWidth=1920
+      - CYPRESS_viewportHeight=1080
+    network_mode: "host"
+  cypress-electron:
+    image: "cypress/included:14.2.0"
+    container_name: cypress-electron
+    working_dir: /testing
+    volumes:
+      - .:/testing
+    environment:
+      - CYPRESS_baseUrl=http://localhost:3000
+      - CYPRESS_viewportWidth=1920
+      - CYPRESS_viewportHeight=1080
+    network_mode: "host"

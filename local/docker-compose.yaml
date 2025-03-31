@@ -103,7 +103,7 @@ services:
       test: ["CMD-SHELL", "wget -q --spider http://dtr-customer:4243/actuator/health/readiness"]
       interval: 4s
       timeout: 3s
-      retries: 30
+      retries: 20
     ports:
       - "127.0.0.1:4243:4243"
     environment:
@@ -288,7 +288,7 @@ services:
       test: ["CMD-SHELL", "wget -q --spider http://dtr-supplier:4243/actuator/health/readiness"]
       interval: 4s
       timeout: 3s
-      retries: 30
+      retries: 20
     ports:
       - "127.0.0.1:4244:4243"
     environment:
@@ -369,7 +369,6 @@ services:
       - miw-net
     extra_hosts:
       - "host.docker.internal:host-gateway" # Adjusts container's host file to allow for communication with docker-host machine
-
 networks:
   miw-net:
     external: true

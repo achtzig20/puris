@@ -1,0 +1,14 @@
+[
+  {
+    "ownMaterialNumber": "MNR-7307-AU340474.002",
+    "name": "Semiconductor",
+    "materialFlag": true,
+    "productFlag": true
+  },
+  {
+    "ownMaterialNumber": "MNR-4177-S",
+    "name": "Central Control Unit",
+    "materialFlag": false,
+    "productFlag": true
+  }
+]
