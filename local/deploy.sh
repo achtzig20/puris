@@ -130,11 +130,11 @@ echo "Infrastructure services are up and running."
 
 echo "All services started successfully."
 
-sh ./run-e2e.sh
 
 if [ $int_seed -eq 1 ]; then
   echo "Seeding Int Data..."
   npm run local-test
+  sh ./run-e2e.sh
   echo "...seeded data. PLEASE CHECK RESULTS ON YOUR OWN."
 fi
 
