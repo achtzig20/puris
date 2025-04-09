@@ -103,7 +103,7 @@ services:
       test: ["CMD-SHELL", "wget -q --spider http://dtr-customer:4243/actuator/health/readiness"]
       interval: 4s
       timeout: 3s
-      retries: 20
+      retries: 30
     ports:
       - "127.0.0.1:4243:4243"
     environment:
@@ -288,7 +288,7 @@ services:
       test: ["CMD-SHELL", "wget -q --spider http://dtr-supplier:4243/actuator/health/readiness"]
       interval: 4s
       timeout: 3s
-      retries: 20
+      retries: 30
     ports:
       - "127.0.0.1:4244:4243"
     environment:

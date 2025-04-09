@@ -33,8 +33,4 @@ services:
       - CYPRESS_SUPPLIER_URL=http://localhost:3001
       - CYPRESS_VIEWPORT_WIDTH=1280
       - CYPRESS_VIEWPORT_HEIGHT=1080
-      - CYPRESS_IDP_ENABLED=false
-      - CYPRESS_IDP_TYPE=local
-      - CYPRESS_IDP_USERNAME=
-      - CYPRESS_IDP_PASSWORD=
     network_mode: "host"
