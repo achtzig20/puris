@@ -1,7 +1,6 @@
 /*
-Copyright (c) 2023 Volkswagen AG
-Copyright (c) 2024 Fraunhofer-Gesellschaft zur Foerderung der angewandten Forschung e.V. (represented by Fraunhofer ISST)
-Copyright (c) 2023 Contributors to the Eclipse Foundation
+Copyright (c) 2025 Volkswagen AG
+Copyright (c) 2025 Contributors to the Eclipse Foundation
 
 See the NOTICE file(s) distributed with this work for additional
 information regarding copyright ownership.
@@ -22,6 +21,14 @@ SPDX-License-Identifier: Apache-2.0
 import { config } from '@models/constants/config';
 import AuthenticationService from './authentication-service';
 
+export interface DataImportResult {
+  message: string;
+  errors: Array<{
+    row: number;
+    errors: string[];
+  }>;
+}
+
 export const uploadDocuments = async (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -33,10 +40,21 @@ export const uploadDocuments = async (file: File) => {
         },
     });
 
-    if (res.status >= 400) {
-        const error = await res.json();
-        throw error;
+    if (res.status === 422 || res.status < 400) {
+        return res.json() as Promise<DataImportResult>;
     }
 
-    return res.json();
+    if (res.status === 413) {
+        return {
+            message: 'The uploaded file has an invalid format.',
+            errors: [],
+        };
+    }
+
+    if (res.status >= 400) {
+        const errorText = await res.text();
+        throw new Error(errorText);
+    }
+
+    return res.json() as Promise<DataImportResult>;
 };

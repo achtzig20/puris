@@ -1,7 +1,6 @@
 /*
-Copyright (c) 2022 Volkswagen AG
-Copyright (c) 2022 Fraunhofer-Gesellschaft zur Foerderung der angewandten Forschung e.V. (represented by Fraunhofer ISST)
-Copyright (c) 2022 Contributors to the Eclipse Foundation
+Copyright (c) 2025 Volkswagen AG
+Copyright (c) 2025 Contributors to the Eclipse Foundation
 
 See the NOTICE file(s) distributed with this work for additional
 information regarding copyright ownership.
@@ -20,23 +19,26 @@ SPDX-License-Identifier: Apache-2.0
 */
 
 import { DropArea } from '@catena-x/portal-shared-components';
-import { Box, Link, Stack, Typography } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import { Accordion, AccordionDetails, AccordionSummary, Box, Link, Stack, Typography } from '@mui/material';
 import { ConfidentialBanner } from '@components/ConfidentialBanner';
 import { useTitle } from '@contexts/titleProvider';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import React from 'react';
-import { uploadDocuments } from '@services/import-service';
+import { DataImportResult, uploadDocuments } from '@services/import-service';
 import { useNotifications } from '@contexts/notificationContext';
+import { ArrowDropDownOutlined, CheckOutlined, ErrorOutlineOutlined } from '@mui/icons-material';
 
-const HiddenInput = styled('input')({
-  display: 'none',
-});
+interface UploadResult {
+  fileName: string;
+  result?: DataImportResult;
+  error?: string;
+}
 
 export const ImportExportView = () => {
     const { setTitle } = useTitle();
     const { notify } = useNotifications();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [uploadResults, setUploadResults] = useState<UploadResult[]>([]);
 
     const templateFiles = [
         '/delivery-template.xlsx',
@@ -45,52 +47,57 @@ export const ImportExportView = () => {
         '/stock-template.xlsx',
     ];
 
-    const handleClick = () => {
-        fileInputRef.current?.click();
+    const supportedExtensions = ['.xlsx', '.csv'];
+
+    const validateFiles = (files: FileList | null) => {
+        if (!files?.length) return [];
+
+        return Array.from(files).filter(file => {
+        const isValid = supportedExtensions.some(ext => 
+            file.name.toLowerCase().endsWith(ext)
+        );
+        
+        if (!isValid) {
+            notify({
+                title: 'Unsupported File Type',
+                description: `File "${file.name}" is not supported. Supported extensions are: ${supportedExtensions.join(', ')}.`,
+                severity: 'error',
+            });
+        }
+        return isValid;
+        });
     };
 
-    const handleFiles = useCallback(async (files: FileList | null) => {
-        if (!files || files.length === 0) return;
+    const updateUploadResult = (fileName: string, update: Partial<UploadResult>) => {
+        setUploadResults(prev => 
+            prev.map(item => 
+                item.fileName === fileName ? { ...item, ...update } : item
+            )
+        );
+    };
 
-        const supportedExtensions = ['.xlsx', '.csv'];
-        const fileArray = Array.from(files);
-        const validFiles = fileArray.filter(file => {
-            const isValidType = supportedExtensions.some(ext =>
-                file.name.toLowerCase().endsWith(ext)
-            );
-            if (!isValidType) {
-                notify({
-                    title: 'Unsupported File Type',
-                    description: `File "${file.name}" is not supported. Only .xlsx and .csv files are allowed.`,
-                    severity: 'error',
-                });
-            }
-            return isValidType;
-        });
-
-        if (validFiles.length === 0) return;
+    const processFiles = async (validFiles: File[]) => {
+        const initialResults: UploadResult[] = validFiles.map(file => ({ fileName: file.name }));
+        setUploadResults(initialResults);
 
         const uploadPromises = validFiles.map(async (file) => {
             try {
                 const result = await uploadDocuments(file);
-                notify({
-                    title: 'Upload Successful',
-                    description: `${file.name}: ${result.message}`,
-                    severity: 'success',
-                });
-                return { file: file.name, success: true };
+                updateUploadResult(file.name, { result });
             } catch (error: any) {
-                notify({
-                    title: 'Upload Failed',
-                    description: `${file.name}: ${error.message}`,
-                    severity: 'error',
-                });
-                return { file: file.name, success: false, error: error.message };
+                updateUploadResult(file.name, { error: error.message });
             }
         });
 
+        await Promise.allSettled(uploadPromises);
+    };
+
+    const handleFiles = useCallback(async (files: FileList | null) => {
+        const validFiles = validateFiles(files);
+        if (validFiles.length === 0) return;
+        
         try {
-            await Promise.allSettled(uploadPromises);
+            await processFiles(validFiles);
         } catch (error) {
             console.error('Unexpected error during file processing:', error);
         }
@@ -107,7 +114,6 @@ export const ImportExportView = () => {
         handleFiles(e.dataTransfer.files);
     };
 
-    // Prevent default behavior for drag events
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -160,28 +166,114 @@ export const ImportExportView = () => {
                     </Typography>
                 </Box>
                 <Box sx={{ px: 3}}>
-                    <Box onClick={handleClick} onDrop={handleDrop} onDragOver={handleDragOver}>
+                    <Box onClick={() => fileInputRef.current?.click()} onDrop={handleDrop} onDragOver={handleDragOver}
+                        sx={{ '& h3': { fontSize: '1.125rem' }, '& p': { fontSize: '.875rem' } }}>
                         <DropArea
                             size="normal"
                             error=""
                             translations={{
-                            errorTitle: 'Sorry, something went wrong',
-                            subTitle: 'Supports: xlsx, csv',
-                            title: 'Drag & Drop or click to browse',
+                                errorTitle: 'Sorry, something went wrong',
+                                subTitle: 'Supports: xlsx, csv',
+                                title: 'Drag & Drop or click to browse',
                             }}
                         />
                     </Box>
-                    <HiddenInput
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    multiple
-                    accept=".xlsx,.csv"
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        multiple
+                        accept=".xlsx,.csv"
+                        hidden
                     />
                 </Box>
+                {uploadResults.length > 0 && (
+                    <Box sx={{ px: 3 }}>
+                        {uploadResults.map((result, index) => (
+                        <UploadResultAccordion key={index} result={result} index={index} />
+                        ))}
+                    </Box>
+                )}
             </Stack>
         </Box>
     );
 };
 
+const UploadResultAccordion = ({ result, index }: { result: UploadResult; index: number }) => {
+  const hasError = result.error || (result.result?.errors.length ?? 0) > 0;
+  const isProcessing = !result.result && !result.error;
+  
+  const getStatus = () => {
+    if (isProcessing) return { message: "Processing...", color: 'transparent', icon: null };
+    if (hasError) return { 
+      message: result.result?.message || result.error || "", 
+      color: '#ffebee', 
+      icon: <ErrorOutlineOutlined sx={{ color: 'red' }} />
+    };
+    return { 
+      message: result.result?.message || "", 
+      color: '#e8f5e8', 
+      icon: <CheckOutlined sx={{ color: 'green' }} />
+    };
+  };
+
+  const status = getStatus();
+
+  return (
+    <Accordion 
+      key={index} 
+      sx={{ mb: 1, backgroundColor: status.color }}
+    >
+      <AccordionSummary expandIcon={<ArrowDropDownOutlined />}>
+        <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+          {status.icon && <Box sx={{ mr: 2 }}>{status.icon}</Box>}
+          
+          <Typography variant="body2" sx={{ flex: 1, mr: 2 }}>
+            {status.message}
+          </Typography>
+          
+          <Typography variant="body2" sx={{ fontWeight: 'bold', marginLeft: 'auto' }}>
+            {result.fileName}
+          </Typography>
+        </Box>
+      </AccordionSummary>
+      
+      <AccordionDetails>
+        {(result.result?.errors && result.result.errors.length > 0) && (
+          <Box>
+            <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'red', mb: 2 }}>
+              Errors found:
+            </Typography>
+            {result.result.errors.map((error, errorIndex) => (
+              <Box key={errorIndex} sx={{ mb: 2, pl: 2 }}>
+                <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                  Row {error.row}:
+                </Typography>
+                <Box sx={{ ml: 2 }}>
+                  {error.errors.map((errorMsg, msgIndex) => (
+                    <Typography key={msgIndex} variant="body2" sx={{ color: 'red', mb: 0.5 }}>
+                      • {errorMsg}
+                    </Typography>
+                  ))}
+                </Box>
+              </Box>
+            ))}
+          </Box>
+        )}
+        
+        {result.error && (
+          <Typography variant="body2" color="red">
+            {result.error}
+          </Typography>
+        )}
+        
+        {result.result && !result.result.errors.length && !result.error && (
+          <Typography variant="body2" sx={{ color: 'green' }}>
+            Success
+          </Typography>
+        )}
+      </AccordionDetails>
+    </Accordion>
+  );
+};
 
