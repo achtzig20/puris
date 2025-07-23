@@ -29,7 +29,7 @@ import { useTitle } from '@contexts/titleProvider';
 import { useAllPartners } from '@hooks/useAllPartners';
 import { Partner } from '@models/types/edc/partner';
 import { DemandCapacityNotificationResolutionModal } from '@features/notifications/components/NotificationResolutionMessageModal';
-import { CollapsibleDisruptionPanel } from '@features/notifications/components/CollapsableNotification';
+import { CollapsibleDisruptionPanel } from '@features/notifications/components/CollapsibleNotification';
 
 
 export const DemandCapacityNotificationView = () => {
@@ -55,14 +55,8 @@ export const DemandCapacityNotificationView = () => {
 
     const fetchAndLogNotification = useCallback(async () => {
         try {
-            const incoming = (await getDemandAndCapacityNotification(true)).map((n: DemandCapacityNotification) => ({
-                ...n,
-                direction: 'incoming'
-            }));
-            const outgoing = (await getDemandAndCapacityNotification(false)).map((n: DemandCapacityNotification) => ({
-                ...n,
-                direction: 'outgoing',
-            }));
+            const incoming = await getDemandAndCapacityNotification(true);
+            const outgoing = await getDemandAndCapacityNotification(false);
             setDemandCapacityNotification([...incoming, ...outgoing]);
         } catch (error) {
             console.error(error);
@@ -95,7 +89,7 @@ export const DemandCapacityNotificationView = () => {
         notifications: DemandCapacityNotification[]
     ) => {
         const relatedNotificationIds = notifications
-            .filter(notification => notification.direction === 'incoming')
+            .filter(notification => notification.reported === true)
             .map(notification => notification.notificationId);
         setFilterPartners(
             partners?.filter(partner => !(notifications.map(notification => notification.partnerBpnl)).includes(partner.bpnl)) ?? null

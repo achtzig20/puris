@@ -1,6 +1,6 @@
 /*
-Copyright (c) 2024 Volkswagen AG
-Copyright (c) 2024 Contributors to the Eclipse Foundation
+Copyright (c) 2025 Volkswagen AG
+Copyright (c) 2025 Contributors to the Eclipse Foundation
 
 See the NOTICE file(s) distributed with this work for additional
 information regarding copyright ownership.
@@ -22,10 +22,9 @@ import { Close } from '@mui/icons-material';
 import { Box, Button, Dialog, DialogTitle, FormLabel, Grid, Stack, Typography, useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { putDemandAndCapacityNotification } from '@services/demand-capacity-notification';
-import { DemandCapacityNotification } from '@models/types/data/demand-capacity-notification';
+import { DemandCapacityNotification, StatusType } from '@models/types/data/demand-capacity-notification';
 import { CheckCircle, ReportProblem } from '@mui/icons-material';
 import { useNotifications } from '@contexts/notificationContext';
-import { STATUS } from '@models/constants/status';
 import { Textarea } from '@catena-x/portal-shared-components';
 
 type DemandCapacityNotificationResolutionModalProps = {
@@ -66,7 +65,7 @@ export const DemandCapacityNotificationResolutionModal = ({
         const updatedNotification = {
             ...demandCapacityNotification,
             resolvingMeasureDescription: resolutionMessage,
-            status: STATUS.find((status) => status.key === 'resolved')?.key
+            status: 'resolved' as StatusType
         };
 
         putDemandAndCapacityNotification(updatedNotification)
@@ -81,7 +80,7 @@ export const DemandCapacityNotificationResolutionModal = ({
             })
             .catch((error) => {
                 notify({
-                        title: 'Error requesting update',
+                        title: 'Error resolving notification',
                         description: error.error,
                         severity: 'error',
                     },
@@ -99,7 +98,7 @@ export const DemandCapacityNotificationResolutionModal = ({
         <>
             <Dialog open={open} onClose={handleClose}>
                 <DialogTitle variant="h3" textAlign="center">
-                    Demand Capacity Notification Information
+                    Resolve Notification
                 </DialogTitle>
                 <Stack padding="0 2rem 2rem" sx={{ width: '60rem' }}>
                     {demandCapacityNotification && (

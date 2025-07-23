@@ -51,21 +51,21 @@ export function CollapsibleDisruptionPanel({
     const theme = useTheme();
     const [isExpanded, setIsExpanded] = useState(false);
 
-    const incomingCount = notifications.filter(n => n.direction === 'incoming').length;
-    const outgoingCount = notifications.filter(n => n.direction === 'outgoing').length;
+    const incomingCount = notifications.filter(n => n.reported === true).length;
+    const outgoingCount = notifications.filter(n => n.reported === false).length;
     const resolvedCount = notifications.filter(n => n.status === 'resolved').length;
     return (
         <>
-            <Button
-                variant="text"
+            <Box
                 sx={{
                     flexGrow: 1,
                     padding: 0,
                     textTransform: 'none',
-                    mindWidth: '100%',
+                    minWidth: '100%',
                     position: 'sticky',
                     left: 0,
                     display: 'flex',
+                    cursor: 'pointer', // Still shows as clickable
                 }}
                 onClick={() => setIsExpanded((prev) => !prev)}
                 data-testid={`collapsible-notification-button-${disruptionId}`}
@@ -88,37 +88,39 @@ export function CollapsibleDisruptionPanel({
                         <Typography variant="body2"><b>{LEADING_ROOT_CAUSE.find((cause) => cause.key === notifications[0].leadingRootCause)?.value}</b></Typography>
                         <Typography variant="body2" color="#ccc">({EFFECTS.find((effect) => effect.key === notifications[0].effect)?.value})</Typography>
                     </Box>
-                    <Box sx={{ display: 'flex', flex: 'auto', justifyContent: 'flex-end', pr: 2,}}>
-                        <Typography variant="body2" textAlign="center">
-                        <b>Incoming:</b> {incomingCount} &nbsp;
-                        <b>Outgoing:</b> {outgoingCount} &nbsp;
-                        <b>Resolved:</b> {resolvedCount}
-                        </Typography>
+                    <Box sx={{ display: 'flex', flex: '1', justifyContent: 'flex-end', pr: 2, textAlign: 'center', gap: '1rem'}}>
+                        <Typography variant="body2"><b>Incoming:</b> {incomingCount}</Typography>
+                        <Typography variant="body2"><b>Outgoing:</b> {outgoingCount}</Typography>
+                        <Typography variant="body2"><b>Resolved:</b> {resolvedCount}</Typography>
                     </Box>
                     {!isResolved && (
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', flex: 'auto', alignItems: 'center', pr: 2, }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', flex: '1', alignItems: 'center', pr: 2, }}>
                             <Button
                                 variant="contained"
                                 sx={{ display: 'flex', gap: '.5rem' }}
-                                onClick={() => onForwardClick(disruptionId, notifications)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onForwardClick(disruptionId, notifications);
+                                }}
                             >
-                                Forward
+                                {
+                                    notifications.some((n) => !n.reported && (!n.relatedNotificationIds || n.relatedNotificationIds.length === 0))
+                                    ? 'New Notification'
+                                    : 'Forward'
+                                }
                             </Button>
                         </Box>
                     )}
                 </Stack>
-            </Button>
-
+            </Box>
             {isExpanded && (
-                <>
-                    <DemandCapacityNotificationTable
-                        notifications={notifications}
-                        partners={partners}
-                        onRowSelected={onRowSelected}
-                        onEditClicked={onEditClicked}
-                        onCheckClicked={onCheckClicked}
-                    />
-                </>
+                <DemandCapacityNotificationTable
+                    notifications={notifications}
+                    partners={partners}
+                    onRowSelected={onRowSelected}
+                    onEditClicked={onEditClicked}
+                    onCheckClicked={onCheckClicked}
+                />
             )}
         </>
     );
@@ -143,18 +145,45 @@ const DemandCapacityNotificationTable: React.FC<NotificationTableProps> = ({ not
                 noRowsMsg='No Notifications found'
                 title={`Title`}
                 columns={[
-                    { headerName: 'Direction', field: 'direction', flex: 0.5 },
+                    { headerName: 'Direction', field: 'reported', flex: 0.5, valueGetter: (params) => (params.row.reported ? 'Incoming' : 'Outgoing') },
                     { headerName: 'Partner', field: 'partnerBpnl', flex: 1, valueFormatter: (params) => partners?.find((partner) => partner.bpnl === params.value)?.name || params.value },
-                    { headerName: ' Affected Material Numbers', field: 'affectedMaterialNumbers', flex: 1 },
-                    { headerName: ' Affected Sites Sender', field: 'affectedSitesBpnsSender', flex: 1 },
-                    { headerName: ' Affected Sites Recipient', field: 'affectedSitesBpnsRecipient', flex: 1 },
-                    { headerName: 'Start date', field: 'startDateOfEffect', flex: 1, valueGetter: (params) => new Date(params.row.startDateOfEffect).toLocaleString() },
-                    { headerName: 'Expected end date', field: 'expectedEndDateOfEffect', flex: 1, valueGetter: (params) => params.row.expectedEndDateOfEffect ? new Date(params.row.expectedEndDateOfEffect).toLocaleString() : '' },
-                    { headerName: 'Last Updated', field: 'contentChangedAt', flex: 1, valueGetter: (params) => params.row.contentChangedAt ? new Date(params.row.contentChangedAt).toLocaleString() : '' },
+                    { headerName: 'Material Numbers', field: 'affectedMaterialNumbers', flex: 1 },
+                    { headerName: 'Sites Sender', field: 'affectedSitesBpnsSender', flex: 1 },
+                    { headerName: 'Sites Recipient', field: 'affectedSitesBpnsRecipient', flex: 1 },
+                    { headerName: 'Start date', field: 'startDateOfEffect', flex: 1, renderCell: (data: { row: DemandCapacityNotification }) => (
+                        <Stack display="flex" textAlign="center" alignItems="center" justifyContent="center" width="100%" height="100%">
+                            <Box>{new Date(data.row.startDateOfEffect).toLocaleDateString('en-GB')}</Box>
+                            <Box>{new Date(data.row.startDateOfEffect).toLocaleTimeString('en-GB')}</Box>
+                        </Stack>
+                        ),
+                    },
+                    { headerName: 'End date', field: 'expectedEndDateOfEffect', flex: 1, renderCell: (data: { row: DemandCapacityNotification }) =>
+                        data.row.expectedEndDateOfEffect ? (
+                        <Stack display="flex" textAlign="center" alignItems="center" justifyContent="center" width="100%" height="100%">
+                            <Box>{new Date(data.row.expectedEndDateOfEffect).toLocaleDateString('en-GB')}</Box>
+                            <Box>{new Date(data.row.expectedEndDateOfEffect).toLocaleTimeString('en-GB')}</Box>
+                        </Stack>
+                        ) : null
+                    },
+                    { headerName: 'Last Updated', field: 'contentChangedAt', flex: 1, renderCell: (data: { row: DemandCapacityNotification }) => (
+                        <Stack display="flex" textAlign="center" alignItems="center" justifyContent="center" width="100%" height="100%">
+                            <Box>{new Date(data.row.contentChangedAt).toLocaleDateString('en-GB')}</Box>
+                            <Box>{new Date(data.row.contentChangedAt).toLocaleTimeString('en-GB')}</Box>
+                        </Stack>
+                        ),
+                    },
                     { headerName: 'Status', field: 'status', flex: 0.5, valueFormatter: (params) => STATUS.find((status) => status.key === params.value)?.value },
-                    { headerName: 'Text', field: 'text', flex: 1.25 },
+                    { headerName: 'Note', field: 'text', flex: 1.25, renderCell: (data: { row: DemandCapacityNotification }) => (
+                        <Stack display="flex" justifyContent="center" width="100%" height="100%">
+                            <Box>{data.row.text}</Box>
+                            {data.row.resolvingMeasureDescription && (
+                                <Box>Resolution: {data.row.resolvingMeasureDescription}</Box>
+                            )}
+                        </Stack>
+                        ),
+                    },
                     { headerName: '', field: 'actions', flex: 0.5 , renderCell: (params) => {
-                        if (params.row.status === 'resolved' || params.row.direction === 'incoming') {
+                        if (params.row.status === 'resolved' || params.row.reported === true) {
                             return null;
                         }
                         return (

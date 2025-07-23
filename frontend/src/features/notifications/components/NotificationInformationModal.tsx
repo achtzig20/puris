@@ -27,7 +27,7 @@ import { postDemandAndCapacityNotification, putDemandAndCapacityNotification } f
 import { EFFECTS } from '@models/constants/effects';
 import { LEADING_ROOT_CAUSE } from '@models/constants/leading-root-causes';
 import { STATUS } from '@models/constants/status';
-import { DemandCapacityNotification, EffectType, LeadingRootCauseType } from '@models/types/data/demand-capacity-notification';
+import { DemandCapacityNotification, EffectType, LeadingRootCauseType, StatusType } from '@models/types/data/demand-capacity-notification';
 import { Site } from '@models/types/edc/site';
 import { useSites } from '@features/stock-view/hooks/useSites';
 import { usePartnerMaterials } from '@hooks/usePartnerMaterials';
@@ -158,6 +158,7 @@ export const DemandCapacityNotificationInformationModal = ({
              const initialData: Partial<DemandCapacityNotification> = {
                 affectedMaterialNumbers: [],
                 affectedSitesBpnsRecipient: [],
+                status: 'open' as StatusType
             };
 
             if (forwardData) {
@@ -258,7 +259,7 @@ export const DemandCapacityNotificationInformationModal = ({
                                         label="Leading cause*"
                                         placeholder="Select the leading cause"
                                         error={formError && !temporaryDemandCapacityNotification?.leadingRootCause}
-                                        disabled={isEditMode && demandCapacityNotification !== null || forwardData?.sourceDisruptionId}
+                                        disabled={ (isEditMode && demandCapacityNotification !== null) || (isEditMode && !!forwardData?.sourceDisruptionId) }
                                     />
                                 </Grid>
                                 <Grid item xs={6}>
@@ -277,7 +278,7 @@ export const DemandCapacityNotificationInformationModal = ({
                                         label="Status*"
                                         placeholder="Select the status"
                                         error={formError && !temporaryDemandCapacityNotification?.status}
-                                        disabled={isEditMode && demandCapacityNotification !== null}
+                                        disabled={true}
                                     ></LabelledAutoComplete>
                                 </Grid>
                                 <Grid item xs={6}>
@@ -296,7 +297,7 @@ export const DemandCapacityNotificationInformationModal = ({
                                         label="Effect*"
                                         placeholder="Select the effect"
                                         error={formError && !temporaryDemandCapacityNotification?.effect}
-                                        disabled={isEditMode && demandCapacityNotification !== null || forwardData?.sourceDisruptionId}
+                                        disabled={ (isEditMode && demandCapacityNotification !== null) || (isEditMode && !!forwardData?.sourceDisruptionId) }
                                     />
                                 </Grid>
                                 <Grid item xs={6} display="flex" alignItems="end">
