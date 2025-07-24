@@ -56,63 +56,58 @@ export function CollapsibleDisruptionPanel({
     const resolvedCount = notifications.filter(n => n.status === 'resolved').length;
     return (
         <>
-            <Box
-                sx={{
-                    flexGrow: 1,
-                    padding: 0,
-                    textTransform: 'none',
-                    minWidth: '100%',
-                    position: 'sticky',
-                    left: 0,
-                    display: 'flex',
-                    cursor: 'pointer', // Still shows as clickable
-                }}
-                onClick={() => setIsExpanded((prev) => !prev)}
-                data-testid={`collapsible-notification-button-${disruptionId}`}
-            >
-                <Stack
-                    direction="row"
-                    alignItems="center"
-                    spacing={0.5}
+            <Box style={{ position: 'relative' }}>
+                <Button
+                    variant="text"
                     sx={{
-                        borderRadius: isExpanded ? '0.75rem 0.75rem 0 0' : '0.75rem',
-                        minHeight: '2.5rem',
-                        width: '100%',
-                        paddingLeft: '.5rem',
-                        backgroundColor: isResolved ? theme.palette.primary.main : theme.palette.primary.dark,
-                        color: theme.palette.primary.contrastText,
+                        flexGrow: 1,
+                        padding: 0,
+                        textTransform: 'none',
+                        minWidth: '100%',
+                        position: 'sticky',
+                        left: 0,
+                        display: 'flex',
                     }}
+                    onClick={() => setIsExpanded((prev) => !prev)}
+                    data-testid={`collapsible-notification-button-${disruptionId}`}
                 >
-                    <Box sx={{ display: 'flex', flex: '1', alignItems: 'center', gap: '.5rem' }}>
-                        <ChevronRightOutlined sx={{ rotate: isExpanded ? '90deg' : '0deg', transition: 'rotate 300ms ease-in-out'}} />
-                        <Typography variant="body2"><b>{LEADING_ROOT_CAUSE.find((cause) => cause.key === notifications[0].leadingRootCause)?.value}</b></Typography>
-                        <Typography variant="body2" color="#ccc">({EFFECTS.find((effect) => effect.key === notifications[0].effect)?.value})</Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', flex: '1', justifyContent: 'flex-end', pr: 2, textAlign: 'center', gap: '1rem'}}>
-                        <Typography variant="body2"><b>Incoming:</b> {incomingCount}</Typography>
-                        <Typography variant="body2"><b>Outgoing:</b> {outgoingCount}</Typography>
-                        <Typography variant="body2"><b>Resolved:</b> {resolvedCount}</Typography>
-                    </Box>
-                    {!isResolved && (
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', flex: '1', alignItems: 'center', pr: 2, }}>
-                            <Button
-                                variant="contained"
-                                sx={{ display: 'flex', gap: '.5rem' }}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onForwardClick(disruptionId, notifications);
-                                }}
-                            >
-                                {
-                                    notifications.some((n) => !n.reported && (!n.relatedNotificationIds || n.relatedNotificationIds.length === 0))
-                                    ? 'New Notification'
-                                    : 'Forward'
-                                }
-                            </Button>
+                    <Stack
+                        direction="row"
+                        alignItems="center"
+                        spacing={0.5}
+                        sx={{
+                            borderRadius: isExpanded ? '0.75rem 0.75rem 0 0' : '0.75rem',
+                            minHeight: '2.5rem',
+                            width: '100%',
+                            paddingLeft: '.5rem',
+                            backgroundColor: isResolved ? theme.palette.primary.main : theme.palette.primary.dark,
+                            color: theme.palette.primary.contrastText,
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', flex: 1, alignItems: 'center', gap: '.5rem' }}>
+                            <ChevronRightOutlined sx={{ rotate: isExpanded ? '90deg' : '0deg', transition: 'rotate 300ms ease-in-out'}} />
+                            <Typography variant="body2"><b>{LEADING_ROOT_CAUSE.find((cause) => cause.key === notifications[0].leadingRootCause)?.value}</b></Typography>
+                            <Typography variant="body2" color="#ccc">({EFFECTS.find((effect) => effect.key === notifications[0].effect)?.value})</Typography>
                         </Box>
-                    )}
-                </Stack>
+                        <Box sx={{ display: 'flex', flex: 1, pr: 2, justifyContent: !isResolved ? 'flex-start' : 'flex-end', textAlign: 'center', gap: '1rem'}}>
+                            <Typography variant="body2"><b>Incoming:</b> {incomingCount}</Typography>
+                            <Typography variant="body2"><b>Outgoing:</b> {outgoingCount}</Typography>
+                            <Typography variant="body2"><b>Resolved:</b> {resolvedCount}</Typography>
+                        </Box>
+                    </Stack>
+                </Button>
+
+                {!isResolved && (
+                    <Button
+                        variant="contained"
+                        sx={{position: 'absolute', top: '50%', right: '1rem', transform: 'translateY(-50%)', zIndex: 1, display: 'flex', gap: '.5rem'}}
+                        onClick={() => onForwardClick(disruptionId, notifications)}
+                    >
+                        {notifications.some((n) =>!n.reported && (!n.relatedNotificationIds || n.relatedNotificationIds.length === 0)) ? 'New Notification' : 'Forward'}
+                    </Button>
+                )}
             </Box>
+
             {isExpanded && (
                 <DemandCapacityNotificationTable
                     notifications={notifications}
@@ -145,19 +140,19 @@ const DemandCapacityNotificationTable: React.FC<NotificationTableProps> = ({ not
                 noRowsMsg='No Notifications found'
                 title={`Title`}
                 columns={[
-                    { headerName: 'Direction', field: 'reported', flex: 0.5, valueGetter: (params) => (params.row.reported ? 'Incoming' : 'Outgoing') },
+                    { headerName: 'Direction', field: 'reported', valueGetter: (params) => (params.row.reported ? 'Incoming' : 'Outgoing') },
                     { headerName: 'Partner', field: 'partnerBpnl', flex: 1, valueFormatter: (params) => partners?.find((partner) => partner.bpnl === params.value)?.name || params.value },
                     { headerName: 'Material Numbers', field: 'affectedMaterialNumbers', flex: 1 },
                     { headerName: 'Sites Sender', field: 'affectedSitesBpnsSender', flex: 1 },
                     { headerName: 'Sites Recipient', field: 'affectedSitesBpnsRecipient', flex: 1 },
-                    { headerName: 'Start date', field: 'startDateOfEffect', flex: 1, renderCell: (data: { row: DemandCapacityNotification }) => (
+                    { headerName: 'Start date', field: 'startDateOfEffect', renderCell: (data: { row: DemandCapacityNotification }) => (
                         <Stack display="flex" textAlign="center" alignItems="center" justifyContent="center" width="100%" height="100%">
                             <Box>{new Date(data.row.startDateOfEffect).toLocaleDateString('en-GB')}</Box>
                             <Box>{new Date(data.row.startDateOfEffect).toLocaleTimeString('en-GB')}</Box>
                         </Stack>
                         ),
                     },
-                    { headerName: 'End date', field: 'expectedEndDateOfEffect', flex: 1, renderCell: (data: { row: DemandCapacityNotification }) =>
+                    { headerName: 'End date', field: 'expectedEndDateOfEffect', renderCell: (data: { row: DemandCapacityNotification }) =>
                         data.row.expectedEndDateOfEffect ? (
                         <Stack display="flex" textAlign="center" alignItems="center" justifyContent="center" width="100%" height="100%">
                             <Box>{new Date(data.row.expectedEndDateOfEffect).toLocaleDateString('en-GB')}</Box>
@@ -165,7 +160,7 @@ const DemandCapacityNotificationTable: React.FC<NotificationTableProps> = ({ not
                         </Stack>
                         ) : null
                     },
-                    { headerName: 'Last Updated', field: 'contentChangedAt', flex: 1, renderCell: (data: { row: DemandCapacityNotification }) => (
+                    { headerName: 'Last Updated', field: 'contentChangedAt', renderCell: (data: { row: DemandCapacityNotification }) => (
                         <Stack display="flex" textAlign="center" alignItems="center" justifyContent="center" width="100%" height="100%">
                             <Box>{new Date(data.row.contentChangedAt).toLocaleDateString('en-GB')}</Box>
                             <Box>{new Date(data.row.contentChangedAt).toLocaleTimeString('en-GB')}</Box>
@@ -182,7 +177,7 @@ const DemandCapacityNotificationTable: React.FC<NotificationTableProps> = ({ not
                         </Stack>
                         ),
                     },
-                    { headerName: '', field: 'actions', flex: 0.5 , renderCell: (params) => {
+                    { headerName: '', field: 'actions', renderCell: (params) => {
                         if (params.row.status === 'resolved' || params.row.reported === true) {
                             return null;
                         }

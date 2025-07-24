@@ -122,70 +122,70 @@ export const DemandCapacityNotificationView = () => {
                     </Button>
                 </Stack>
 
-                {Object.keys(openGroups).length > 0 && (
-                    <>
-                        {Object.entries(openGroups).map(([sourceDisruptionId, notifications]) => (
-                            <Box key={sourceDisruptionId} width="100%" display="flex" flexDirection="column" paddingBottom="1">
-                                <CollapsibleDisruptionPanel
-                                    key={sourceDisruptionId}
-                                    disruptionId={sourceDisruptionId}
-                                    notifications={notifications}
-                                    partners={partners}
-                                    isResolved={false}
-                                    onForwardClick={handleCreateNotificationFromDisruption}
-                                    onRowSelected={(notification) => {
-                                        setModalOpen(true);
-                                        setSelectedNotification(notification);
-                                        setIsEditMode(false);
-                                    }}
-                                    onEditClicked={(notification) => {
-                                        setModalOpen(true);
-                                        setSelectedNotification(notification);
-                                        setIsEditMode(true);
-                                    }}
-                                    onCheckClicked={(notification) => {
-                                        setSelectedNotification(notification);
-                                        setConfirmModalOpen(true);
-                                    }}
-                                />
-                            </Box>
-                        ))}
-                    </>
+                {Object.keys(openGroups).length > 0 ? (
+                    Object.entries(openGroups).map(([sourceDisruptionId, notifications]) => (
+                        <Box key={sourceDisruptionId} width="100%" display="flex" flexDirection="column" paddingBottom="1">
+                            <CollapsibleDisruptionPanel
+                                key={sourceDisruptionId}
+                                disruptionId={sourceDisruptionId}
+                                notifications={notifications}
+                                partners={partners}
+                                isResolved={false}
+                                onForwardClick={handleCreateNotificationFromDisruption}
+                                onRowSelected={(notification) => {
+                                    setModalOpen(true);
+                                    setSelectedNotification(notification);
+                                    setIsEditMode(false);
+                                }}
+                                onEditClicked={(notification) => {
+                                    setModalOpen(true);
+                                    setSelectedNotification(notification);
+                                    setIsEditMode(true);
+                                }}
+                                onCheckClicked={(notification) => {
+                                    setSelectedNotification(notification);
+                                    setConfirmModalOpen(true);
+                                }}
+                            />
+                        </Box>
+                    ))
+                ) : (
+                    <Typography color="text.secondary">There are currently no ongoing disruptions.</Typography>
                 )}
 
-                {Object.keys(resolvedGroups).length > 0 && (
-                    <>
-                        <Stack width='100%'>
-                            <Typography variant="h6">Resolved</Typography>
-                        </Stack>
+                <Stack width='100%'>
+                    <Typography variant="h6">Resolved</Typography>
+                </Stack>
 
-                        {Object.entries(resolvedGroups).map(([sourceDisruptionId, notifications]) => (
-                            <Box key={sourceDisruptionId} width="100%" display="flex" flexDirection="column" paddingBottom="2rem">
-                                <CollapsibleDisruptionPanel
-                                    key={sourceDisruptionId}
-                                    disruptionId={sourceDisruptionId}
-                                    notifications={notifications}
-                                    partners={partners}
-                                    isResolved={true}
-                                    onForwardClick={handleCreateNotificationFromDisruption}
-                                    onRowSelected={(notification) => {
-                                        setModalOpen(true);
-                                        setSelectedNotification(notification);
-                                        setIsEditMode(false);
-                                    }}
-                                    onEditClicked={(notification) => {
-                                        setModalOpen(true);
-                                        setSelectedNotification(notification);
-                                        setIsEditMode(true);
-                                    }}
-                                    onCheckClicked={(notification) => {
-                                        setSelectedNotification(notification);
-                                        setConfirmModalOpen(true);
-                                    }}
-                                />
-                            </Box>
-                        ))}
-                    </>
+                {Object.keys(resolvedGroups).length > 0 ? (
+                    Object.entries(resolvedGroups).map(([sourceDisruptionId, notifications]) => (
+                        <Box key={sourceDisruptionId} width="100%" display="flex" flexDirection="column" paddingBottom="2rem">
+                            <CollapsibleDisruptionPanel
+                                key={sourceDisruptionId}
+                                disruptionId={sourceDisruptionId}
+                                notifications={notifications}
+                                partners={partners}
+                                isResolved={true}
+                                onForwardClick={handleCreateNotificationFromDisruption}
+                                onRowSelected={(notification) => {
+                                    setModalOpen(true);
+                                    setSelectedNotification(notification);
+                                    setIsEditMode(false);
+                                }}
+                                onEditClicked={(notification) => {
+                                    setModalOpen(true);
+                                    setSelectedNotification(notification);
+                                    setIsEditMode(true);
+                                }}
+                                onCheckClicked={(notification) => {
+                                    setSelectedNotification(notification);
+                                    setConfirmModalOpen(true);
+                                }}
+                            />
+                        </Box>
+                    ))
+                ) : (
+                    <Typography variant="h6">No previously resolved disruptions found.</Typography>
                 )}
             </Stack>
 

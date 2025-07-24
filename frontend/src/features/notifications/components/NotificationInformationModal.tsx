@@ -152,28 +152,30 @@ export const DemandCapacityNotificationInformationModal = ({
     const { sites } = useSites();
 
     useEffect(() => {
-        if (demandCapacityNotification) {
-            setTemporaryDemandCapacityNotification(demandCapacityNotification);
-        } else {
-             const initialData: Partial<DemandCapacityNotification> = {
-                affectedMaterialNumbers: [],
-                affectedSitesBpnsRecipient: [],
-                status: 'open' as StatusType
-            };
+        if (open) {
+            if (demandCapacityNotification) {
+                setTemporaryDemandCapacityNotification(demandCapacityNotification);
+            } else {
+                const initialData: Partial<DemandCapacityNotification> = {
+                    affectedMaterialNumbers: [],
+                    affectedSitesBpnsRecipient: [],
+                    status: 'open' as StatusType
+                };
 
-            if (forwardData) {
-                initialData.sourceDisruptionId = forwardData.sourceDisruptionId;
-                initialData.effect = forwardData.effect;
-                initialData.leadingRootCause = forwardData.leadingRootCause;
+                if (forwardData) {
+                    initialData.sourceDisruptionId = forwardData.sourceDisruptionId;
+                    initialData.effect = forwardData.effect;
+                    initialData.leadingRootCause = forwardData.leadingRootCause;
 
-                if (forwardData.relatedNotificationIds) {
-                    initialData.relatedNotificationIds = forwardData.relatedNotificationIds;
+                    if (forwardData.relatedNotificationIds) {
+                        initialData.relatedNotificationIds = forwardData.relatedNotificationIds;
+                    }
                 }
-            }
 
-            setTemporaryDemandCapacityNotification(initialData);
+                setTemporaryDemandCapacityNotification(initialData);
+            }
         }
-    }, [demandCapacityNotification, forwardData]);
+    }, [open, demandCapacityNotification, forwardData]);
 
     const handleSaveClick = () => {
         if (!isValidDemandCapacityNotification(temporaryDemandCapacityNotification)) {
@@ -259,7 +261,7 @@ export const DemandCapacityNotificationInformationModal = ({
                                         label="Leading cause*"
                                         placeholder="Select the leading cause"
                                         error={formError && !temporaryDemandCapacityNotification?.leadingRootCause}
-                                        disabled={ (isEditMode && demandCapacityNotification !== null) || (isEditMode && !!forwardData?.sourceDisruptionId) }
+                                        disabled={ isEditMode && (demandCapacityNotification !== null || !!forwardData?.sourceDisruptionId) }
                                     />
                                 </Grid>
                                 <Grid item xs={6}>
@@ -297,7 +299,7 @@ export const DemandCapacityNotificationInformationModal = ({
                                         label="Effect*"
                                         placeholder="Select the effect"
                                         error={formError && !temporaryDemandCapacityNotification?.effect}
-                                        disabled={ (isEditMode && demandCapacityNotification !== null) || (isEditMode && !!forwardData?.sourceDisruptionId) }
+                                        disabled={ isEditMode && (demandCapacityNotification !== null || !!forwardData?.sourceDisruptionId) }
                                     />
                                 </Grid>
                                 <Grid item xs={6} display="flex" alignItems="end">
@@ -329,11 +331,12 @@ export const DemandCapacityNotificationInformationModal = ({
                                         locale="de"
                                         error={
                                             formError &&
-                                            (!temporaryDemandCapacityNotification?.expectedEndDateOfEffect ||
-                                                temporaryDemandCapacityNotification?.expectedEndDateOfEffect < new Date() ||
+                                            !!temporaryDemandCapacityNotification?.expectedEndDateOfEffect && (
+                                                temporaryDemandCapacityNotification.expectedEndDateOfEffect < new Date() ||
                                                 (!!temporaryDemandCapacityNotification.startDateOfEffect &&
-                                                    temporaryDemandCapacityNotification?.expectedEndDateOfEffect <
-                                                        temporaryDemandCapacityNotification.startDateOfEffect))
+                                                    temporaryDemandCapacityNotification.expectedEndDateOfEffect <
+                                                        temporaryDemandCapacityNotification.startDateOfEffect)
+                                            )
                                         }
                                         value={temporaryDemandCapacityNotification?.expectedEndDateOfEffect ?? null}
                                         onValueChange={(date) =>
