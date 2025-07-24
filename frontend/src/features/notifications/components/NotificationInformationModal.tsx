@@ -438,7 +438,7 @@ export const DemandCapacityNotificationInformationModal = ({
                                         error={formError && !temporaryDemandCapacityNotification?.text}
                                     />
                                 </Grid>
-                                <Typography  variant="body3" sx={{color: theme.palette.warning.main, py: 1}} ><ReportProblem></ReportProblem> These notes will be released to all selected partners and may include sensitive data. Proceed with caution!</Typography>
+                                <Typography  variant="body3" sx={{color: theme.palette.warning.main, py: 1}} ><ReportProblem></ReportProblem> These notes will be shared with the selected partner. Please do not include sensitive data of third parties.</Typography>
                             </>
                         </Grid>
                     ) : (

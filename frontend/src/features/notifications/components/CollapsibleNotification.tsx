@@ -19,7 +19,7 @@ SPDX-License-Identifier: Apache-2.0
 */
 import { useState } from 'react';
 import { Box, Button, IconButton, Stack, Typography, useTheme } from '@mui/material';
-import { CheckCircle, ChevronRightOutlined, Edit } from '@mui/icons-material';
+import { Check, ChevronRightOutlined, Edit } from '@mui/icons-material';
 import { DemandCapacityNotification } from '@models/types/data/demand-capacity-notification';
 import { Partner } from '@models/types/edc/partner';
 import { Table } from '@catena-x/portal-shared-components';
@@ -33,9 +33,9 @@ type CollapsibleDemandNotificationProps = {
     partners: Partner[] | null;
     isResolved: boolean,
     onForwardClick: (id: string, notifications: any[]) => void;
-    onRowSelected: (notification: any) => void;
-    onEditClicked: (notification: any) => void;
-    onCheckClicked: (notification: any) => void;
+    onRowSelected: (notification: DemandCapacityNotification) => void;
+    onEditClicked: (notification: DemandCapacityNotification) => void;
+    onCheckClicked: (notification: DemandCapacityNotification) => void;
 };
 
 export function CollapsibleDisruptionPanel({
@@ -92,7 +92,9 @@ export function CollapsibleDisruptionPanel({
                         <Box sx={{ display: 'flex', flex: 1, pr: 2, justifyContent: !isResolved ? 'flex-start' : 'flex-end', textAlign: 'center', gap: '1rem'}}>
                             <Typography variant="body2"><b>Incoming:</b> {incomingCount}</Typography>
                             <Typography variant="body2"><b>Outgoing:</b> {outgoingCount}</Typography>
-                            <Typography variant="body2"><b>Resolved:</b> {resolvedCount}</Typography>
+                            {isResolved && (
+                                <Typography variant="body2"><b>Resolved:</b> {resolvedCount}</Typography>
+                            )}
                         </Box>
                     </Stack>
                 </Button>
@@ -100,7 +102,7 @@ export function CollapsibleDisruptionPanel({
                 {!isResolved && (
                     <Button
                         variant="contained"
-                        sx={{position: 'absolute', top: '50%', right: '1rem', transform: 'translateY(-50%)', zIndex: 1, display: 'flex', gap: '.5rem'}}
+                        sx={{position: 'absolute', top: '50%', right: '1rem', transform: 'translateY(-50%)', zIndex: 1}}
                         onClick={() => onForwardClick(disruptionId, notifications)}
                     >
                         {notifications.some((n) =>!n.reported && (!n.relatedNotificationIds || n.relatedNotificationIds.length === 0)) ? 'New Notification' : 'Forward'}
@@ -167,7 +169,7 @@ const DemandCapacityNotificationTable: React.FC<NotificationTableProps> = ({ not
                         </Stack>
                         ),
                     },
-                    { headerName: 'Status', field: 'status', flex: 0.5, valueFormatter: (params) => STATUS.find((status) => status.key === params.value)?.value },
+                    { headerName: 'Status', field: 'status', valueFormatter: (params) => STATUS.find((status) => status.key === params.value)?.value },
                     { headerName: 'Note', field: 'text', flex: 1.25, renderCell: (data: { row: DemandCapacityNotification }) => (
                         <Stack display="flex" justifyContent="center" width="100%" height="100%">
                             <Box>{data.row.text}</Box>
@@ -182,9 +184,10 @@ const DemandCapacityNotificationTable: React.FC<NotificationTableProps> = ({ not
                             return null;
                         }
                         return (
-                            <Box display="flex" gap={1}>
+                            <Box display="flex" gap={1} justifyContent="end" width="100%" >
                                 <IconButton
                                     color="primary"
+                                    size="small"
                                     aria-label="edit"
                                     onClick={(e) => {
                                         e.stopPropagation();
@@ -194,14 +197,15 @@ const DemandCapacityNotificationTable: React.FC<NotificationTableProps> = ({ not
                                     <Edit></Edit>
                                 </IconButton>
                                 <IconButton
-                                    sx={{color: "#3AD053"}}
+                                    color="primary"
+                                    size="small"
                                     aria-label="confirm"
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         onCheckClicked?.(params.row);
                                     }}
                                 >
-                                    <CheckCircle></CheckCircle>
+                                    <Check ></Check >
                                 </IconButton>
                             </Box>
                         )

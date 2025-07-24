@@ -23,7 +23,7 @@ import { Box, Button, Dialog, DialogTitle, FormLabel, Grid, Stack, Typography, u
 import { useEffect, useState } from 'react';
 import { putDemandAndCapacityNotification } from '@services/demand-capacity-notification';
 import { DemandCapacityNotification, StatusType } from '@models/types/data/demand-capacity-notification';
-import { CheckCircle, ReportProblem } from '@mui/icons-material';
+import { Check, ReportProblem } from '@mui/icons-material';
 import { useNotifications } from '@contexts/notificationContext';
 import { Textarea } from '@catena-x/portal-shared-components';
 
@@ -130,7 +130,7 @@ export const DemandCapacityNotificationResolutionModal = ({
                                 sx={{ display: 'flex', gap: '.25rem' }}
                                 onClick={() => handleSaveClick()}
                             >
-                                <CheckCircle></CheckCircle> Resolve
+                                <Check></Check> Resolve
                             </Button>
                         ) : null}
                     </Box>
