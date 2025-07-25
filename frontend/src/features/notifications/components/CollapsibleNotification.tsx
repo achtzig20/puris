@@ -32,7 +32,7 @@ type CollapsibleDemandNotificationProps = {
     notifications: DemandCapacityNotification[];
     partners: Partner[] | null;
     isResolved: boolean,
-    onForwardClick: (id: string, notifications: any[]) => void;
+    onForwardClick: (id: string, notifications: DemandCapacityNotification[]) => void;
     onRowSelected: (notification: DemandCapacityNotification) => void;
     onEditClicked: (notification: DemandCapacityNotification) => void;
     onCheckClicked: (notification: DemandCapacityNotification) => void;
@@ -92,7 +92,7 @@ export function CollapsibleDisruptionPanel({
                         <Box sx={{ display: 'flex', flex: 1, pr: 2, justifyContent: !isResolved ? 'flex-start' : 'flex-end', textAlign: 'center', gap: '1rem'}}>
                             <Typography variant="body2"><b>Incoming:</b> {incomingCount}</Typography>
                             <Typography variant="body2"><b>Outgoing:</b> {outgoingCount}</Typography>
-                            {isResolved && (
+                            {!isResolved && (
                                 <Typography variant="body2"><b>Resolved:</b> {resolvedCount}</Typography>
                             )}
                         </Box>
