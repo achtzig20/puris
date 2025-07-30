@@ -65,7 +65,10 @@ export const DemandCapacityNotificationResolutionModal = ({
         const updatedNotification = {
             ...demandCapacityNotification,
             resolvingMeasureDescription: resolutionMessage,
-            status: 'resolved' as StatusType
+            status: 'resolved' as StatusType,
+            affectedSitesBpnsRecipient: [],
+            affectedSitesBpnsSender: [],
+            affectedMaterialNumbers: []
         };
 
         putDemandAndCapacityNotification(updatedNotification)

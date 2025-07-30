@@ -117,6 +117,7 @@ export function CollapsibleDisruptionPanel({
                     onRowSelected={onRowSelected}
                     onEditClicked={onEditClicked}
                     onCheckClicked={onCheckClicked}
+                    showActionsColumn={!isResolved}
                 />
             )}
         </>
@@ -144,9 +145,11 @@ const DemandCapacityNotificationTable: React.FC<NotificationTableProps> = ({ not
                 columns={[
                     { headerName: 'Direction', field: 'reported', valueGetter: (params) => (params.row.reported ? 'Incoming' : 'Outgoing') },
                     { headerName: 'Partner', field: 'partnerBpnl', flex: 1, valueFormatter: (params) => partners?.find((partner) => partner.bpnl === params.value)?.name || params.value },
-                    { headerName: 'Material Numbers', field: 'affectedMaterialNumbers', flex: 1 },
-                    { headerName: 'Sites Sender', field: 'affectedSitesBpnsSender', flex: 1 },
-                    { headerName: 'Sites Recipient', field: 'affectedSitesBpnsRecipient', flex: 1 },
+                    ...(showActionsColumn ? [
+                        { headerName: 'Material Numbers', field: 'affectedMaterialNumbers', flex: 1 },
+                        { headerName: 'Sites Sender', field: 'affectedSitesBpnsSender', flex: 1 },
+                        { headerName: 'Sites Recipient', field: 'affectedSitesBpnsRecipient', flex: 1 },
+                    ] : []),
                     { headerName: 'Start date', field: 'startDateOfEffect', renderCell: (data: { row: DemandCapacityNotification }) => (
                         <Stack display="flex" textAlign="center" alignItems="center" justifyContent="center" width="100%" height="100%">
                             <Box>{new Date(data.row.startDateOfEffect).toLocaleDateString('en-GB')}</Box>
