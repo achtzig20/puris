@@ -189,10 +189,13 @@ A notification in the top right of the user's screen will inform them, if saving
 
 _DISCLAIMER: This feature has not yet been finished. Currently, users neither can't react to notifications nor can close notifications._
 
-A user may use the page to send notifications to partners or read received notifications. One may choose the direction:
+A user may use the page to send notifications to partners or read received notifications.
+- `OPEN` for grouped messages that have at least one message open
+- `RESOLVED` for grouped messages that have all been resolved
 
-- `OUTGOING` for messages sent to a partner
-- `INCOMING` for messages received from a partner
+The notifications are grouped by their `disruptionId` into collapsible sections which expand to show the tables. They share the same Leading Root Cause and Effect.
+The table displays `Outgoing` if the message was sent to a partner and `Incoming` if it was received from a partner.
+If the notification has been resolved, the text column inside of the table will additionally display the Resolution Message inside of the Text column.
 
 ![Overview of the notification view](img/notification_view.png)
 
@@ -200,15 +203,15 @@ One may get further information by clicking on a notification in the list.
 
 ![Detailed notification after double clicking the entry](img/notification_detail.png)
 
-When triggering the button "SEND NOTIFICATION", a modal dialog is opened allowing a user to compose the demand and capacity notification.
+When triggering the button "NEW NOTIFICATION", a modal dialog is opened allowing a user to compose the demand and capacity notification. This creates a grouped section with the notification visible in the table.
 
 ![Send notification modal](img/notification_send.png)
 
 After filling the mandatory data (see `*`), the user can send the notification:
 
 - Partner (supplier or customer relationship)
-- Leading Root Cause (one as defined by CX-0146 for demand and capacity notification)
-- Status (either `Open` or `Closed`, use close to close disruptions)
+- Leading Cause (one as defined by CX-0146 for demand and capacity notification)
+- Status (this field is automatically pre-selected with the `Open` option)
 - Effect (either `Increase` or `Decrease` of `Production` or `Demand`)
 - Start Date of Effect
 - (optional) End Date of Effect
@@ -216,6 +219,21 @@ After filling the mandatory data (see `*`), the user can send the notification:
 - (optional) Affected Material Numbers (only those applicable to the partner)
 - (optional) Affected Sites Recipient
 - (optional) Text
+
+If an Outgoing notification has the Open status the user can interact with it by either editing it or resolving it. 
+When triggering the edit button the same modal is opened as for the New Notification, the fields pre-populated with existing data. 
+
+When the resolve button is triggered a modal dialog is opened allowing a user to write a resolution message and when saving will automatically change the status of the notification to `Resolved`.
+
+A user can also create a notification related to one the existing Open groups by triggering the "FORWARD" button. This opens the creation modal.
+The following fields are pre-selected and read only:
+
+- Leading cause (same as the related notifications)
+- Effect (same as the related notifications)
+- Status (this field is automatically pre-selected with the `Open` option)
+
+The Partner field only provides options for partners that aren't linked to any of the related notifications This creates another entry in the existing table.
+
 
 ## Catalog
 
