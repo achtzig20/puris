@@ -21,6 +21,8 @@ The **need for configuration updates** is **marked bold**.
 
 * Use the frontend's existing keycloak authentication to authorize backend calls ([#896](https://github.com/eclipse-tractusx/puris/pull/896)) (**moved IDP configuration and IDP no longer optional**)
 * updated End-to-End tests to support local authentication ([#920](https://github.com/eclipse-tractusx/puris/pull/920))
+* Update DemandAndCapacityNotification API to implement standard version 2.0 ([#921](https://github.com/eclipse-tractusx/puris/pull/921))
+* Update Frontend Notification View with grouping based on disruptionId and seperating by status, forwarding connected notifications, editing and resolving notifications ([#xxx](xxx))
 
 ### Fixes
 
