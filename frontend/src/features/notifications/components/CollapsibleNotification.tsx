@@ -90,7 +90,9 @@ export function CollapsibleDisruptionPanel({
                             <Typography variant="body2" color="#ccc">({EFFECTS.find((effect) => effect.key === notifications[0].effect)?.value})</Typography>
                         </Box>
                         <Box sx={{ display: 'flex', flex: 1, pr: 2, justifyContent: !isResolved ? 'flex-start' : 'flex-end', textAlign: 'center', gap: '1rem'}}>
-                            <Typography variant="body2"><b>Incoming:</b> {incomingCount}</Typography>
+                            {incomingCount > 0 && (
+                                <Typography variant="body2"><b>Incoming:</b> {incomingCount}</Typography>
+                            )}
                             <Typography variant="body2"><b>Outgoing:</b> {outgoingCount}</Typography>
                             {!isResolved && (
                                 <Typography variant="body2"><b>Resolved:</b> {resolvedCount}</Typography>
@@ -118,6 +120,7 @@ export function CollapsibleDisruptionPanel({
                     onEditClicked={onEditClicked}
                     onCheckClicked={onCheckClicked}
                     showActionsColumn={!isResolved}
+                    incomingCount={incomingCount}
                 />
             )}
         </>
@@ -128,12 +131,13 @@ type NotificationTableProps = {
     notifications: DemandCapacityNotification[],
     partners: Partner[] | null,
     showActionsColumn?: boolean;
+    incomingCount: number;
     onRowSelected: (notification: DemandCapacityNotification) => void;
     onEditClicked?: (notification: DemandCapacityNotification) => void;
     onCheckClicked?: (notification: DemandCapacityNotification) => void;
 }
 
-const DemandCapacityNotificationTable: React.FC<NotificationTableProps> = ({ notifications, partners, onRowSelected, onCheckClicked, onEditClicked, showActionsColumn = true, }) => {
+const DemandCapacityNotificationTable: React.FC<NotificationTableProps> = ({ notifications, partners, onRowSelected, onCheckClicked, onEditClicked, showActionsColumn = true, incomingCount}) => {
     return (
         <Box width="100%" className="hide-title">
             <Table
@@ -143,7 +147,13 @@ const DemandCapacityNotificationTable: React.FC<NotificationTableProps> = ({ not
                 noRowsMsg='No Notifications found'
                 title={`Title`}
                 columns={[
-                    { headerName: 'Direction', field: 'reported', valueGetter: (params) => (params.row.reported ? 'Incoming' : 'Outgoing') },
+                    ...(incomingCount > 1 ? [
+                        {
+                            headerName: 'Direction',
+                            field: 'reported',
+                            valueGetter: (params:  { row: DemandCapacityNotification }) => (params.row.reported ? 'Incoming' : 'Outgoing')
+                        }
+                    ] : []),
                     { headerName: 'Partner', field: 'partnerBpnl', flex: 1, valueFormatter: (params) => partners?.find((partner) => partner.bpnl === params.value)?.name || params.value },
                     ...(showActionsColumn ? [
                         { headerName: 'Material Numbers', field: 'affectedMaterialNumbers', flex: 1 },
