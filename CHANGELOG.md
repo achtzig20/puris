@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## v3.2.0 *unpublished*
+## v3.3.0
 
 The following Changelog lists the changes. Please refer to the [documentation](docs/README.md) for configuration needs and understanding the concept changes.
 
@@ -13,12 +13,33 @@ The **need for configuration updates** is **marked bold**.
 
 ### Added
 
-* Implement Excel imports through API ([#897](https://github.com/eclipse-tractusx/puris/pull/897/))
+* Added unit tests Excel imports ([#922](https://github.com/eclipse-tractusx/puris/pull/922))
+* Added role based permission handling for endpoints ([#925](https://github.com/eclipse-tractusx/puris/pull/925))
+
+### Changed
+
+* Updated End-to-End tests to support local authentication ([#920](https://github.com/eclipse-tractusx/puris/pull/920))
+* Update DemandAndCapacityNotification API to implement standard version 2.0 ([#921](https://github.com/eclipse-tractusx/puris/pull/921))
+
+## v3.2.0
+
+The following Changelog lists the changes. Please refer to the [documentation](docs/README.md) for configuration needs and understanding the concept changes.
+
+The **need for configuration updates** is **marked bold**.
+
+### Added
+
+* Implement Excel imports through
+  API ([#897](https://github.com/eclipse-tractusx/puris/pull/897/), [#907](https://github.com/eclipse-tractusx/puris/pull/907))
+* Added liquibase for database migrations ([#913](https://github.com/eclipse-tractusx/puris/pull/913))
 
 ### Changed
 
 * Use the frontend's existing keycloak authentication to authorize backend calls ([#896](https://github.com/eclipse-tractusx/puris/pull/896)) (**moved IDP configuration and IDP no longer optional**)
-* Rework validation logic to return detailed error messages ([#907](https://github.com/eclipse-tractusx/puris/pull/907))
+
+### Fixes
+
+* Added lastUpdatedOnDateTime to local representations of Demand, Production and Delivery ([#908](https://github.com/eclipse-tractusx/puris/pull/908))
 
 ## [v3.1.0](https://github.com/eclipse-tractusx/puris/releases/tag/3.1.0)
 
