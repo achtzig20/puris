@@ -75,7 +75,7 @@ export const router = createBrowserRouter([
                         element: <TransferView />,
                     },
                     {
-                        path: 'import-export',
+                        path: 'import',
                         element: <ImportExportView />,
                     },
                 ],

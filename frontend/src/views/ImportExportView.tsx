@@ -47,7 +47,7 @@ export const ImportExportView = () => {
         '/stock-template.xlsx',
     ];
 
-    const supportedExtensions = ['.xlsx', '.csv'];
+    const supportedExtensions = ['.xlsx'];
 
     const validateFiles = (files: FileList | null) => {
         if (!files?.length) return [];
@@ -84,8 +84,8 @@ export const ImportExportView = () => {
             try {
                 const result = await uploadDocuments(file);
                 updateUploadResult(file.name, { result });
-            } catch (error: any) {
-                updateUploadResult(file.name, { error: error.message });
+            } catch (error) {
+                updateUploadResult(file.name, { error: error instanceof Error ? error.message : String(error) });
             }
         });
 
