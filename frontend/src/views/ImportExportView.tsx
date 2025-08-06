@@ -237,8 +237,8 @@ const UploadResultAccordion = ({ result, index }: { result: UploadResult; index:
           </Typography>
         </Box>
       </AccordionSummary>
-      
-      <AccordionDetails>
+
+      <AccordionDetails sx={{ maxHeight: "20rem", overflowY: "scroll" }}>
         {(result.result?.errors && result.result.errors.length > 0) && (
           <Box>
             <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'red', mb: 2 }}>
