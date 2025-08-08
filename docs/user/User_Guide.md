@@ -202,13 +202,13 @@ If the notification has been resolved, the row will be grayed out and the text c
 
 One may get further information by clicking on a notification in the list.
 
-#### Notification Detail Modal
+### Notification Detail Modal
 
-![Detailed notification after double clicking the entry](img/notification_detail.png)
+![Detailed notification after clicking the entry](img/notification_detail.png)
 
 When triggering the button "NEW NOTIFICATION", a modal dialog is opened allowing a user to compose the demand and capacity notification. This creates a grouped section with the notification visible in the table.
 
-#### Send notification modal
+### Send notification modal
 
 ![Send notification modal](img/notification_send.png)
 
@@ -228,13 +228,13 @@ After filling the mandatory data (see `*`), the user can send the notification:
 If an Outgoing notification has the Open status the user can interact with it by either editing it or resolving it.
 When triggering the edit button the same modal is opened as for the New Notification, the fields pre-populated with existing data.
 
-#### Edit notification modal
+### Edit notification modal
 
 ![Edit notification modal](img/notification_edit.png)
 
 When the resolve button is triggered a modal dialog is opened allowing a user to write a resolution message and when saving will automatically change the status of the notification to `Resolved`.
 
-#### Resolve notification modal
+### Resolve notification modal
 
 ![Resolve notification modal](img/notification_resolution.png)
 
@@ -245,15 +245,15 @@ The following fields are pre-selected and read only:
 - Effect (same as the related notifications)
 - Status (this field is automatically pre-selected with the `Open` option)
 
-The Partner field only provides options for partners that aren't linked to any of the related notifications. This creates another entry in the existing table.
+The Partner field only provides options for partners that aren't linked to any of the related or any of the existing outgoing notifications. This creates another entry in the existing table.
 
-#### Forward notification modal
+### Forward notification modal
 
 ![Forward notification modal](img/notification_forward.png)
 
 ## Import
 
-An Admin can upload data in this page. They can click and download one of pre-existing template files listed on the page:
+An Admin can upload data in this page. Once the file is uploaded, all existing data for that type will be replaced by the newly uploaded data. They can click and download one of pre-existing template files listed on the page:
 
 - delivery-template.xlsx
 - demand-template.xlsx
