@@ -25,6 +25,7 @@ The **need for configuration updates** is **marked bold**.
 Chore
 
 * Updated open API ([#929](https://github.com/eclipse-tractusx/puris/pull/929))
+* Updated open API ([#933](https://github.com/eclipse-tractusx/puris/pull/933))
 
 ## v3.2.0
 
