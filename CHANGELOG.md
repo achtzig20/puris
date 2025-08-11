@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v3.3.0
+
+The following Changelog lists the changes. Please refer to the [documentation](docs/README.md) for configuration needs and understanding the concept changes.
+
+The **need for configuration updates** is **marked bold**.
+
+### Added
+
+* Added unit tests Excel imports ([#922](https://github.com/eclipse-tractusx/puris/pull/922))
+* Added role based permission handling for endpoints ([#925](https://github.com/eclipse-tractusx/puris/pull/925))
+* Added Excel import page with template files download ([#930](https://github.com/eclipse-tractusx/puris/pull/930))
+
+### Changed
+
+* Updated End-to-End tests to support local authentication ([#920](https://github.com/eclipse-tractusx/puris/pull/920))
+* Update DemandAndCapacityNotification API to implement standard version 2.0 ([#921](https://github.com/eclipse-tractusx/puris/pull/921))
+* Update Frontend Notification View with grouping based on disruptionId and seperating by status, forwarding connected notifications, editing and resolving notifications ([#926](https://github.com/eclipse-tractusx/puris/pull/926))
+
+### Chore
+
+* Updated open API ([#929](https://github.com/eclipse-tractusx/puris/pull/929))
+* Updated dependencies to resolve high and critical security vulnerabilities ([#932](https://github.com/eclipse-tractusx/puris/pull/932))
+
 ## v3.2.0
 
 The following Changelog lists the changes. Please refer to the [documentation](docs/README.md) for configuration needs and understanding the concept changes.

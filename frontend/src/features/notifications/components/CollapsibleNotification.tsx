@@ -18,7 +18,7 @@ under the License.
 SPDX-License-Identifier: Apache-2.0
 */
 import { useState } from 'react';
-import { Box, Button, IconButton, Stack, Typography, useTheme } from '@mui/material';
+import { Box, Button, IconButton, Stack, Tooltip, Typography, useTheme } from '@mui/material';
 import { Check, ChevronRightOutlined, Edit } from '@mui/icons-material';
 import { DemandCapacityNotification } from '@models/types/data/demand-capacity-notification';
 import { Partner } from '@models/types/edc/partner';
@@ -90,7 +90,9 @@ export function CollapsibleDisruptionPanel({
                             <Typography variant="body2" color="#ccc">({EFFECTS.find((effect) => effect.key === notifications[0].effect)?.value})</Typography>
                         </Box>
                         <Box sx={{ display: 'flex', flex: 1, pr: 2, justifyContent: !isResolved ? 'flex-start' : 'flex-end', textAlign: 'center', gap: '1rem'}}>
-                            <Typography variant="body2"><b>Incoming:</b> {incomingCount}</Typography>
+                            {incomingCount > 0 && (
+                                <Typography variant="body2"><b>Incoming:</b> {incomingCount}</Typography>
+                            )}
                             <Typography variant="body2"><b>Outgoing:</b> {outgoingCount}</Typography>
                             {!isResolved && (
                                 <Typography variant="body2"><b>Resolved:</b> {resolvedCount}</Typography>
@@ -117,6 +119,8 @@ export function CollapsibleDisruptionPanel({
                     onRowSelected={onRowSelected}
                     onEditClicked={onEditClicked}
                     onCheckClicked={onCheckClicked}
+                    showActionsColumn={!isResolved}
+                    incomingCount={incomingCount}
                 />
             )}
         </>
@@ -127,12 +131,13 @@ type NotificationTableProps = {
     notifications: DemandCapacityNotification[],
     partners: Partner[] | null,
     showActionsColumn?: boolean;
+    incomingCount: number;
     onRowSelected: (notification: DemandCapacityNotification) => void;
     onEditClicked?: (notification: DemandCapacityNotification) => void;
     onCheckClicked?: (notification: DemandCapacityNotification) => void;
 }
 
-const DemandCapacityNotificationTable: React.FC<NotificationTableProps> = ({ notifications, partners, onRowSelected, onCheckClicked, onEditClicked, showActionsColumn = true, }) => {
+const DemandCapacityNotificationTable: React.FC<NotificationTableProps> = ({ notifications, partners, onRowSelected, onCheckClicked, onEditClicked, showActionsColumn = true, incomingCount}) => {
     return (
         <Box width="100%" className="hide-title">
             <Table
@@ -142,11 +147,19 @@ const DemandCapacityNotificationTable: React.FC<NotificationTableProps> = ({ not
                 noRowsMsg='No Notifications found'
                 title={`Title`}
                 columns={[
-                    { headerName: 'Direction', field: 'reported', valueGetter: (params) => (params.row.reported ? 'Incoming' : 'Outgoing') },
+                    ...(incomingCount > 1 ? [
+                        {
+                            headerName: 'Direction',
+                            field: 'reported',
+                            valueGetter: (params:  { row: DemandCapacityNotification }) => (params.row.reported ? 'Incoming' : 'Outgoing')
+                        }
+                    ] : []),
                     { headerName: 'Partner', field: 'partnerBpnl', flex: 1, valueFormatter: (params) => partners?.find((partner) => partner.bpnl === params.value)?.name || params.value },
-                    { headerName: 'Material Numbers', field: 'affectedMaterialNumbers', flex: 1 },
-                    { headerName: 'Sites Sender', field: 'affectedSitesBpnsSender', flex: 1 },
-                    { headerName: 'Sites Recipient', field: 'affectedSitesBpnsRecipient', flex: 1 },
+                    ...(showActionsColumn ? [
+                        { headerName: 'Material Numbers', field: 'affectedMaterialNumbers', flex: 1 },
+                        { headerName: 'Sites Sender', field: 'affectedSitesBpnsSender', flex: 1 },
+                        { headerName: 'Sites Recipient', field: 'affectedSitesBpnsRecipient', flex: 1 },
+                    ] : []),
                     { headerName: 'Start date', field: 'startDateOfEffect', renderCell: (data: { row: DemandCapacityNotification }) => (
                         <Stack display="flex" textAlign="center" alignItems="center" justifyContent="center" width="100%" height="100%">
                             <Box>{new Date(data.row.startDateOfEffect).toLocaleDateString('en-GB')}</Box>
@@ -179,34 +192,38 @@ const DemandCapacityNotificationTable: React.FC<NotificationTableProps> = ({ not
                         </Stack>
                         ),
                     },
-                    { headerName: '', field: 'actions', renderCell: (params) => {
+                    { headerName: 'Action', field: 'actions', renderCell: (params) => {
                         if (params.row.status === 'resolved' || params.row.reported === true) {
                             return null;
                         }
                         return (
                             <Box display="flex" gap={1} justifyContent="end" width="100%" >
-                                <IconButton
-                                    color="primary"
-                                    size="small"
-                                    aria-label="edit"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onEditClicked?.(params.row);
-                                    }}
-                                >
-                                    <Edit></Edit>
-                                </IconButton>
-                                <IconButton
-                                    color="primary"
-                                    size="small"
-                                    aria-label="confirm"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onCheckClicked?.(params.row);
-                                    }}
-                                >
-                                    <Check ></Check >
-                                </IconButton>
+                                <Tooltip title="Edit Notification">
+                                    <IconButton
+                                        color="primary"
+                                        size="small"
+                                        aria-label="edit"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onEditClicked?.(params.row);
+                                        }}
+                                    >
+                                        <Edit></Edit>
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Resolve Notification">
+                                    <IconButton
+                                        color="primary"
+                                        size="small"
+                                        aria-label="confirm"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onCheckClicked?.(params.row);
+                                        }}
+                                    >
+                                        <Check ></Check >
+                                    </IconButton>
+                                </Tooltip>
                             </Box>
                         )
                     }}

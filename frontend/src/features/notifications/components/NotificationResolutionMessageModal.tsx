@@ -65,7 +65,11 @@ export const DemandCapacityNotificationResolutionModal = ({
         const updatedNotification = {
             ...demandCapacityNotification,
             resolvingMeasureDescription: resolutionMessage,
-            status: 'resolved' as StatusType
+            status: 'resolved' as StatusType,
+            affectedSitesBpnsRecipient: [],
+            affectedSitesBpnsSender: [],
+            affectedMaterialNumbers: [],
+            text: ''
         };
 
         putDemandAndCapacityNotification(updatedNotification)
@@ -105,7 +109,7 @@ export const DemandCapacityNotificationResolutionModal = ({
                         <Grid container spacing={1} padding=".25rem">
                             <>
                                 <Grid item xs={12}>
-                                    <FormLabel>Resolution message</FormLabel>
+                                    <FormLabel>Resolution message*</FormLabel>
                                     <Textarea
                                         minRows="5"
                                         id="resolvingMeasureDescription"
