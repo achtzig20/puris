@@ -115,7 +115,7 @@ public class EdcAdapterServiceTest {
             "        \"edc\": \"https://w3id.org/edc/v0.0.1/ns/\",\n" +
             "        \"tx\": \"https://w3id.org/tractusx/v0.0.1/ns/\",\n" +
             "        \"tx-auth\": \"https://w3id.org/tractusx/auth/\",\n" +
-            "        \"cx-policy\": \"https://w3id.org/catenax/policy/\",\n" +
+            "        \"cx-policy\": \"https://w3id.org/catenax/2025/9/policy/\",\n" +
             "        \"dcat\": \"http://www.w3.org/ns/dcat#\",\n" +
             "        \"dct\": \"http://purl.org/dc/terms/\",\n" +
             "        \"odrl\": \"http://www.w3.org/ns/odrl/2/\",\n" +
@@ -184,7 +184,7 @@ public class EdcAdapterServiceTest {
             "        \"edc\": \"https://w3id.org/edc/v0.0.1/ns/\",\n" +
             "        \"tx\": \"https://w3id.org/tractusx/v0.0.1/ns/\",\n" +
             "        \"tx-auth\": \"https://w3id.org/tractusx/auth/\",\n" +
-            "        \"cx-policy\": \"https://w3id.org/catenax/policy/\",\n" +
+            "        \"cx-policy\": \"https://w3id.org/catenax/2025/9/policy/\",\n" +
             "        \"dcat\": \"http://www.w3.org/ns/dcat#\",\n" +
             "        \"dct\": \"http://purl.org/dc/terms/\",\n" +
             "        \"odrl\": \"http://www.w3.org/ns/odrl/2/\",\n" +
@@ -242,7 +242,7 @@ public class EdcAdapterServiceTest {
             "        \"edc\": \"https://w3id.org/edc/v0.0.1/ns/\",\n" +
             "        \"tx\": \"https://w3id.org/tractusx/v0.0.1/ns/\",\n" +
             "        \"tx-auth\": \"https://w3id.org/tractusx/auth/\",\n" +
-            "        \"cx-policy\": \"https://w3id.org/catenax/policy/\",\n" +
+            "        \"cx-policy\": \"https://w3id.org/catenax/2025/9/policy/\",\n" +
             "        \"dcat\": \"http://www.w3.org/ns/dcat#\",\n" +
             "        \"dct\": \"http://purl.org/dc/terms/\",\n" +
             "        \"odrl\": \"http://www.w3.org/ns/odrl/2/\",\n" +
@@ -320,7 +320,7 @@ public class EdcAdapterServiceTest {
         "        \"edc\": \"https://w3id.org/edc/v0.0.1/ns/\",\n" +
         "        \"tx\": \"https://w3id.org/tractusx/v0.0.1/ns/\",\n" +
         "        \"tx-auth\": \"https://w3id.org/tractusx/auth/\",\n" +
-        "        \"cx-policy\": \"https://w3id.org/catenax/policy/\",\n" +
+        "        \"cx-policy\": \"https://w3id.org/catenax/2025/9/policy/\",\n" +
         "        \"dcat\": \"http://www.w3.org/ns/dcat#\",\n" +
         "        \"dct\": \"http://purl.org/dc/terms/\",\n" +
         "        \"odrl\": \"http://www.w3.org/ns/odrl/2/\",\n" +
@@ -362,7 +362,7 @@ public class EdcAdapterServiceTest {
         "        \"edc\": \"https://w3id.org/edc/v0.0.1/ns/\",\n" +
         "        \"tx\": \"https://w3id.org/tractusx/v0.0.1/ns/\",\n" +
         "        \"tx-auth\": \"https://w3id.org/tractusx/auth/\",\n" +
-        "        \"cx-policy\": \"https://w3id.org/catenax/policy/\",\n" +
+        "        \"cx-policy\": \"https://w3id.org/catenax/2025/9/policy/\",\n" +
         "        \"dcat\": \"http://www.w3.org/ns/dcat#\",\n" +
         "        \"dct\": \"http://purl.org/dc/terms/\",\n" +
         "        \"odrl\": \"http://www.w3.org/ns/odrl/2/\",\n" +

@@ -73,7 +73,7 @@ def create_verifiable_credential(did_issuer: str, did_subject: str, bpnl_subject
     }
 
     if needs_version:
-        vc["credentialSubject"]["contractVersion"] = "1.0"
+        vc["credentialSubject"]["contractVersion"] = "2.0"
     return vc
 
 

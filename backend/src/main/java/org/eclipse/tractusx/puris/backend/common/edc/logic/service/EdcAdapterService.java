@@ -719,8 +719,7 @@ public class EdcAdapterService {
             Map<String, String> equalFilters = new HashMap<>();
             equalFilters.put(EdcRequestBodyBuilder.CX_COMMON_NAMESPACE + "version", "3.0");
             equalFilters.put(
-                "'" + EdcRequestBodyBuilder.DCT_NAMESPACE + "type'.'@id'",
-                EdcRequestBodyBuilder.CX_TAXO_NAMESPACE + "DigitalTwinRegistry"
+                "id", "DigitalTwinRegistryId@" + partner.getBpnl()
             );
             var responseNode = getCatalog(partner.getEdcUrl(), partner.getBpnl(), equalFilters);
             responseNode = jsonLdUtils.expand(responseNode);
@@ -1046,7 +1045,7 @@ public class EdcAdapterService {
         // - asset per asset type
         // - asset for submodel bundle
         equalFilters.put(EdcRequestBodyBuilder.CX_COMMON_NAMESPACE + "version", "3.0");
-        equalFilters.put(EdcRequestBodyBuilder.EDC_NAMESPACE + "id", submodelData.assetId);
+        equalFilters.put("id", submodelData.assetId);
 
         return negotiateContract(partner, submodelData.assetId(), type, submodelData.dspUrl(), equalFilters);
     }
@@ -1214,7 +1213,7 @@ public class EdcAdapterService {
             result = result && testSingleConstraint(
                 purposeConstraint,
                 EdcRequestBodyBuilder.CX_POLICY_NAMESPACE + "UsagePurpose",
-                EdcRequestBodyBuilder.ODRL_NAMESPACE + "eq",
+                EdcRequestBodyBuilder.ODRL_NAMESPACE + "isAnyOf",
                 variablesService.getPurisPurposeWithVersion()
             );
 
