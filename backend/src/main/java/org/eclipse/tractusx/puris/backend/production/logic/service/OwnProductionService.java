@@ -96,14 +96,12 @@ public class OwnProductionService extends ProductionService<OwnProduction> {
         }
         if (production.getPartner() == null) {
             errors.add("Missing partner.");
-        }
-        if (production.getPartner().equals(ownPartnerEntity)) {
+        } else if (production.getPartner().equals(ownPartnerEntity)) {
             errors.add("Partner cannot be the same as own partner entity.");
         }
         if (production.getProductionSiteBpns() == null) {
             errors.add("Missing production site BPNS.");
-        }
-        if (ownPartnerEntity.getSites().stream().noneMatch(site -> site.getBpns().equals(production.getProductionSiteBpns()))) {
+        } else if (ownPartnerEntity.getSites().stream().noneMatch(site -> site.getBpns().equals(production.getProductionSiteBpns()))) {
             errors.add("Production site BPNS must match one of the own partner entity's site BPNS.");
         }
         if (!((production.getCustomerOrderNumber() != null && production.getCustomerOrderPositionNumber() != null) || 
