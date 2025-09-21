@@ -60,6 +60,9 @@ public class ReportedProductionService extends ProductionService<ReportedProduct
     }
 
     public boolean validate(ReportedProduction production) {
+        if (production == null) {
+            return false;
+        }
         return 
             production.getQuantity() > 0 && 
             production.getMeasurementUnit() != null && 
