@@ -36,6 +36,9 @@ public class ReportedDemandService extends DemandService<ReportedDemand, Reporte
     @Override
     public boolean validate(ReportedDemand demand) {
         Partner ownPartnerEntity = partnerService.getOwnPartnerEntity();
+        if (ownPartnerEntity == null) {
+            return false;
+        }
         return 
             demand.getMaterial() != null &&
             demand.getPartner() != null &&
