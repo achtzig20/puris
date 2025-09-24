@@ -77,9 +77,13 @@ public class OwnDemandService extends DemandService<OwnDemand, OwnDemandReposito
         }
         if (demand.getPartner() == null) {
             errors.add("Missing Partner.");
-        }
-        if (!mprService.partnerSuppliesMaterial(demand.getMaterial(), demand.getPartner())) {
+        } else if (!mprService.partnerSuppliesMaterial(demand.getMaterial(), demand.getPartner())) {
             errors.add("Partner does not supply the specified material.");
+        } else if (demand.getPartner().equals(ownPartnerEntity)) {
+            errors.add("Partner cannot be the same as own partner entity.");
+        } else if (demand.getSupplierLocationBpns() != null && 
+            demand.getPartner().getSites().stream().noneMatch(site -> site.getBpns().equals(demand.getSupplierLocationBpns()))) {
+            errors.add("Supplier location BPNS must match one of the partner's site BPNS.");
         }
         if (demand.getQuantity() <= 0) {
             errors.add("Quantity must be greater than 0.");
@@ -101,15 +105,8 @@ public class OwnDemandService extends DemandService<OwnDemand, OwnDemandReposito
         if (demand.getDemandLocationBpns() == null) {
             errors.add("Missing demand location BPNS.");
         }
-        if (demand.getPartner().equals(ownPartnerEntity)) {
-            errors.add("Partner cannot be the same as own partner entity.");
-        }
-        if (ownPartnerEntity.getSites().stream().noneMatch(site -> site.getBpns().equals(demand.getDemandLocationBpns()))) {
+        if (ownPartnerEntity.getSites() != null && ownPartnerEntity.getSites().stream().noneMatch(site -> site.getBpns().equals(demand.getDemandLocationBpns()))) {
             errors.add("Demand location BPNS must match one of the own partner entity's site BPNS.");
-        }
-        if (demand.getSupplierLocationBpns() != null && 
-            demand.getPartner().getSites().stream().noneMatch(site -> site.getBpns().equals(demand.getSupplierLocationBpns()))) {
-            errors.add("Supplier location BPNS must match one of the partner's site BPNS.");
         }
         return errors;
     }
