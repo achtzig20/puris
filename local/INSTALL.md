@@ -71,6 +71,9 @@ sh deploy.sh -i
 # redeploy puris but keep infrastructure and show logs of EDC, DTR, PURIS
 sh deploy.sh -l
 
+# Preserve existing images (skip backend/frontend rebuild)
+sh deploy.sh -p
+
 
 ```
 
