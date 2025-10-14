@@ -118,18 +118,18 @@ if [ $preserve_images -eq 1 ]; then
   if ! docker image inspect puris-backend:dev >/dev/null 2>&1 || ! docker image inspect puris-frontend:dev >/dev/null 2>&1; then
     echo "One or more images missing; doing a one-time build to avoid compose failures..."
     echo "Building backend image (puris-backend:dev) ..."
-    (cd ../backend && docker build -t puris-backend:dev .) || { echo "ERROR: Backend image build failed."; exit 1; }
+    docker build -t puris-backend:dev ../backend
     echo "Building frontend image (puris-frontend:dev) ..."
-    (cd ../frontend && docker build -t puris-frontend:dev .) || { echo "ERROR: Frontend image build failed."; exit 1; }
+    docker build -t puris-frontend:dev ../frontend
   else
     echo "Images present: puris-backend:dev and puris-frontend:dev"
   fi
 else
   echo "Rebuilding backend and frontend images..."
   echo "Building backend image (puris-backend:dev) ..."
-  (cd ../backend && docker build -t puris-backend:dev .) || { echo "ERROR: Backend image build failed."; exit 1; }
+  docker build -t puris-backend:dev ../backend
   echo "Building frontend image (puris-frontend:dev) ..."
-  (cd ../frontend && docker build -t puris-frontend:dev .) || { echo "ERROR: Frontend image build failed."; exit 1; }
+  docker build -t puris-frontend:dev ../frontend
 fi
 
 echo "Removing the PURIS + EDCs with their DTR and Database..."

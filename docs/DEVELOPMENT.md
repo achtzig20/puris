@@ -330,16 +330,19 @@ All notable changes must be recorded in the `./CHANGELOG.md` file in the reposit
     - `Changed` for changes to existing features
     - `Fixed` for bugfixes
     - `Removed` for deletions
-    - `Chore` for things like updating documentation files
+    - `Chore` for updates to dependencies, documentation etc.
 - Always include a PR reference and short summary. If the PR hasn’t been opened yet, look up the number of the most recent PR and use the following number as a placeholder.
 
 ## Versioning and Chart Updates
 
-When you change anything that affects deployment, Helm Charts, or container images, you must update the chart metadata and version numbers. To update Helm Charts:
+We follow Semantic Versioning to determine whether a change is a major, minor, or patch release.
+When you change anything that affects deployment, Helm Charts, you must update the relevant metadata and version numbers. To update Helm Charts:
 
 - Open the chart descriptor at: `charts/puris/Chart.yaml`
-- Update the `version` and `appVersion` fields
-- Update container image tags in `charts/puris/values.yaml`
+- Update the `version` if any Helm chart files change
+- Update the `appVersion` only if the application version itself changes
+
+Please note that the chart version must always be increased when the app version changes, even if no chart files were modified.
 
 If you changed environment variables or service configuration, verify with:
 
