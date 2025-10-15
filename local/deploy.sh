@@ -113,24 +113,27 @@ if [ $env_created -eq 1 ]; then
   sh seed-bdrs.sh
 fi
 
+bg_build() { echo "Building $3 ($1) ..."
+  docker build -t "$1" "$2"
+}
 if [ $preserve_images -eq 1 ]; then
   echo "Preserving existing images. Checking presence..."
-  if ! docker image inspect puris-backend:dev >/dev/null 2>&1 || ! docker image inspect puris-frontend:dev >/dev/null 2>&1; then
-    echo "One or more images missing; doing a one-time build to avoid compose failures..."
-    echo "Building backend image (puris-backend:dev) ..."
-    docker build -t puris-backend:dev ../backend &
-    echo "Building frontend image (puris-frontend:dev) ..."
-    docker build -t puris-frontend:dev ../frontend &
-    wait
-  else
-    echo "Images present: puris-backend:dev and puris-frontend:dev"
-  fi  
+  if ! docker image inspect puris-backend:dev >/dev/null 2>&1; then
+    bg_build puris-backend:dev ../backend Backend || { echo "Backend build failed \nExiting..."; exit 1; }
+  fi
+  if ! docker image inspect puris-frontend:dev >/dev/null 2>&1; then
+    bg_build puris-frontend:dev ../frontend Frontend || { echo "Frontend build failed \nExiting..."; exit 1; }
+  fi
+  echo "Missing images built."
 else
-  echo "Rebuilding backend and frontend images..."
-  echo "Building backend image (puris-backend:dev) ..."
-  docker build -t puris-backend:dev ../backend
-  echo "Building frontend image (puris-frontend:dev) ..."
-  docker build -t puris-frontend:dev ../frontend
+  ( bg_build puris-backend:dev ../backend Backend ) &
+  b=$!
+  ( bg_build puris-frontend:dev ../frontend Frontend ) &
+  f=$!
+
+  wait "$b" || { echo "Backend build failed \nExiting...";  exit 1; }
+  wait "$f" || { echo "Frontend build failed \nExiting..."; exit 1; }
+  echo "Both images rebuilt."
 fi
 
 echo "Removing the PURIS + EDCs with their DTR and Database..."
