@@ -167,13 +167,9 @@ EOF
 
 chmod +x seed-bdrs.sh
 
-# Bruno process .env generation
-BRUNO_COLLECTION_ROOT="./bruno/puris-integration-test"
-mkdir -p "${BRUNO_COLLECTION_ROOT}"
-
 # generate .env for the bruno collection
 echo "Creating .env for bruno"
-cat << EOF > "${BRUNO_COLLECTION_ROOT}/.env"
+cat << EOF > "./bruno/puris-integration-test/.env"
 CUSTOMER_PURIS_BACKEND_API_KEY=$CUSTOMER_BACKEND_API_KEY
 CUSTOMER_EDC_API_KEY=$EDC_API_PW
 SUPPLIER_PURIS_BACKEND_API_KEY=$SUPPLIER_BACKEND_API_KEY
