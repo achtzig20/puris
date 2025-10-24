@@ -230,7 +230,11 @@ function CompanyInfo() {
             >
                 {ownPartner?.name}
             </Typography>
-            <TextToClipboard text={ownPartner?.bpnl}></TextToClipboard>
+            {
+                ownPartner?.bpnl 
+                    ? <TextToClipboard text={ownPartner?.bpnl}></TextToClipboard>
+                    : null
+            }
         </Stack>
     )
 }
