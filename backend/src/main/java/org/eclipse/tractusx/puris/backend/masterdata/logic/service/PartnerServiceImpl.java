@@ -34,6 +34,7 @@ import org.springframework.stereotype.Service;
 
 import java.net.URL;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -41,6 +42,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
 
 import javax.management.openmbean.KeyAlreadyExistsException;
+
 
 @Service
 @Slf4j
@@ -70,8 +72,9 @@ public class PartnerServiceImpl implements PartnerService {
 
     @Override
     public Partner create(Partner partner) {
-        if (!testConstraints(partner)) {
-            log.error("Could not create Partner " + partner.getBpnl() + " because of constraint violation");
+        List<String> constraintErrors = testConstraints(partner);
+        if (!constraintErrors.isEmpty()) {
+            log.error("Could not create Partner " + partner.getBpnl() + " because of constraint violations: " + constraintErrors);
             throw new IllegalArgumentException("Partner violates constraints.");
         }
         if (partner.getUuid() != null) {
@@ -118,52 +121,72 @@ public class PartnerServiceImpl implements PartnerService {
     }
 
 
-    private boolean testConstraints(Partner partner) {
-        // Each Partner needs a BPNL, a name, an edcUrl and a BPNA or a BPNS (containing a BPNA)
-        boolean validData = bpnlPattern.matcher(partner.getBpnl()).matches();
-        if (!validData) {
-            log.error("Invalid BPNL: " + partner.getBpnl());
-        }
+    private List<String> testConstraints(Partner partner) {
+        List<String> errors = new ArrayList<>();
         int addressCount = 0;
+        // Each Partner needs a BPNL, a name, an edcUrl and a BPNA or a BPNS (containing a BPNA)
+        if (partner.getBpnl() == null || !bpnlPattern.matcher(partner.getBpnl()).matches()) {
+            String error = "Invalid BPNL: " + partner.getBpnl();
+            log.error(error);
+            errors.add(error);
+        }
+        
+        //EDC URL validation
         try {
             new URL(partner.getEdcUrl()).toURI();
         } catch (Exception e) {
-            validData = false;
-            log.error("Invalid EDC URL: " + partner.getEdcUrl());
+            String error = "Invalid BPNL: " + partner.getBpnl();
+            log.error(error);
+            errors.add(error);
         }
+
         boolean nameExists = partner.getName() != null && !partner.getName().isEmpty();
         if (!nameExists) {
-            log.error("Missing name of partner");
+            String error = "Missing name of partner";
+            log.error(error);
+            errors.add(error);
         }
-        validData = validData && nameExists;
+
         for (var site : partner.getSites()) {
             boolean validBpns = bpnsPattern.matcher(site.getBpns()).matches();
             if (!validBpns) {
-                log.error("Invalid BPNS: " + site.getBpns());
+                String error = "Invalid BPNS: " + site.getBpns();
+                log.error(error);
+                errors.add(error);
             }
-            validData = validData && validBpns;
+
+            if (site.getAddresses().isEmpty()) {
+                String error = "Site " + site.getBpns() + " has no addresses";
+                log.error(error);
+                errors.add(error);
+            }
             for (var address : site.getAddresses()) {
                 boolean validBpna = bpnaPattern.matcher(address.getBpna()).matches();
                 if (!validBpna) {
-                    log.error("Invalid BPNA: " + address.getBpna());
+                    String error = "Invalid BPNA on site " + site.getBpns() + ": " + address.getBpna();
+                    log.error(error);
+                    errors.add(error);
                 }
-                validData = validData && validBpna;
                 addressCount++;
             }
-            if (site.getAddresses().isEmpty()) {
-                validData = false;
-                log.error("Site " + site.getBpns() + " has no addresses");
-            }
+            
         }
+        // Partner addresses
         for (var address : partner.getAddresses()) {
             boolean validBpna = bpnaPattern.matcher(address.getBpna()).matches();
-            validData = validData && validBpna;
+            if (!validBpna) {
+                String error = "Invalid BPNA on partner: " + address.getBpna();
+                log.error(error);
+                errors.add(error);
+            }
             addressCount++;
         }
         if (addressCount < 1) {
-            log.error("No BPNA given for Partner " + partner.getBpnl());
+            String error = "No BPNA given for Partner " + partner.getBpnl();
+            log.error(error);
+            errors.add(error);
         }
-        return validData && addressCount > 0;
+        return errors;
     }
 
     @Override
@@ -188,8 +211,9 @@ public class PartnerServiceImpl implements PartnerService {
 
     @Override
     public Partner update(Partner partner) {
-        if (!testConstraints(partner)) {
-            log.error("Could not update Partner " + partner.getBpnl() + " because of constraint violation");
+        List<String> constraintErrors = testConstraints(partner);
+        if (!constraintErrors.isEmpty()) {
+            log.error("Could not update Partner " + partner.getBpnl() + " because of constraint violations: " + constraintErrors);
             throw new IllegalArgumentException("Partner violates constraints.");
         }
         if (partner.getUuid() == null) {
