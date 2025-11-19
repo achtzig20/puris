@@ -21,6 +21,7 @@ package org.eclipse.tractusx.puris.backend.masterdata.logic;
 
 import java.util.Date;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -41,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import static org.mockito.Mockito.never;
@@ -76,23 +78,18 @@ public class MaterialServiceTest {
     }
 
     @Test
-    void create_WhenMaterialDoesNotExist_ReturnsCreatedMaterial() {
+    void create_WhenMaterialDoesNotExist_ThrowsNoSuchElementException() {
         // Given
         Material material = new Material(true, false, "MNR-123", "uuid-value", "Test Material", new Date());
+        when(materialRepository.findById(material.getOwnMaterialNumber())).thenReturn(Optional.empty());
 
         // When
-        when(materialRepository.findById(material.getOwnMaterialNumber())).thenReturn(Optional.empty());
-        when(materialRepository.findByMaterialNumberCx(material.getMaterialNumberCx())).thenReturn(List.of());
-        when(materialRepository.save(material)).thenReturn(material);
+        NoSuchElementException ex = assertThrows(NoSuchElementException.class, () -> materialService.update(material));
 
-        // Then
-        Material createdMaterial = materialService.create(material);
+        assertEquals("Material does not exist.", ex.getMessage());
 
-        assertNotNull(createdMaterial);
-        assertEquals(material, createdMaterial);
         verify(materialRepository, times(1)).findById(material.getOwnMaterialNumber());
-        verify(materialRepository, times(1)).findByMaterialNumberCx(material.getMaterialNumberCx());
-        verify(materialRepository, times(1)).save(material);
+        verify(materialRepository, never()).save(any(Material.class));
     }
 
     @Test
@@ -150,19 +147,18 @@ public class MaterialServiceTest {
     }
 
     @Test
-    void update_WhenMaterialDoesNotExist_ReturnsNull() {
+    void update_WhenMaterialDoesNotExist_ThrowsNoSuchElementException() {
         // Given
         Material material = new Material(true, false, "MNR-123", "uuid-value", "Test Material", new Date());
-
+        // When
         when(materialRepository.findById(material.getOwnMaterialNumber())).thenReturn(Optional.empty());
 
-        // When
-        Material result = materialService.update(material);
-
         // Then
-        assertNull(result);
+        NoSuchElementException ex = assertThrows(NoSuchElementException.class, () -> materialService.update(material));
+
+        assertEquals("Material does not exist.", ex.getMessage());
         verify(materialRepository, times(1)).findById(material.getOwnMaterialNumber());
-        verify(materialRepository, never()).save(material);
+        verify(materialRepository, never()).save(any(Material.class));
     }
 
     @Test
