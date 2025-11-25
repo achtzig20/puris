@@ -154,7 +154,7 @@ export const MasterDataView = () => {
             <Stack spacing={3}>
                 <ConfidentialBanner />
                 <Stack width='100%' direction="row" justifyContent="space-between" alignItems="center">
-                    <Typography variant="h6">Master data Materials</Typography>
+                    <Typography variant="h6">Master data</Typography>
                     {<Button variant="contained" sx={{ display: 'flex', gap: '.5rem' }} onClick={() => {
                         setMaterialModalOpen(true);
                     }}>
