@@ -14,6 +14,7 @@ The **need for configuration updates** is **marked bold**.
 ### Added
 
 - added site designations per material partner relationhip ([#1061](https://github.com/eclipse-tractusx/puris/pull/1061))
+- added site designations per material partner relationhip in the frontend and display in table ([#1062](https://github.com/eclipse-tractusx/puris/pull/1062))
 
 ### Changed
 
