@@ -342,7 +342,9 @@ public class DeliveryRequestApiServiceTest {
             partnerSupplies,
             partnerBuys,
             partnerSupplies ? ownSites : new TreeSet<>(),
-            partnerBuys ? ownSites : new TreeSet<>()
+            partnerBuys ? ownSites : new TreeSet<>(),
+            new TreeSet<>(),
+            new TreeSet<>()
         );
     }
 }

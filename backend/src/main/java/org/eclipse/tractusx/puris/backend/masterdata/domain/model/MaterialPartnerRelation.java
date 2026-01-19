@@ -80,13 +80,25 @@ public class MaterialPartnerRelation {
      * Contains all own Sites (BPNSs) that stock the specified Material from the partner.
      */
     private SortedSet<Site> ownStockingSites;
+    @OneToMany(cascade = CascadeType.ALL)
+    @Valid
+    /**
+     * Contains all partner Sites (BPNSs) that produce the specified Material.
+     */
+    private SortedSet<Site> partnerProducingSites;
+    @OneToMany(cascade = CascadeType.ALL)
+    @Valid
+    /**
+     * Contains all partner Sites (BPNSs) that stock the specified Material.
+     */
+    private SortedSet<Site> partnerStockingSites;
 
     public MaterialPartnerRelation() {
         this.key = new Key();
     }
 
-   public MaterialPartnerRelation(Material material, Partner partner, String partnerMaterialNumber,
-            boolean partnerSupplies, boolean partnerBuys, SortedSet<Site> ownProducingSites, SortedSet<Site> ownStockIngSites) {
+    public MaterialPartnerRelation(Material material, Partner partner, String partnerMaterialNumber, boolean partnerSupplies,
+        boolean partnerBuys, SortedSet<Site> ownProducingSites, SortedSet<Site> ownStockIngSites, SortedSet<Site> partnerProducingSites, SortedSet<Site> partnerStockingSites) {
         this.material = material;
         this.partner = partner;
         this.key = new Key(material.getOwnMaterialNumber(), partner.getUuid());

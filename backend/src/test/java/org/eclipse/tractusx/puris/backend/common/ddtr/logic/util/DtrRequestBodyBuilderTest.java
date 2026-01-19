@@ -43,6 +43,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -128,7 +129,9 @@ class DtrRequestBodyBuilderTest {
             true,
             true,
             ownSites,
-            ownSites
+            ownSites,
+            new TreeSet<>(),
+            new TreeSet<>()
         );
         MPR.setPartnerCXNumber("urn:uuid:ccfffbba-cfa0-49c4-bc9c-4e13d7a4ac88");
 
@@ -139,7 +142,9 @@ class DtrRequestBodyBuilderTest {
             true,
             true,
             ownSites2,
-            ownSites2
+            ownSites2,
+            new TreeSet<>(),
+            new TreeSet<>()
         );
         MPR2.setPartnerCXNumber("urn:uuid:ccfffbba-cfa0-49c4-bc9c-4e13d7a4ac99");
     }

@@ -26,7 +26,6 @@ import org.eclipse.tractusx.puris.backend.common.edc.domain.model.AssetType;
 import org.eclipse.tractusx.puris.backend.common.edc.logic.service.EdcAdapterService;
 import org.eclipse.tractusx.puris.backend.delivery.domain.model.DeliveryResponsibilityEnumeration;
 import org.eclipse.tractusx.puris.backend.delivery.domain.model.OwnDelivery;
-import org.eclipse.tractusx.puris.backend.delivery.domain.model.ReportedDelivery;
 import org.eclipse.tractusx.puris.backend.delivery.logic.adapter.DeliveryInformationSammMapper;
 import org.eclipse.tractusx.puris.backend.delivery.logic.dto.deliverysamm.DeliveryInformation;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Material;

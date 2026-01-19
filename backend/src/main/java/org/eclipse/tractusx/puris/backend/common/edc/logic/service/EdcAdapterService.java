@@ -20,6 +20,7 @@
  */
 package org.eclipse.tractusx.puris.backend.common.edc.logic.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,8 @@ import org.eclipse.tractusx.puris.backend.common.util.PatternStore;
 import org.eclipse.tractusx.puris.backend.common.util.VariablesService;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.MaterialPartnerRelation;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Partner;
+import org.eclipse.tractusx.puris.backend.masterdata.logic.adapter.PartTypeInformationSammMapper;
+import org.eclipse.tractusx.puris.backend.masterdata.logic.dto.parttypeinformation.PartTypeInformationSAMM;
 import org.eclipse.tractusx.puris.backend.stock.logic.dto.itemstocksamm.DirectionCharacteristic;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,6 +60,9 @@ public class EdcAdapterService {
 
     @Autowired
     private EdcContractMappingService edcContractMappingService;
+
+    @Autowired
+    private PartTypeInformationSammMapper partTypeInformationSammMapper;
 
     @Autowired
     private JsonLdUtils jsonLdUtils;
@@ -891,11 +897,8 @@ public class EdcAdapterService {
                 HttpUrl.Builder urlBuilder = HttpUrl.parse(edrDto.endpoint()).newBuilder()
                     .addPathSegment("lookup")
                     .addPathSegment("shells");
-                String query = "{\"name\":\"manufacturerPartId\",\"value\":\"" + manufacturerPartId + "\"}";
-                query += ",{\"name\":\"digitalTwinType\",\"value\":\"PartType\"}";
-                query += ",{\"name\":\"manufacturerId\",\"value\":\"" + manufacturerId + "\"}";
-                String encodedQuery = Base64.getEncoder().encodeToString(query.getBytes(StandardCharsets.UTF_8));
-                urlBuilder.addQueryParameter("assetIds", encodedQuery);
+                String query = createAssetIdQuery(manufacturerPartId, manufacturerId, mpr);
+                urlBuilder.addQueryParameter("assetIds", query);
                 var request = new Request.Builder()
                     .get()
                     .header(edrDto.authKey(), edrDto.authCode())
@@ -961,6 +964,19 @@ public class EdcAdapterService {
             }
         }
         return getAasSubmodelDescriptors(manufacturerPartId, manufacturerId, mpr, --retries);
+    }
+
+    private String createAssetIdQuery(String manufacturerPartId, String manufacturerId, MaterialPartnerRelation mpr) {
+        boolean isOwnMaterial = mpr.getPartner().getBpnl() != manufacturerId;
+        String query = "{\"name\":\"digitalTwinType\",\"value\":\"PartType\"}";
+        if (!isOwnMaterial && (mpr.getPartnerCXNumber() == null || mpr.getPartnerCXNumber().isEmpty())) {
+            query += ",{\"name\":\"manufacturerPartId\",\"value\":\"" + manufacturerPartId + "\"}";
+            query += ",{\"name\":\"manufacturerId\",\"value\":\"" + manufacturerId + "\"}";
+        } else {
+            String globalAssetId = isOwnMaterial ? mpr.getMaterial().getMaterialNumberCx() : mpr.getPartnerCXNumber();
+            query += ",{\"name\":\"globalAssetId\",\"value\":\"" + globalAssetId + "\"}";
+        }
+        return Base64.getEncoder().encodeToString(query.getBytes(StandardCharsets.UTF_8));
     }
 
     /**
@@ -1155,9 +1171,22 @@ public class EdcAdapterService {
      * @param mpr the MaterialPartnerRelation
      * @return the partner's CXid for that material
      */
-    public String getCxIdFromPartTypeInformation(MaterialPartnerRelation mpr) {
+    public MaterialPartnerRelation getUpdatedMprFromPartTypeInformation(MaterialPartnerRelation mpr) {
         var data = getSubmodelFromPartner(mpr, AssetType.PART_TYPE_INFORMATION_SUBMODEL, null, 1);
-        return data.get("catenaXId").asText();
+        try {
+            var samm = objectMapper.treeToValue(data, PartTypeInformationSAMM.class);
+            if (samm.getCatenaXId() == null) {
+                throw new IllegalArgumentException("No CatenaXId found in PartTypeInformation Submodel for material "
+                    + mpr.getMaterial().getOwnMaterialNumber() + " at partner " + mpr.getPartner().getBpnl());
+            }
+            partTypeInformationSammMapper.updateMaterialFromSamm(mpr, samm);
+            return mpr;
+        } catch (JsonProcessingException e) {
+            
+        } catch (IllegalArgumentException e) {
+            
+        }
+        return null;
     }
 
     /**

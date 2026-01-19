@@ -23,20 +23,22 @@ package org.eclipse.tractusx.puris.backend.masterdata.logic.adapter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Material;
+import org.eclipse.tractusx.puris.backend.masterdata.domain.model.MaterialPartnerRelation;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Partner;
+import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Site;
+import org.eclipse.tractusx.puris.backend.masterdata.logic.dto.parttypeinformation.FunctionEnum;
+import org.eclipse.tractusx.puris.backend.masterdata.logic.dto.parttypeinformation.PartSitesInformationAsPlanned;
 import org.eclipse.tractusx.puris.backend.masterdata.logic.dto.parttypeinformation.PartTypeInformationSAMM;
-import org.eclipse.tractusx.puris.backend.masterdata.logic.service.MaterialPartnerRelationService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class PartTypeInformationSammMapper {
-
-    @Autowired
-    private MaterialPartnerRelationService mprService;
 
     /**
      * From a suppliers perspective, generate a PartTypeInformation SAMM from a product-material.
@@ -44,7 +46,8 @@ public class PartTypeInformationSammMapper {
      * @param material  the material
      * @return          the SAMM generated from the given material
      */
-    public PartTypeInformationSAMM productToSamm(Material material) {
+    public PartTypeInformationSAMM productToSamm(MaterialPartnerRelation mpr) {
+        Material material = mpr.getMaterial();
         if (!material.isProductFlag()) {
             return null;
         }
@@ -52,7 +55,12 @@ public class PartTypeInformationSammMapper {
         samm.setCatenaXId(material.getMaterialNumberCx());
         samm.getPartTypeInformation().setManufacturerPartId(material.getOwnMaterialNumber());
         samm.getPartTypeInformation().setNameAtManufacturer(material.getName());
-
+        mpr.getOwnProducingSites().forEach(site -> {
+            PartSitesInformationAsPlanned partSitesInfo = new PartSitesInformationAsPlanned();
+            partSitesInfo.setFunction(FunctionEnum.PRODUCTION);
+            partSitesInfo.setCatenaXsiteId(site.getBpns());
+            samm.getPartSitesInformationAsPlanned().add(partSitesInfo);
+        });
         return samm;
     }
 
@@ -60,13 +68,12 @@ public class PartTypeInformationSammMapper {
      * This method will accept a PartTypeInformation SAMM from a specific supplier partner,
      * that is meant to update the information on a specific material.
      *
-     * @param material          the material
+     * @param mpr               the material partner relation to update
      * @param samm              the SAMM
-     * @param sendingPartner    the partner, you received the SAMM from
      */
-    public void updateMaterialFromSamm(@NonNull Material material, @NonNull PartTypeInformationSAMM samm, @NonNull Partner sendingPartner) {
+    public void updateMaterialFromSamm(@NonNull MaterialPartnerRelation mpr, @NonNull PartTypeInformationSAMM samm) {
+        Partner sendingPartner = mpr.getPartner();
         try {
-            var mpr = mprService.find(material, sendingPartner);
             String partId = samm.getPartTypeInformation().getManufacturerPartId();
             String nameAtManufacturer = samm.getPartTypeInformation().getNameAtManufacturer();
             String cxId = samm.getCatenaXId();
@@ -108,8 +115,45 @@ public class PartTypeInformationSammMapper {
                 }
                 mpr.setPartnerCXNumber(cxId);
             }
-            mprService.update(mpr);
 
+            SortedSet<Site> producingSites = samm.getPartSitesInformationAsPlanned().stream()
+                .filter(siteInfo -> siteInfo.getFunction() == FunctionEnum.PRODUCTION)
+                .map(siteInfo -> {
+                    Site site = mpr.getPartner().getSites().stream()
+                        .filter(s -> s.getBpns().equals(siteInfo.getCatenaXsiteId()))
+                        .findFirst()
+                        .orElse(null);
+                    if (site == null) {
+                        log.error("No matching site with BPNS {} defined for Partner {}", siteInfo.getCatenaXsiteId(), mpr.getPartner());
+                        return null;
+                    }
+                    return site;
+                })
+                .collect(Collectors.toCollection(TreeSet::new));
+            if (producingSites.stream().anyMatch(Objects::isNull)) {
+                log.error("Aborting SAMM processing from Partner " + sendingPartner.getBpnl() + " due to invalid site definitions.\n" + samm);
+                return;
+            }
+            mpr.setPartnerProducingSites(producingSites);
+            SortedSet<Site> stockingSites = samm.getPartSitesInformationAsPlanned().stream()
+                .filter(siteInfo -> siteInfo.getFunction() == FunctionEnum.WAREHOUSE)
+                .map(siteInfo -> {
+                    Site site = mpr.getPartner().getSites().stream()
+                        .filter(s -> s.getBpns().equals(siteInfo.getCatenaXsiteId()))
+                        .findFirst()
+                        .orElse(null);
+                    if (site == null) {
+                        log.error("No matching site with BPNS {} defined for Partner {}", siteInfo.getCatenaXsiteId(), mpr.getPartner());
+                        return null;
+                    }
+                    return site;
+                })
+                .collect(Collectors.toCollection(TreeSet::new));
+            if (stockingSites.stream().anyMatch(Objects::isNull)) {
+                log.error("Aborting SAMM processing from Partner " + sendingPartner.getBpnl() + " due to invalid site definitions.\n" + samm);
+                return;
+            }
+            mpr.setPartnerStockingSites(stockingSites);
         } catch (Exception e) {
             log.error("Invalid Samm from Partner " + sendingPartner.getBpnl() + "\n" + samm, e);
         }

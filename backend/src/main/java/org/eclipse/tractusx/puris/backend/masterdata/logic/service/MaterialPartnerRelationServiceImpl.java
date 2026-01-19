@@ -25,7 +25,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.tractusx.puris.backend.common.ddtr.logic.DtrAdapterService;
 import org.eclipse.tractusx.puris.backend.common.edc.logic.service.EdcAdapterService;
-import org.eclipse.tractusx.puris.backend.common.util.PatternStore;
 import org.eclipse.tractusx.puris.backend.common.util.VariablesService;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Material;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.MaterialPartnerRelation;
@@ -185,14 +184,13 @@ public class MaterialPartnerRelationServiceImpl implements MaterialPartnerRelati
                 if (retries < initialRetries) {
                     Thread.sleep(300);
                 }
-                String partnerCXId = edcAdapterService.getCxIdFromPartTypeInformation(materialPartnerRelation);
-                if (partnerCXId != null && PatternStore.URN_OR_UUID_PATTERN.matcher(partnerCXId).matches()) {
-                    materialPartnerRelation.setPartnerCXNumber(partnerCXId);
-                    mprRepository.save(materialPartnerRelation);
+                MaterialPartnerRelation updatedMpr = edcAdapterService.getUpdatedMprFromPartTypeInformation(materialPartnerRelation);
+                if (updatedMpr != null) {
+                    mprRepository.save(updatedMpr);
                     log.info("Successfully inserted Partner CX Id for Partner " +
                         materialPartnerRelation.getPartner().getBpnl() + " and Material "
                         + materialPartnerRelation.getMaterial().getOwnMaterialNumber() +
-                        " -> " + partnerCXId);
+                        " -> " + updatedMpr.getPartnerCXNumber());
                 } else {
                     log.warn("PartTypeInformation fetch from " + materialPartnerRelation.getPartner().getBpnl() +
                         " for " + materialPartnerRelation.getMaterial().getOwnMaterialNumber() + " failed. Retries left: " + retries);
@@ -501,7 +499,11 @@ public class MaterialPartnerRelationServiceImpl implements MaterialPartnerRelati
     public List<Partner> findAllSuppliersForOwnMaterialNumber(String ownMaterialNumber) {
         return mprRepository.findAllByMaterial_OwnMaterialNumberAndPartnerSuppliesMaterialIsTrue(ownMaterialNumber)
             .stream()
-            .map(mpr -> mpr.getPartner())
+            .map(mpr -> {
+                Partner partner = mpr.getPartner();
+                partner.setSites(partner.getSites().stream().filter(site -> mpr.getPartnerProducingSites().stream().anyMatch(s -> s.getBpns().equals(site.getBpns()))).collect(Collectors.toCollection(TreeSet::new)));
+                return partner;
+            })
             .collect(Collectors.toList());
     }
 

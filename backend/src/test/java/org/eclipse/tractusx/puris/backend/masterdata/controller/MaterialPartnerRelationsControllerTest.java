@@ -92,7 +92,7 @@ public class MaterialPartnerRelationsControllerTest {
         String partnerMaterialNumber = "MNR-8101-ID146955.001";
         System.out.println(partnerMaterialNumber + " -> " + new String(Base64.getEncoder().encode(partnerMaterialNumber.getBytes())));
         MaterialPartnerRelation newMpr = new MaterialPartnerRelation(material, partner, partnerMaterialNumber,
-            true, true, new TreeSet<>(), new TreeSet<>());
+            true, true, new TreeSet<>(), new TreeSet<>(), new TreeSet<>(), new TreeSet<>());
 
         MaterialPartnerRelationDto dto = new MaterialPartnerRelationDto(
             materialNumber,
@@ -132,7 +132,7 @@ public class MaterialPartnerRelationsControllerTest {
 
         String partnerMaterialNumber = "MNR-8101-ID146955.002";
         MaterialPartnerRelation newMpr = new MaterialPartnerRelation(material, partner, partnerMaterialNumber,
-            true, true, new TreeSet<>(), new TreeSet<>());
+            true, true, new TreeSet<>(), new TreeSet<>(), new TreeSet<>(), new TreeSet<>());
 
         MaterialPartnerRelationDto dto = new MaterialPartnerRelationDto(
             materialNumber,
@@ -161,12 +161,12 @@ public class MaterialPartnerRelationsControllerTest {
         // given
         String partnerMaterialNumber = "MNR-8101-ID146955.001";
         MaterialPartnerRelation newMpr = new MaterialPartnerRelation(material, partner, partnerMaterialNumber,
-            true, true, new TreeSet<>(), new TreeSet<>());
+            true, true, new TreeSet<>(), new TreeSet<>(), new TreeSet<>(), new TreeSet<>());
 
 
         String partnerMaterialNumber2 = "MNR-8101-ID146955.002";
         MaterialPartnerRelation newMpr2 = new MaterialPartnerRelation(material, partner, partnerMaterialNumber2,
-            true, true, new TreeSet<>(), new TreeSet<>());
+            true, true, new TreeSet<>(), new TreeSet<>(), new TreeSet<>(), new TreeSet<>());
 
         // when
         when(partnerService.findByBpnl(anyString())).thenReturn(partner);
@@ -200,12 +200,12 @@ public class MaterialPartnerRelationsControllerTest {
 
         String partnerMaterialNumber = "MNR-8101-ID146955.001";
         MaterialPartnerRelation newMpr = new MaterialPartnerRelation(material, partner, partnerMaterialNumber,
-            true, true, new TreeSet<>(), new TreeSet<>());
+            true, true, new TreeSet<>(), new TreeSet<>(), new TreeSet<>(), new TreeSet<>());
 
 
         String partnerMaterialNumber2 = "MNR-8101-ID146955.002";
         MaterialPartnerRelation newMpr2 = new MaterialPartnerRelation(material, partner, partnerMaterialNumber2,
-            true, true, new TreeSet<>(), new TreeSet<>());
+            true, true, new TreeSet<>(), new TreeSet<>(), new TreeSet<>(), new TreeSet<>());
 
 
         // when

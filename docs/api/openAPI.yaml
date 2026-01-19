@@ -2832,72 +2832,15 @@ paths:
         the ownMaterialNumber and the partnerBpnl. The other three parameters are
         genuinely optional. Provide them only if you want to change their values. '
       operationId: updateMaterialPartnerRelation
-      parameters:
-      - description: The Material Number that is used in your own company to identify
-          the Material, encoded in base64
-        in: query
-        name: ownMaterialNumber
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MaterialPartnerRelationDto'
+              additionalProperties: false
         required: true
-        schema:
-          additionalProperties: false
-          maxItems: 50
-          type: string
-      - description: The unique BPNL that was assigned to that Partner.
-        example: BPNL2222222222RR
-        in: query
-        name: partnerBpnl
-        required: true
-        schema:
-          additionalProperties: false
-          maxItems: 50
-          type: string
-      - description: The Material Number that this Partner is using in his own company
-          to identify the Material, encoded in base64
-        in: query
-        name: partnerMaterialNumber
-        required: false
-        schema:
-          additionalProperties: false
-          maxItems: 50
-          type: string
-      - description: The CatenaX Number that this Partner uses
-        example: 860fb504-b884-4009-9313-c6fb6cdc776b
-        in: query
-        name: partnerCXNumber
-        required: false
-        schema:
-          additionalProperties: false
-          maxItems: 50
-          type: string
-      - description: The informal name that this Partner uses
-        example: Semiconductor
-        in: query
-        name: nameAtManufacturer
-        required: false
-        schema:
-          additionalProperties: false
-          maxItems: 50
-          type: string
-      - description: This boolean flag indicates whether this Partner is a potential
-          supplier of the given Material.
-        example: true
-        in: query
-        name: partnerSupplies
-        required: false
-        schema:
-          additionalProperties: false
-          type: boolean
-      - description: This boolean flag indicates whether this Partner is a potential
-          customer of this Material.
-        example: true
-        in: query
-        name: partnerBuys
-        required: false
-        schema:
-          additionalProperties: false
-          type: boolean
       responses:
-        '200':
+        '204':
           content:
             '*/*':
               schema:
@@ -3408,13 +3351,13 @@ paths:
       summary: Gets all associated materials for Partner
       tags:
       - partner-controller
-  /parttypeinformation/{materialnumber}/submodel/{representation}:
+  /parttypeinformation/{globalAssetId}/submodel/{representation}:
     get:
       description: 'Endpoint that delivers PartTypeInformation of own products to
-        customer partners. ''materialnumber'' must be set to the ownMaterialNumber
-        of the party, that receives the request. Please note that the SAMMs delivered
-        by this endpoint don''t provide partClassification and partSitesInformationAsPlanned
-        data. This endpoint is meant to be accessed by partners via EDC only. '
+        customer partners. ''globalAssetId'' must be set to the global asset id of
+        the party, that receives the request. Please note that the SAMMs delivered
+        by this endpoint don''t provide partClassification data. This endpoint is
+        meant to be accessed by partners via EDC only. '
       operationId: getMapping
       parameters:
       - in: header
@@ -3424,10 +3367,9 @@ paths:
           additionalProperties: false
           maxItems: 50
           type: string
-      - description: The material number that the request receiving party uses for
-          the material in question
+      - description: The global asset id for the requested part type.
         in: path
-        name: materialnumber
+        name: globalAssetId
         required: true
         schema:
           additionalProperties: false

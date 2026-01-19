@@ -41,8 +41,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.regex.Pattern;
 
 @RestController
@@ -50,7 +48,7 @@ import java.util.regex.Pattern;
 @Slf4j
 public class PartTypeInformationController {
     static Pattern bpnlPattern = PatternStore.BPNL_PATTERN;
-    static Pattern materialNumberPattern = PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_PATTERN;
+    static Pattern materialNumberPattern = PatternStore.URN_OR_UUID_PATTERN;
 
     @Autowired
     private PartnerService partnerService;
@@ -68,8 +66,8 @@ public class PartTypeInformationController {
     }
 
     @Operation(description = "Endpoint that delivers PartTypeInformation of own products to customer partners. " +
-        "'materialnumber' must be set to the ownMaterialNumber of the party, that receives the request. Please note that the " +
-        "SAMMs delivered by this endpoint don't provide partClassification and partSitesInformationAsPlanned data. " +
+        "'globalAssetId' must be set to the global asset id of the party, that receives the request. Please note that the " +
+        "SAMMs delivered by this endpoint don't provide partClassification data. " +
         "This endpoint is meant to be accessed by partners via EDC only. ")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Ok"),
@@ -78,13 +76,12 @@ public class PartTypeInformationController {
         @ApiResponse(responseCode = "404", description = "Product not found for given parameters. ", content = @Content),
         @ApiResponse(responseCode = "501", description = "Unsupported representation requested. ", content = @Content)
     })
-    @GetMapping("/{materialnumber}/submodel/{representation}")
+    @GetMapping("/{globalAssetId}/submodel/{representation}")
     public ResponseEntity<PartTypeInformationSAMM> getMapping(@RequestHeader("edc-bpn") String bpnl,
-                                                              @Parameter(description = "The material number that the request receiving party uses for the material in question")
-                                        @PathVariable String materialnumber,
+                                                              @Parameter(description = "The global asset id for the requested part type.")
+                                        @PathVariable String globalAssetId,
                                                               @Parameter(description = "Must be set to '$value'") @PathVariable String representation) {
-        materialnumber = new String (Base64.getDecoder().decode(materialnumber.getBytes(StandardCharsets.UTF_8)));
-        if (!bpnlPattern.matcher(bpnl).matches() || !materialNumberPattern.matcher(materialnumber).matches()) {
+        if (!bpnlPattern.matcher(bpnl).matches() || !materialNumberPattern.matcher(globalAssetId).matches()) {
             return ResponseEntity.badRequest().build();
         }
 
@@ -95,8 +92,8 @@ public class PartTypeInformationController {
         if (partner == null) {
             return ResponseEntity.status(401).build();
         }
-        log.info("{} requests part type information on {}", bpnl, materialnumber);
-        Material material = materialService.findByOwnMaterialNumber(materialnumber);
+        log.info("{} requests part type information on {}", bpnl, globalAssetId);
+        Material material = materialService.findByMaterialNumberCx(globalAssetId);
         if (material == null || !material.isProductFlag()) {
             return ResponseEntity.status(404).build();
         }
@@ -104,7 +101,7 @@ public class PartTypeInformationController {
         if (mpr == null || !mpr.isPartnerBuysMaterial()) {
             return ResponseEntity.status(404).build();
         }
-        var samm = sammMapper.productToSamm(material);
+        var samm = sammMapper.productToSamm(mpr);
         return ResponseEntity.ok(samm);
     }
 }

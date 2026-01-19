@@ -166,7 +166,7 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
 
         SortedSet<Site> ownSites = supplierPartner.getSites();
         MaterialPartnerRelation semiconductorPartnerRelation = new MaterialPartnerRelation(semiconductorMaterial,
-            supplierPartner, semiconductorMatNbrSupplier, true, true, ownSites, ownSites);
+            supplierPartner, semiconductorMatNbrSupplier, true, true, ownSites, ownSites, new TreeSet<>(), new TreeSet<>());
         mprService.create(semiconductorPartnerRelation);
         semiconductorPartnerRelation = mprService.find(semiconductorMaterial, supplierPartner);
         log.info("Found Relation: " + semiconductorPartnerRelation);
@@ -178,7 +178,7 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
         log.info(String.format("Created Product: %s", centralControlUnitEntity));
 
         MaterialPartnerRelation ccuPartnerRelation = new MaterialPartnerRelation(centralControlUnitEntity,
-            nonScenarioCustomer, "MNR-4177-C", false, true, ownSites, new TreeSet<>());
+            nonScenarioCustomer, "MNR-4177-C", false, true, ownSites, new TreeSet<>(), new TreeSet<>(), new TreeSet<>());
         ccuPartnerRelation.setPartnerCXNumber("89f9c477-7e6e-4899-9b4b-d2c1081455ec");
         ccuPartnerRelation = mprService.create(ccuPartnerRelation);
         log.info("Found Relation: " + ccuPartnerRelation);
@@ -276,7 +276,7 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
         SortedSet<Site> ownSites = mySelf.getSites();
 
         MaterialPartnerRelation semiconductorPartnerRelation = new MaterialPartnerRelation(semiconductorMaterial,
-            customerPartner, semiconductorMatNbrCustomer, true, true, ownSites, ownSites);
+            customerPartner, semiconductorMatNbrCustomer, true, true, ownSites, ownSites, new TreeSet<>(), new TreeSet<>());
         semiconductorPartnerRelation = mprService.create(semiconductorPartnerRelation);
 
         log.info("Created Relation " + semiconductorPartnerRelation);

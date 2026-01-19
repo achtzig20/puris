@@ -279,8 +279,8 @@ public abstract class DeliveryService<T extends Delivery> {
         if (ownPartnerEntity == null) {
             ownPartnerEntity = partnerService.getOwnPartnerEntity();
         }
-        var ownSites = ownPartnerEntity.getSites();
         var partnerSites = delivery.getPartner().getSites();
+        MaterialPartnerRelation mpr = mprService.find(delivery.getPartner().getBpnl(), delivery.getMaterial().getOwnMaterialNumber());
 
         if (delivery.getIncoterm() == null) {
             errors.add("Missing Incoterm.");
@@ -290,26 +290,26 @@ public abstract class DeliveryService<T extends Delivery> {
                     if (!delivery.getMaterial().isMaterialFlag()) {
                         errors.add(String.format("Material '%s' must be configured as material via flag (incoterm '%s' with supplier responsibility).", delivery.getMaterial().getOwnMaterialNumber(), delivery.getIncoterm().getValue()));
                     }
-                    errors.addAll(validateLocationsAsCustomer(delivery, ownSites, partnerSites));
+                    errors.addAll(validateLocationsAsCustomer(delivery, mpr.getOwnStockingSites(), partnerSites));
                     break;
                 case CUSTOMER:
                     if (!delivery.getMaterial().isProductFlag()) {
                         errors.add(String.format("Material '%s' must be configured as product via flag (incoterm '%s' with customer responsibility).", delivery.getMaterial().getOwnMaterialNumber(), delivery.getIncoterm().getValue()));
                     }
-                    errors.addAll(validateLocationsAsSupplier(delivery, ownSites, partnerSites));
+                    errors.addAll(validateLocationsAsSupplier(delivery, mpr.getOwnProducingSites(), partnerSites));
                     break;
                 case PARTIAL:
                     boolean valid = false;
                     List<String> supplierPathErrors = Collections.emptyList();
                     List<String> customerPathErrors = Collections.emptyList();
                     if (delivery.getMaterial().isProductFlag()) {
-                        supplierPathErrors  = validateLocationsAsSupplier(delivery, ownSites, partnerSites);
+                        supplierPathErrors  = validateLocationsAsSupplier(delivery, mpr.getOwnProducingSites(), partnerSites);
                         if (supplierPathErrors.isEmpty()) {
                             valid = true;
                         }
                     }
                     if (delivery.getMaterial().isMaterialFlag()) {
-                        customerPathErrors = validateLocationsAsCustomer(delivery, ownSites, partnerSites);
+                        customerPathErrors = validateLocationsAsCustomer(delivery, mpr.getOwnStockingSites(), partnerSites);
                         if (customerPathErrors.isEmpty()) {
                             valid = true;
                         }

@@ -26,6 +26,7 @@ import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Material;
+import org.eclipse.tractusx.puris.backend.masterdata.domain.model.MaterialPartnerRelation;
 import org.eclipse.tractusx.puris.backend.masterdata.logic.dto.parttypeinformation.*;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
@@ -50,9 +51,10 @@ public class PartTypeInformationSAMMMapperTest {
 
     @Test
     void testSammMapperShouldSuccess() {
-        Material material = getTestMaterial();
+        MaterialPartnerRelation mpr = getTestMaterialPartnerRelation();
+        Material material = mpr.getMaterial();
         System.out.println("Fail test Mat" + material);
-        PartTypeInformationSAMM samm =  partTypeSammMapper.productToSamm(material);
+        PartTypeInformationSAMM samm =  partTypeSammMapper.productToSamm(mpr);
         Assertions.assertEquals(samm.getCatenaXId(), material.getMaterialNumberCx());
         Assertions.assertEquals(samm.getPartTypeInformation().getManufacturerPartId(), material.getOwnMaterialNumber());
         Assertions.assertEquals(samm.getPartTypeInformation().getNameAtManufacturer(), material.getName());
@@ -60,9 +62,10 @@ public class PartTypeInformationSAMMMapperTest {
 
     @Test
     void testSammMapperShouldFail() {
-        Material material = getTestMaterial();
+        MaterialPartnerRelation mpr = getTestMaterialPartnerRelation();
+        Material material = mpr.getMaterial();
         material.setProductFlag(false);
-        PartTypeInformationSAMM samm =  partTypeSammMapper.productToSamm(material);
+        PartTypeInformationSAMM samm =  partTypeSammMapper.productToSamm(mpr);
         System.out.println(samm);
         Assertions.assertNull(samm);
     }
@@ -128,5 +131,11 @@ public class PartTypeInformationSAMMMapperTest {
         material.setName("A wonderful test balloon");
         material.setProductFlag(true);
         return material;
+    }
+
+    private static MaterialPartnerRelation getTestMaterialPartnerRelation() {
+        MaterialPartnerRelation mpr = new MaterialPartnerRelation();
+        mpr.setMaterial(getTestMaterial());
+        return mpr;
     }
 }

@@ -137,6 +137,8 @@ public class DemandAndCapacityNotificationSammMapperTest {
             false,
             true,
             ownSites,
+            new TreeSet<>(),
+            new TreeSet<>(),
             new TreeSet<>()
             );
 
@@ -195,7 +197,7 @@ public class DemandAndCapacityNotificationSammMapperTest {
         SortedSet<Site> ownSites = mySelf.getSites();
 
         MaterialPartnerRelation materialPartnerRelation = new MaterialPartnerRelation(semiconductorMaterial, externalPartner,
-            SUPPLIER_MAT_NUMBER, true, false, new TreeSet<>(), ownSites
+            SUPPLIER_MAT_NUMBER, true, false, new TreeSet<>(), ownSites, new TreeSet<>(), new TreeSet<>()
             );
 
         when(materialService.findByOwnMaterialNumber(CUSTOMER_MAT_NUMBER)).thenReturn(semiconductorMaterial);
@@ -290,7 +292,9 @@ public class DemandAndCapacityNotificationSammMapperTest {
             true,
             false,
             new TreeSet<>(),
-            ownSites
+            ownSites,
+            new TreeSet<>(),
+            new TreeSet<>()
             );
         materialPartnerRelation.setPartnerCXNumber(CX_MAT_NUMBER);
 
@@ -351,7 +355,7 @@ public class DemandAndCapacityNotificationSammMapperTest {
         SortedSet<Site> ownSites = mySelf.getSites();
 
         MaterialPartnerRelation materialPartnerRelation = new MaterialPartnerRelation(semiconductorMaterial, externalPartner,
-            CUSTOMER_MAT_NUMBER, false, true, ownSites, new TreeSet<>());
+            CUSTOMER_MAT_NUMBER, false, true, ownSites, new TreeSet<>(), new TreeSet<>(), new TreeSet<>());
 
         when(materialService.findByMaterialNumberCx(CX_MAT_NUMBER)).thenReturn(semiconductorMaterial);
         when(materialService.findByOwnMaterialNumber(SUPPLIER_MAT_NUMBER)).thenReturn(semiconductorMaterial);
@@ -446,6 +450,8 @@ public class DemandAndCapacityNotificationSammMapperTest {
             false,
             true,
             ownSites,
+            new TreeSet<>(),
+            new TreeSet<>(),
             new TreeSet<>());
 
         Material dummyMaterial = new Material(false,
@@ -457,6 +463,8 @@ public class DemandAndCapacityNotificationSammMapperTest {
             false,
             true,
             ownSites,
+            new TreeSet<>(),
+            new TreeSet<>(),
             new TreeSet<>());
 
         OwnDemandAndCapacityNotification notification = OwnDemandAndCapacityNotification.builder()
@@ -547,13 +555,13 @@ public class DemandAndCapacityNotificationSammMapperTest {
 
         SortedSet<Site> ownSites = mySelf.getSites();
         MaterialPartnerRelation materialPartnerRelation = new MaterialPartnerRelation(semiconductorMaterial, externalPartner,
-            SUPPLIER_MAT_NUMBER, true, false, new TreeSet<>(), ownSites);
+            SUPPLIER_MAT_NUMBER, true, false, new TreeSet<>(), ownSites, new TreeSet<>(), new TreeSet<>());
 
         Material dummyMaterial = new Material(true,
             false, DUMMY_MATERIAL_CUSTOMER_MNR, null, "Dummy Material", new Date());
 
         MaterialPartnerRelation dummyMpr = new MaterialPartnerRelation(dummyMaterial, externalPartner,
-            DUMMY_MATERIAL_CUSTOMER_MNR, true, false, new TreeSet<>(), ownSites);
+            DUMMY_MATERIAL_CUSTOMER_MNR, true, false, new TreeSet<>(), ownSites, new TreeSet<>(), new TreeSet<>());
 
         when(materialService.findByOwnMaterialNumber(CUSTOMER_MAT_NUMBER)).thenReturn(semiconductorMaterial);
         when(materialService.findByOwnMaterialNumber(DUMMY_MATERIAL_CUSTOMER_MNR)).thenReturn(dummyMaterial);

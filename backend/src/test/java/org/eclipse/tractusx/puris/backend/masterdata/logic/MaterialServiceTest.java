@@ -216,7 +216,7 @@ public class MaterialServiceTest {
         material.setProductFlag(true);
         material.setOwnMaterialNumber(semiconductorMatNbrSupplier);
         Partner customerPartner = createAndGetCustomerPartner();
-        MaterialPartnerRelation materialPartnerRelation = new MaterialPartnerRelation(material, customerPartner, semiconductorMatNbrCustomer, false, true, new TreeSet<>(), new TreeSet<>());
+        MaterialPartnerRelation materialPartnerRelation = new MaterialPartnerRelation(material, customerPartner, semiconductorMatNbrCustomer, false, true, new TreeSet<>(), new TreeSet<>(), new TreeSet<>(), new TreeSet<>());
 
         // When
         when(mprService.findAllByCustomerPartnerAndPartnerMaterialNumber(customerPartner, semiconductorMatNbrCustomer)).thenReturn(List.of(materialPartnerRelation));
@@ -234,7 +234,7 @@ public class MaterialServiceTest {
         material.setProductFlag(true);
         material.setOwnMaterialNumber(semiconductorMatNbrSupplier);
         Partner customerPartner = createAndGetCustomerPartner();
-        MaterialPartnerRelation materialPartnerRelation = new MaterialPartnerRelation(material, customerPartner, semiconductorMatNbrCustomer, false, true, new TreeSet<>(), new TreeSet<>());
+        MaterialPartnerRelation materialPartnerRelation = new MaterialPartnerRelation(material, customerPartner, semiconductorMatNbrCustomer, false, true, new TreeSet<>(), new TreeSet<>(), new TreeSet<>(), new TreeSet<>());
 
         // When
         when(mprService.findAllByCustomerPartnerMaterialNumber(semiconductorMatNbrCustomer)).thenReturn(List.of(materialPartnerRelation));
@@ -251,7 +251,7 @@ public class MaterialServiceTest {
         material.setProductFlag(true);
         material.setOwnMaterialNumber(semiconductorMatNbrSupplier);
         Partner customerPartner = createAndGetCustomerPartner();
-        MaterialPartnerRelation materialPartnerRelation = new MaterialPartnerRelation(material, customerPartner, semiconductorMatNbrCustomer, false, true, new TreeSet<>(), new TreeSet<>());
+        MaterialPartnerRelation materialPartnerRelation = new MaterialPartnerRelation(material, customerPartner, semiconductorMatNbrCustomer, false, true, new TreeSet<>(), new TreeSet<>(), new TreeSet<>(), new TreeSet<>());
 
         // When
         when(mprService.findAllByCustomerPartnerMaterialNumber(semiconductorMatNbrCustomer)).thenReturn(List.of(materialPartnerRelation));
@@ -285,7 +285,7 @@ public class MaterialServiceTest {
         material.setProductFlag(true);
         material.setOwnMaterialNumber(semiconductorMatNbrSupplier);
         Partner customerPartner = createAndGetCustomerPartner();
-        MaterialPartnerRelation materialPartnerRelation = new MaterialPartnerRelation(material, customerPartner, semiconductorMatNbrCustomer, false, true, new TreeSet<>(), new TreeSet<>());
+        MaterialPartnerRelation materialPartnerRelation = new MaterialPartnerRelation(material, customerPartner, semiconductorMatNbrCustomer, false, true, new TreeSet<>(), new TreeSet<>(), new TreeSet<>(), new TreeSet<>());
 
         // When
         when(mprService.findAllByCustomerPartnerAndPartnerMaterialNumber(customerPartner, semiconductorMatNbrCustomer)).thenReturn(List.of(materialPartnerRelation));
@@ -320,7 +320,7 @@ public class MaterialServiceTest {
         material.setMaterialFlag(true);
         material.setOwnMaterialNumber(semiconductorMatNbrCustomer);
         Partner supplierPartner = createAndGetSupplierPartner();
-        MaterialPartnerRelation materialPartnerRelation = new MaterialPartnerRelation(material, supplierPartner, semiconductorMatNbrSupplier, true, false, new TreeSet<>(), new TreeSet<>());
+        MaterialPartnerRelation materialPartnerRelation = new MaterialPartnerRelation(material, supplierPartner, semiconductorMatNbrSupplier, true, false, new TreeSet<>(), new TreeSet<>(), new TreeSet<>(), new TreeSet<>());
 
         // When
         when(mprService.findAllBySupplierPartnerAndPartnerMaterialNumber(supplierPartner, semiconductorMatNbrSupplier)).thenReturn(List.of(materialPartnerRelation));

@@ -58,4 +58,44 @@ databaseChangeLog:
                   type: VARCHAR(255)
                   constraints:
                     nullable: false
+  - changeSet:
+      id: "2"
+      author: ReneSchroederLJ
+      changes:
+        - createTable:
+            tableName: material_partner_relation_partner_producing_sites
+            columns:
+              - column:
+                  name: material_partner_relation_key_own_material_number
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: material_partner_relation_key_uuid
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: partner_producing_sites_bpns
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: material_partner_relation_partner_stocking_sites
+            columns:
+              - column:
+                  name: material_partner_relation_key_own_material_number
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: material_partner_relation_key_uuid
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: partner_stocking_sites_bpns
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
 

@@ -22,7 +22,6 @@
 package org.eclipse.tractusx.puris.backend.masterdata.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +29,9 @@ import org.eclipse.tractusx.puris.backend.common.util.PatternStore;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Material;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.MaterialPartnerRelation;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.MaterialPartnerRelationDto;
+import org.eclipse.tractusx.puris.backend.masterdata.domain.model.MaterialPartnerRelationDto;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Partner;
+import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Site;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Site;
 import org.eclipse.tractusx.puris.backend.masterdata.logic.service.MaterialPartnerRelationService;
 import org.eclipse.tractusx.puris.backend.masterdata.logic.service.MaterialService;
@@ -164,7 +165,7 @@ public class MaterialPartnerRelationsController {
         if (mprService.find(material, partner) != null) {
             return new ResponseEntity<>(HttpStatusCode.valueOf(409));
         }
-        MaterialPartnerRelation newMpr = new MaterialPartnerRelation(material, partner, dto.getPartnerMaterialNumber(), dto.isPartnerSuppliesMaterial(), dto.isPartnerBuysMaterial(), producingSites, stockingSites);
+        MaterialPartnerRelation newMpr = new MaterialPartnerRelation(material, partner, dto.getPartnerMaterialNumber(), dto.isPartnerSuppliesMaterial(), dto.isPartnerBuysMaterial(), producingSites, stockingSites, new TreeSet<>(), new TreeSet<>());
 
         newMpr = mprService.create(newMpr);
         if (newMpr == null) {
@@ -180,69 +181,36 @@ public class MaterialPartnerRelationsController {
         "Updates an existing MaterialPartnerRelation. You have to specify the ownMaterialNumber and " +
         "the partnerBpnl. The other three parameters are genuinely optional. Provide them only if you want to change their values. ")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Update was accepted."),
+        @ApiResponse(responseCode = "204", description = "Update was accepted."),
         @ApiResponse(responseCode = "400", description = "Invalid parameters"),
         @ApiResponse(responseCode = "404", description = "No existing entity was found."),
         @ApiResponse(responseCode = "500", description = "Internal Server Error.")
     })
-    public ResponseEntity<?> updateMaterialPartnerRelation(
-        @Parameter(description = "The Material Number that is used in your own company to identify the Material, " +
-            "encoded in base64") @RequestParam String ownMaterialNumber,
-        @Parameter(description = "The unique BPNL that was assigned to that Partner.",
-            example = "BPNL2222222222RR") @RequestParam() String partnerBpnl,
-        @Parameter(description = "The Material Number that this Partner is using in his own company to identify the Material, "
-            + "encoded in base64") @RequestParam(required = false) String partnerMaterialNumber,
-        @Parameter(description = "The CatenaX Number that this Partner uses",
-            example = "860fb504-b884-4009-9313-c6fb6cdc776b") @RequestParam(required = false) String partnerCXNumber,
-        @Parameter(description = "The informal name that this Partner uses",
-            example = "Semiconductor") @RequestParam(required = false) String nameAtManufacturer,
-        @Parameter(description = "This boolean flag indicates whether this Partner is a potential supplier of the given Material.",
-            example = "true") @RequestParam(required = false) Boolean partnerSupplies,
-        @Parameter(description = "This boolean flag indicates whether this Partner is a potential customer of this Material.",
-            example = "true") @RequestParam(required = false) Boolean partnerBuys) {
-        try {
-            ownMaterialNumber = new String(Base64.getDecoder().decode(ownMaterialNumber));
-            partnerMaterialNumber = new String(Base64.getDecoder().decode(partnerMaterialNumber));
-        } catch (Exception e) {
-            log.error("parameters were not properly encoded in base64");
-            return new ResponseEntity<>(HttpStatusCode.valueOf(400));
-        }
+    public ResponseEntity<?> updateMaterialPartnerRelation(@RequestBody MaterialPartnerRelationDto dto) {
         MaterialPartnerRelation existingRelation = null;
-        if (!bpnlPattern.matcher(partnerBpnl).matches() || !materialPattern.matcher(ownMaterialNumber).matches() ||
-            (partnerMaterialNumber != null && !materialPattern.matcher(partnerMaterialNumber).matches())) {
+        if (!bpnlPattern.matcher(dto.getPartnerBpnl()).matches() || !materialPattern.matcher(dto.getOwnMaterialNumber()).matches() ||
+            (dto.getPartnerMaterialNumber() != null && !materialPattern.matcher(dto.getPartnerMaterialNumber()).matches())) {
             log.warn("Rejected message parameters. ");
             return new ResponseEntity<>(HttpStatusCode.valueOf(400));
         }
-        Partner partner = partnerService.findByBpnl(partnerBpnl);
+        Partner partner = partnerService.findByBpnl(dto.getPartnerBpnl());
 
-        Material material = materialService.findByOwnMaterialNumber(ownMaterialNumber);
+        Material material = materialService.findByOwnMaterialNumber(dto.getOwnMaterialNumber());
         if (partner != null && material != null) {
             existingRelation = mprService.find(material, partner);
         }
         if (existingRelation == null) {
             return new ResponseEntity<>(HttpStatusCode.valueOf(404));
         }
-        if (partnerSupplies != null) {
-            existingRelation.setPartnerSuppliesMaterial(partnerSupplies);
-        }
-        if (partnerBuys != null) {
-            existingRelation.setPartnerBuysMaterial(partnerBuys);
-        }
-        if (partnerMaterialNumber != null) {
-            existingRelation.setPartnerMaterialNumber(partnerMaterialNumber);
-        }
-        if (nameAtManufacturer != null) {
-            existingRelation.setNameAtManufacturer(nameAtManufacturer);
-        }
-        if (partnerCXNumber != null) {
-            existingRelation.setPartnerCXNumber(partnerCXNumber);
-        }
+        existingRelation.setPartnerSuppliesMaterial(dto.isPartnerSuppliesMaterial());
+        existingRelation.setPartnerBuysMaterial(dto.isPartnerBuysMaterial());
+        existingRelation.setPartnerMaterialNumber(dto.getPartnerMaterialNumber());
         existingRelation = mprService.update(existingRelation);
         if (existingRelation == null) {
-            return new ResponseEntity<>(HttpStatusCode.valueOf(500));
+            return new ResponseEntity<>(HttpStatusCode.valueOf(400));
         }
 
-        return new ResponseEntity<>(HttpStatusCode.valueOf(200));
+        return new ResponseEntity<>(HttpStatusCode.valueOf(204));
     }
 
 }

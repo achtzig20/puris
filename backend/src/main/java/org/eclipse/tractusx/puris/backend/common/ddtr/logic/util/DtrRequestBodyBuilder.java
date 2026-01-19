@@ -105,6 +105,7 @@ public class DtrRequestBodyBuilder {
         submodelDescriptorsArray.add(createSubmodelObject(AssetType.DEMAND_SUBMODEL.URN_SEMANTIC_ID, href, variablesService.getDemandSubmodelApiAssetId()));
         submodelDescriptorsArray.add(createSubmodelObject(AssetType.DELIVERY_SUBMODEL.URN_SEMANTIC_ID, href, variablesService.getDeliverySubmodelApiAssetId()));
         submodelDescriptorsArray.add(createSubmodelObject(AssetType.DAYS_OF_SUPPLY.URN_SEMANTIC_ID, directionHref, variablesService.getDaysOfSupplySubmodelApiAssetId()));
+        submodelDescriptorsArray.add(createPartTypeSubmodelObject(materialPartnerRelation.getPartnerCXNumber()));
         log.debug("Created body for material {}\n{}", material.getOwnMaterialNumber(), body.toPrettyString());
         return body;
     }
@@ -156,7 +157,7 @@ public class DtrRequestBodyBuilder {
         submodelDescriptorsArray.add(createSubmodelObject(AssetType.PRODUCTION_SUBMODEL.URN_SEMANTIC_ID, href, variablesService.getProductionSubmodelApiAssetId()));
         submodelDescriptorsArray.add(createSubmodelObject(AssetType.DELIVERY_SUBMODEL.URN_SEMANTIC_ID, href, variablesService.getDeliverySubmodelApiAssetId()));
         submodelDescriptorsArray.add(createSubmodelObject(AssetType.DAYS_OF_SUPPLY.URN_SEMANTIC_ID, directionHref, variablesService.getDaysOfSupplySubmodelApiAssetId()));
-        submodelDescriptorsArray.add(createPartTypeSubmodelObject(material.getOwnMaterialNumber()));
+        submodelDescriptorsArray.add(createPartTypeSubmodelObject(material.getMaterialNumberCx()));
 
         log.debug("Created body for product {}\n{}", material.getOwnMaterialNumber(), body.toPrettyString());
         return body;
@@ -243,7 +244,7 @@ public class DtrRequestBodyBuilder {
     private JsonNode createPartTypeSubmodelObject(String materialId) {
         String href = variablesService.getEdcDataplanePublicUrl();
         href = href.endsWith("/") ? href : href + "/";
-        href += Base64.getEncoder().encodeToString(materialId.getBytes(StandardCharsets.UTF_8));
+        href += materialId;
         href += "/submodel";
         return createSubmodelObject(AssetType.PART_TYPE_INFORMATION_SUBMODEL.URN_SEMANTIC_ID, href, variablesService.getPartTypeSubmodelApiAssetId());
     }
