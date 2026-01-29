@@ -24,10 +24,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Material;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.MaterialPartnerRelation;
 import org.eclipse.tractusx.puris.backend.masterdata.domain.model.MaterialRelation;
-import org.eclipse.tractusx.puris.backend.masterdata.domain.model.Partner;
 import org.eclipse.tractusx.puris.backend.masterdata.logic.dto.singlelevelbomasplanned.ChildData;
 import org.eclipse.tractusx.puris.backend.masterdata.logic.dto.singlelevelbomasplanned.ItemQuantity;
 import org.eclipse.tractusx.puris.backend.masterdata.logic.dto.singlelevelbomasplanned.SingleLevelBomAsPlannedSAMM;
+import org.eclipse.tractusx.puris.backend.masterdata.logic.dto.singlelevelbomasplanned.ValidityPeriodEntity;
 import org.eclipse.tractusx.puris.backend.masterdata.logic.service.MaterialPartnerRelationService;
 import org.eclipse.tractusx.puris.backend.masterdata.logic.service.MaterialRelationService;
 import org.eclipse.tractusx.puris.backend.masterdata.logic.service.MaterialService;
@@ -67,7 +67,14 @@ public class SingleLevelBomAsPlannedSammMapper {
 
         SingleLevelBomAsPlannedSAMM samm = new SingleLevelBomAsPlannedSAMM();
         samm.setCatenaXId(material.getMaterialNumberCx());
-        samm.setChildItems(new HashSet<>());
+
+        // Only products (items we manufacture) have a BOM structure
+        if (!material.isProductFlag()) {
+            log.debug("Material {} is not marked as product, returning empty BOM", 
+                material.getOwnMaterialNumber());
+            samm.setChildItems(new HashSet<>());
+            return samm;
+        }
 
         Set<ChildData> childItems = new HashSet<>();
         
@@ -86,24 +93,14 @@ public class SingleLevelBomAsPlannedSammMapper {
                 continue;
             }
             
-            // Find all suppliers of this child material
-            List<Partner> suppliers = materialPartnerRelationService.findAllSuppliersForMaterial(childMaterial);
-            
-            if (suppliers.isEmpty()) {
-                log.warn("No supplier found for child material {}, skipping", childMaterialNumber);
-                continue;
-            }
-            
+            // Find all supplier MaterialPartnerRelations for this child material
+            List<MaterialPartnerRelation> supplierRelations = materialPartnerRelationService
+                .findAllByOwnMaterialNumber(childMaterial.getOwnMaterialNumber()).stream()
+                .filter(MaterialPartnerRelation::isPartnerSuppliesMaterial)
+                .collect(Collectors.toList());
+
             // Create ChildData for each supplier of this component
-            for (Partner supplier : suppliers) {
-                MaterialPartnerRelation mpr = materialPartnerRelationService.find(childMaterial, supplier);
-                
-                if (mpr == null || !mpr.isPartnerSuppliesMaterial()) {
-                    log.warn("MaterialPartnerRelation not found or partner not marked as supplier for {} and {}", 
-                        childMaterialNumber, supplier.getBpnl());
-                    continue;
-                }
-                
+            for (MaterialPartnerRelation mpr : supplierRelations) {
                 ChildData childData = createChildData(mpr, materialRelation);
                 if (childData != null) {
                     childItems.add(childData);
@@ -129,38 +126,44 @@ public class SingleLevelBomAsPlannedSammMapper {
 
         ChildData childData = new ChildData();
         
-        // Set the catena-X ID from partner's CX number
-        String childCxId = mpr.getPartnerCXNumber();
+        // Set timestamps from MaterialRelation if available, otherwise use current time
+        String createdOn = materialRelation.getCreatedOn() != null ? 
+            materialRelation.getCreatedOn().toInstant().toString() : Instant.now().toString();
+        childData.setCreatedOn(createdOn);
         
+        // Set quantity from MaterialRelation
+        double quantityValue = materialRelation.getQuantity();
+        String unit = materialRelation.getMeasurementUnit().getValue();
+        ItemQuantity quantity = new ItemQuantity(quantityValue, unit);
+        childData.setQuantity(quantity);
+        
+        // Set last modified timestamp
+        String lastModifiedOn = materialRelation.getLastModifiedOn() != null ? 
+            materialRelation.getLastModifiedOn().toInstant().toString() : Instant.now().toString(); //fallback to createdon 
+        childData.setLastModifiedOn(lastModifiedOn);
+        
+        // Set validity period from MaterialRelation if available
+        ValidityPeriodEntity validityPeriod = null;
+        if (materialRelation.getValidFrom() != null || materialRelation.getValidTo() != null) {
+            String validFromStr = materialRelation.getValidFrom() != null ? 
+                materialRelation.getValidFrom().toInstant().toString() : null;
+            String validToStr = materialRelation.getValidTo() != null ? 
+                materialRelation.getValidTo().toInstant().toString() : null;
+            validityPeriod = new ValidityPeriodEntity(validFromStr, validToStr);
+        }
+        childData.setValidityPeriod(validityPeriod);
+        
+        // Set business partner BPNL (the supplier of this component)
+        childData.setBusinessPartner(mpr.getPartner().getBpnl());
+        
+        // Set the catena-X ID from child material's CX number
+        String childCxId = mpr.getPartnerCXNumber();
         if (childCxId == null || childCxId.isEmpty()) {
             throw new IllegalStateException(
                 String.format("No valid Catena-X ID found for child material %s with partner %s",
                     mpr.getMaterial().getOwnMaterialNumber(), mpr.getPartner().getBpnl()));
         }
-        
         childData.setCatenaXId(childCxId);
-        
-        // Set business partner BPNL (the supplier of this component)
-        childData.setBusinessPartner(mpr.getPartner().getBpnl());
-        
-        // Set timestamps from MaterialRelation if available, otherwise use current time
-        String createdOn = materialRelation.getCreatedOn() != null ? 
-            materialRelation.getCreatedOn().toInstant().toString() : Instant.now().toString();
-        String lastModifiedOn = materialRelation.getLastModifiedOn() != null ? 
-            materialRelation.getLastModifiedOn().toInstant().toString() : Instant.now().toString();
-        childData.setCreatedOn(createdOn);
-        childData.setLastModifiedOn(lastModifiedOn);
-        
-        // Set quantity from MaterialRelation
-        double quantityValue = materialRelation.getQuantity();
-        String unit = materialRelation.getMeasurementUnit() != null ? 
-            materialRelation.getMeasurementUnit().getValue() : "unit:piece";
-        ItemQuantity quantity = new ItemQuantity(quantityValue, unit);
-        childData.setQuantity(quantity);
-        
-        // Set validity period from MaterialRelation if available
-        // TODO: Map validFrom and validTo to ValidityPeriod object once DTO is defined
-        childData.setValidityPeriod(null);
         
         return childData;
     }
