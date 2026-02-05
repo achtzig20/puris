@@ -87,7 +87,44 @@ public class DeliveryRequestApiController {
         }
 
         log.info("Received request for " + materialNumberCx + " from " + bpnl);
-        var samm = deliveryRequestApiService.handleDeliverySubmodelRequest(bpnl, materialNumberCx);
+        var samm = deliveryRequestApiService.handleDeliverySubmodelRequest(bpnl, materialNumberCx, false);
+        if (samm == null) {
+            log.error("SAMM for delivery is null, return 500.");
+            return ResponseEntity.status(500).build();
+        }
+        return ResponseEntity.ok(samm);
+    }
+
+    @Operation(summary = "This endpoint receives the Delivery Information Submodel 2.0.0 requests. " +
+        "This endpoint is meant to be accessed by partners via EDC only. ")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Ok"),
+        @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content),
+        @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content),
+        @ApiResponse(responseCode = "501", description = "Unsupported representation", content = @Content)
+    })
+    @GetMapping("anonymized/request/{materialNumberCx}/submodel/{representation}")
+    public ResponseEntity<DeliveryInformation> getAnonymizedDeliveryMapping(
+        @RequestHeader("edc-bpn") String bpnl,
+        @PathVariable String materialNumberCx,
+        @PathVariable String representation
+    ) {
+        if (!bpnlPattern.matcher(bpnl).matches() || !urnPattern.matcher(materialNumberCx).matches()) {
+            log.warn("Rejecting request at Anonymized Delivery Information Submodel request 1.0.0 endpoint");
+            return ResponseEntity.badRequest().build();
+        }
+
+        if (!"$value".equals(representation)) {
+            log.warn("Rejecting request at Anonymized Delivery Information Submodel request 2.0.0 endpoint, missing '$value' in request");
+            if (!PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_PATTERN.matcher(representation).matches()) {
+                representation = "<REPLACED_INVALID_REPRESENTATION>";
+            }
+            log.warn("Received " + representation + " from " + bpnl);
+            return ResponseEntity.status(501).build();
+        }
+
+        log.info("Received request for " + materialNumberCx + " from " + bpnl);
+        var samm = deliveryRequestApiService.handleDeliverySubmodelRequest(bpnl, materialNumberCx, true);
         if (samm == null) {
             log.error("SAMM for delivery is null, return 500.");
             return ResponseEntity.status(500).build();

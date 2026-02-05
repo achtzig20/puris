@@ -177,7 +177,7 @@ public class DeliveryRequestApiServiceTest {
         when(mprService.find(mpr.getMaterial(), SUPPLIER_PARTNER)).thenReturn(mpr);
 
         // trigger the api handling, we don't care about the answer as we don't mock the samm mapper
-        deliveryRequestApiService.handleDeliverySubmodelRequest(BPNL_SUPPLIER, MATERIAL_NUMBER_CX_SUPPLIER);
+        deliveryRequestApiService.handleDeliverySubmodelRequest(BPNL_SUPPLIER, MATERIAL_NUMBER_CX_SUPPLIER, false);
 
         //then
         // verify that update has been triggered due to missing cx id as customer
