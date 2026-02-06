@@ -224,7 +224,6 @@ public class EdcAdapterService {
         result &= createSubmodelContractDefinitionForPartner(AssetType.DELIVERY_SUBMODEL.URN_SEMANTIC_ID, variablesService.getDeliverySubmodelApiAssetId(), partner);
         result &= createSubmodelContractDefinitionForPartner(AssetType.NOTIFICATION.URN_SEMANTIC_ID, variablesService.getNotificationApiAssetId(), partner);
         result &= createSubmodelContractDefinitionForPartner(AssetType.DAYS_OF_SUPPLY.URN_SEMANTIC_ID, variablesService.getDaysOfSupplySubmodelApiAssetId(), partner);
-        result &= createSubmodelContractDefinitionForPartner(AssetType.DELIVERY_ANONYMIZED_SUBMODEL.URN_SEMANTIC_ID, variablesService.getDeliveryAnonymizedSubmodelApiAssetId(), partner);
         return createSubmodelContractDefinitionForPartner(AssetType.PART_TYPE_INFORMATION_SUBMODEL.URN_SEMANTIC_ID, variablesService.getPartTypeSubmodelApiAssetId(), partner) && result;
     }
 

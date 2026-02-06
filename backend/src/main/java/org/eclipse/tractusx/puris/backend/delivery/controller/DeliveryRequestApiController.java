@@ -28,6 +28,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.tractusx.puris.backend.common.util.PatternStore;
+import org.eclipse.tractusx.puris.backend.delivery.logic.dto.anonymizeddeliverysamm.DeliveryInformationAnonymized;
 import org.eclipse.tractusx.puris.backend.delivery.logic.dto.deliverysamm.DeliveryInformation;
 import org.eclipse.tractusx.puris.backend.delivery.logic.service.DeliveryRequestApiService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,7 +88,7 @@ public class DeliveryRequestApiController {
         }
 
         log.info("Received request for " + materialNumberCx + " from " + bpnl);
-        var samm = deliveryRequestApiService.handleDeliverySubmodelRequest(bpnl, materialNumberCx, false);
+        var samm = deliveryRequestApiService.handleDeliverySubmodelRequest(bpnl, materialNumberCx);
         if (samm == null) {
             log.error("SAMM for delivery is null, return 500.");
             return ResponseEntity.status(500).build();
@@ -104,8 +105,9 @@ public class DeliveryRequestApiController {
         @ApiResponse(responseCode = "501", description = "Unsupported representation", content = @Content)
     })
     @GetMapping("anonymized/request/{materialNumberCx}/submodel/{representation}")
-    public ResponseEntity<DeliveryInformation> getAnonymizedDeliveryMapping(
+    public ResponseEntity<DeliveryInformationAnonymized> getAnonymizedDeliveryMapping(
         @RequestHeader("edc-bpn") String bpnl,
+        @RequestHeader("edc-contract-agreement-id") String contractAgreementId,
         @PathVariable String materialNumberCx,
         @PathVariable String representation
     ) {
@@ -124,7 +126,7 @@ public class DeliveryRequestApiController {
         }
 
         log.info("Received request for " + materialNumberCx + " from " + bpnl);
-        var samm = deliveryRequestApiService.handleDeliverySubmodelRequest(bpnl, materialNumberCx, true);
+        var samm = deliveryRequestApiService.handleDeliveryAnonymizedSubmodelRequest(bpnl, materialNumberCx, contractAgreementId);
         if (samm == null) {
             log.error("SAMM for delivery is null, return 500.");
             return ResponseEntity.status(500).build();
