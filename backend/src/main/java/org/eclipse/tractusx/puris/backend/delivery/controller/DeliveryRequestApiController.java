@@ -53,12 +53,6 @@ public class DeliveryRequestApiController {
 
     private final Pattern urnPattern = PatternStore.URN_OR_UUID_PATTERN;
 
-    @RequestMapping(value = "/**")
-    @ResponseStatus(HttpStatus.NOT_IMPLEMENTED)
-    public ResponseEntity<String> handleNotImplemented() {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
-    }
-
     @Operation(summary = "This endpoint receives the Delivery Information Submodel 2.0.0 requests. " +
         "This endpoint is meant to be accessed by partners via EDC only. ")
     @ApiResponses(value = {
@@ -111,17 +105,18 @@ public class DeliveryRequestApiController {
         @PathVariable String materialNumberCx,
         @PathVariable String representation
     ) {
+        log.info("Received request for anonymized delivery information with materialNumberCx: {} and representation: {} from bpnl: {}", materialNumberCx, representation, bpnl);
         if (!bpnlPattern.matcher(bpnl).matches() || !urnPattern.matcher(materialNumberCx).matches()) {
             log.warn("Rejecting request at Anonymized Delivery Information Submodel request 1.0.0 endpoint");
             return ResponseEntity.badRequest().build();
         }
 
         if (!"$value".equals(representation)) {
-            log.warn("Rejecting request at Anonymized Delivery Information Submodel request 2.0.0 endpoint, missing '$value' in request");
+            log.info("Rejecting request at Anonymized Delivery Information Submodel request 2.0.0 endpoint, missing '$value' in request");
             if (!PatternStore.NON_EMPTY_NON_VERTICAL_WHITESPACE_PATTERN.matcher(representation).matches()) {
                 representation = "<REPLACED_INVALID_REPRESENTATION>";
             }
-            log.warn("Received " + representation + " from " + bpnl);
+            log.info("Received " + representation + " from " + bpnl);
             return ResponseEntity.status(501).build();
         }
 
@@ -132,5 +127,11 @@ public class DeliveryRequestApiController {
             return ResponseEntity.status(500).build();
         }
         return ResponseEntity.ok(samm);
+    }
+
+    @RequestMapping(value = "/**")
+    @ResponseStatus(HttpStatus.NOT_IMPLEMENTED)
+    public ResponseEntity<String> handleNotImplemented() {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 }

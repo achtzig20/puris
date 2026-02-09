@@ -157,6 +157,43 @@ components:
       - direction
       - materialGlobalAssetId
       type: object
+    DeliveryAnonymized:
+      additionalProperties: false
+      properties:
+        anonymizedDestinationBpns:
+          maxItems: 50
+          type: string
+          writeOnly: true
+        anonymizedOriginBpns:
+          maxItems: 50
+          type: string
+          writeOnly: true
+        deliveryQuantity:
+          $ref: '#/components/schemas/ItemQuantityEntity'
+        destinationBpnsAnonymized:
+          maxItems: 50
+          type: string
+        lastUpdatedOnDateTime:
+          format: date-time
+          maxItems: 50
+          type: string
+        originBpnsAnonymized:
+          maxItems: 50
+          type: string
+        transitEvents:
+          items:
+            $ref: '#/components/schemas/TransitEvent'
+          maxItems: 2
+          minItems: 1
+          type: array
+          uniqueItems: true
+      required:
+      - deliveryQuantity
+      - destinationBpnsAnonymized
+      - lastUpdatedOnDateTime
+      - originBpnsAnonymized
+      - transitEvents
+      type: object
     DeliveryDto:
       additionalProperties: false
       properties:
@@ -308,6 +345,23 @@ components:
       required:
       - materialGlobalAssetId
       - positions
+      type: object
+    DeliveryInformationAnonymized:
+      additionalProperties: false
+      properties:
+        deliveries:
+          items:
+            $ref: '#/components/schemas/DeliveryAnonymized'
+          maxItems: 50
+          type: array
+          uniqueItems: true
+        materialGlobalAssetIdAnonymized:
+          maxItems: 50
+          pattern: ^[^\n\x0B\f\r\x85\u2028\u2029]+$
+          type: string
+      required:
+      - deliveries
+      - materialGlobalAssetIdAnonymized
       type: object
     Demand:
       additionalProperties: false
@@ -1397,6 +1451,25 @@ components:
           format: double
           type: number
       type: object
+    TransitEvent:
+      additionalProperties: false
+      properties:
+        dateTimeOfEvent:
+          format: date-time
+          maxItems: 50
+          type: string
+        eventType:
+          enum:
+          - estimated-departure
+          - actual-departure
+          - estimated-arrival
+          - actual-arrival
+          maxItems: 50
+          type: string
+      required:
+      - dateTimeOfEvent
+      - eventType
+      type: object
   securitySchemes:
     X-API-KEY:
       in: header
@@ -1819,6 +1892,13 @@ paths:
           additionalProperties: false
           maxItems: 50
           type: string
+      - in: header
+        name: edc-contract-agreement-id
+        required: true
+        schema:
+          additionalProperties: false
+          maxItems: 50
+          type: string
       - in: path
         name: materialNumberCx
         required: true
@@ -1838,7 +1918,7 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: '#/components/schemas/DeliveryInformation'
+                $ref: '#/components/schemas/DeliveryInformationAnonymized'
                 additionalProperties: false
           description: Ok
         '400':
