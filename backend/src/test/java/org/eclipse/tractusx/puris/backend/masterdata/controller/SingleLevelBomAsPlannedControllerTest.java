@@ -39,6 +39,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -46,6 +47,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(SingleLevelBomAsPlannedController.class)
@@ -185,21 +187,27 @@ class SingleLevelBomAsPlannedControllerTest {
 
     @Test
     @WithMockApiKey
-    void getMapping_MaterialNotAProduct_Returns404() throws Exception {
+    void getMapping_MaterialNotAProduct_ReturnsEmptyBom() throws Exception {
         // given
         Material material = createTestMaterial(false); // productFlag = false
+        SingleLevelBomAsPlannedSAMM emptyBom = new SingleLevelBomAsPlannedSAMM();
+        emptyBom.setCatenaXId(material.getMaterialNumberCx());
+        emptyBom.setChildItems(new HashSet<>());
 
         when(materialService.findByOwnMaterialNumber(MATERIAL_NUMBER)).thenReturn(material);
+        when(sammMapper.materialToSamm(material)).thenReturn(emptyBom);
 
         // when/then
         mockMvc.perform(
             get("/single-level-bom-as-planned/{materialnumber}/submodel/{representation}",
                 base64Encode(MATERIAL_NUMBER), "$value")
                 .header("edc-bpn", OWN_BPNL)
-        ).andExpect(status().isNotFound());
+        ).andExpect(status().isOk())
+         .andExpect(jsonPath("$.catenaXId").value(material.getMaterialNumberCx()))
+         .andExpect(jsonPath("$.childItems").isEmpty());
 
         verify(materialService).findByOwnMaterialNumber(MATERIAL_NUMBER);
-        verify(sammMapper, never()).materialToSamm(any());
+        verify(sammMapper).materialToSamm(material);
     }
 
     @Test
