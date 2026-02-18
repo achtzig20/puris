@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2024 Volkswagen AG
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright (c) 2026 Volkswagen AG
+ * Copyright (c) 2026 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information regarding copyright ownership.
@@ -20,6 +20,12 @@
 
 package org.eclipse.tractusx.puris.backend.masterdata.logic.dto.singlelevelbomasplanned;
 
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+
+import org.eclipse.tractusx.puris.backend.common.util.PatternStore;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Valid;
@@ -29,11 +35,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.eclipse.tractusx.puris.backend.common.util.PatternStore;
-
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
 
 /**
  * Generated class for Single Level Bill of Material as Planned. The single-level 
