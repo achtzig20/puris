@@ -1,0 +1,68 @@
+meta {
+  name: 08 - Get shell descriptors
+  type: http
+  seq: 8
+  tags: [
+    exchange-anonymized-data
+  ]
+}
+
+get {
+  url: {{DTR_EDR_ENDPOINT}}/shell-descriptors/:aasIdentifier
+  body: none
+  auth: apikey
+}
+
+params:path {
+  aasIdentifier: {{AAS_IDENTIFIER}}
+}
+
+auth:apikey {
+  key: Authorization
+  value: {{DTR_EDR_AUTH}}
+  placement: header
+}
+
+script:post-response {
+  const jsonData = res.getBody();
+  const semanticId = "urn:samm:io.catenax.single_level_bom_as_planned:1.0.0#SingleLevelBomAsPlanned"
+  
+  console.log("Shell Descriptor ID:", jsonData.id);
+  
+  // Check if submodelDescriptors exists
+  if (!jsonData.submodelDescriptors || !Array.isArray(jsonData.submodelDescriptors) || jsonData.submodelDescriptors.length === 0) {
+    console.error("❌ No submodelDescriptors found in DTR response");
+    console.error("The shell exists but has no registered submodels");
+    console.log("Response:", JSON.stringify(jsonData, null, 2));
+    return;
+  }
+  
+  console.log("Found", jsonData.submodelDescriptors.length, "submodel(s)");
+  
+  // Find SingleLevelBomAsPlanned submodel
+  const singleLevelBomSubmodelDescriptor = jsonData.submodelDescriptors.find(smd => 
+    smd.semanticId && smd.semanticId.keys && smd.semanticId.keys.some(kv => kv.value === semanticId)
+  );
+  
+  if (singleLevelBomSubmodelDescriptor) {
+    console.log("✅ Found SingleLevelBomAsPlanned submodel");
+    const submodelEndpoint = singleLevelBomSubmodelDescriptor.endpoints[0].protocolInformation.href;
+    const dspEndpoint = singleLevelBomSubmodelDescriptor.endpoints[0].protocolInformation.subprotocolBody.split("dspEndpoint=")[1];
+    bru.setVar("SUBMODEL_ENDPOINT", submodelEndpoint);
+    bru.setVar("DSP_ENDPOINT", dspEndpoint);
+    console.log("Submodel endpoint:", submodelEndpoint);
+    console.log("DSP endpoint:", dspEndpoint);
+  } else {
+    console.error("❌ SingleLevelBomAsPlanned submodel not found");
+    console.log("Available submodels:");
+    jsonData.submodelDescriptors.forEach((smd, idx) => {
+      const semId = smd.semanticId?.keys?.[0]?.value || "unknown";
+      console.log(`  ${idx + 1}. ${semId}`);
+    });
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
