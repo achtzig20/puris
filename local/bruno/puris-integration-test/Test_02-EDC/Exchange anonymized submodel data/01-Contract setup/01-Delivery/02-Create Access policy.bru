@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{CUSTOMER_EDC}}/{{MANAGEMENT_PATH}}/v3/policydefinitions
+  url: {{SUPPLIER_EDC}}/{{MANAGEMENT_PATH}}/v3/policydefinitions
   body: json
   auth: inherit
 }
@@ -33,7 +33,7 @@ body:json {
             "@type" : "LogicalConstraint",
             "leftOperand" : "BusinessPartnerNumber",
             "operator" : "eq",
-            "rightOperand" : "{{SUPPLIER_BPNL}}"
+            "rightOperand" : "{{CUSTOMER_BPNL}}"
           } ]
         }
       } ]

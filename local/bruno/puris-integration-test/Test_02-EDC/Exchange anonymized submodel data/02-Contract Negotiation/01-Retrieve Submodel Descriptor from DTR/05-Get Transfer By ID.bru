@@ -8,14 +8,14 @@ meta {
 }
 
 get {
-  url: {{SUPPLIER_EDC}}/{{MANAGEMENT_PATH}}/v3/transferprocesses/{{DTR_TRANSFER_PROCESS_ID}}
+  url: {{CUSTOMER_EDC}}/{{MANAGEMENT_PATH}}/v3/transferprocesses/{{DTR_TRANSFER_PROCESS_ID}}
   body: none
   auth: apikey
 }
 
 auth:apikey {
   key: X-API-KEY
-  value: {{SUPPLIER_EDC_API_KEY}}
+  value: {{CUSTOMER_EDC_API_KEY}}
   placement: header
 }
 
@@ -25,8 +25,8 @@ body:json {
           "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
       },
       "assetId": "{{DTR_ASSET_ID}}",
-      "connectorAddress": "{{CUSTOMER_EDC_EXT_HOSTNAME}}/{{PROTOCOL_PATH}}",
-      "connectorId": "{{CUSTOMER_BPNL}}",
+      "connectorAddress": "{{SUPPLIER_EDC_EXT_HOSTNAME}}/{{PROTOCOL_PATH}}",
+      "connectorId": "{{SUPPLIER_BPNL}}",
       "contractId": "{{DTR_CONTRACT_AGREEMENT_ID}}",
       "transferType": "HttpData-PULL",
       "dataDestination": {
