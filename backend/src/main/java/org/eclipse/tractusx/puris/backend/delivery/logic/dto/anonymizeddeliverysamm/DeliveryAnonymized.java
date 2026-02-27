@@ -69,13 +69,13 @@ public class DeliveryAnonymized {
             @JsonProperty(value = "deliveryQuantity") ItemQuantityEntity deliveryQuantity,
             @JsonProperty(value = "lastUpdatedOnDateTime") Date lastUpdatedOnDateTime,
             @JsonProperty(value = "transitEvents") Set<TransitEvent> transitEvents,
-            @JsonProperty(value = "anonymizedOriginBpns") String anonymizedOriginBpns,
-            @JsonProperty(value = "anonymizedDestinationBpns") String anonymizedDestinationBpns) {
+            @JsonProperty(value = "originBpnsAnonymized") String originBpnsAnonymized,
+            @JsonProperty(value = "destinationBpnsAnonymized") String destinationBpnsAnonymized) {
                 this.deliveryQuantity = deliveryQuantity;
                 this.lastUpdatedOnDateTime = lastUpdatedOnDateTime;
                 this.transitEvents = transitEvents;
-                this.originBpnsAnonymized = anonymizedOriginBpns;
-                this.destinationBpnsAnonymized = anonymizedDestinationBpns;
+                this.originBpnsAnonymized = originBpnsAnonymized;
+                this.destinationBpnsAnonymized = destinationBpnsAnonymized;
     }
 
     @Override

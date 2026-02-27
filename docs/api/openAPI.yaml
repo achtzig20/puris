@@ -160,14 +160,6 @@ components:
     DeliveryAnonymized:
       additionalProperties: false
       properties:
-        anonymizedDestinationBpns:
-          maxItems: 50
-          type: string
-          writeOnly: true
-        anonymizedOriginBpns:
-          maxItems: 50
-          type: string
-          writeOnly: true
         deliveryQuantity:
           $ref: '#/components/schemas/ItemQuantityEntity'
         destinationBpnsAnonymized:
