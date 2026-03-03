@@ -55,51 +55,44 @@ body:json {
 }
 
 script:post-response {
-  let jsonData = res.getBody();
+  const jsonData = res.getBody();
   const semanticId = "urn:samm:io.catenax.single_level_bom_as_planned:1.0.0#SingleLevelBomAsPlanned";
-  
-  // Handle both single object and array responses
-  let catalog = jsonData['dcat:dataset'];
-  const catalogArray = Array.isArray(catalog) ? catalog : [catalog];
-  
-  const catalogEntry = catalogArray.find(ce => ce["https://admin-shell.io/aas/3/0/HasSemantics/semanticId"]["@id"] === semanticId)
-  
-  if (!catalogEntry) {
-    console.error("❌ SingleLevelBomAsPlanned asset not found in catalog");
-    console.log("Available assets:", catalogArray.map(ce => ce["https://admin-shell.io/aas/3/0/HasSemantics/semanticId"]?.["@id"] || "unknown"));
-    return;
-  }
-  
-  let offer = catalogEntry["odrl:hasPolicy"]
-  const offerId = offer["@id"]
-  const assetId = catalogEntry.id
-  
-  offer.offerId = offerId
-  delete offer["@id"]
-  
-  offer.assetId = assetId
-  
-  offer = {
-      "@context": "http://www.w3.org/ns/odrl.jsonld",
-      "@type": "odrl:Offer",
-      "@id": offerId,
-      "assigner": jsonData["dspace:participantId"],
-      "odrl:permission": {
-          "odrl:target": assetId,
-          "odrl:action": {
-              "odrl:type": "http://www.w3.org/ns/odrl/2/use"
-          },
-          "odrl:constraint": offer["odrl:permission"]["odrl:constraint"]
-      },
-      "odrl:prohibition": [],
-      "odrl:obligation": [],
-      "odrl:target": {
-          "@id": assetId
-      }
-  }
-  
-  bru.setVar("SUBMODEL_CATALOG_OFFER", JSON.stringify(offer))
-  bru.setVar("SUBMODEL_CATALOG_OFFER_ID", offerId)
+
+  const datasets = jsonData['dcat:dataset'];
+  const catalog = Array.isArray(datasets) ? datasets : [datasets];
+
+  const catalogEntry = catalog.find(ce =>
+    ce["https://admin-shell.io/aas/3/0/HasSemantics/semanticId"]?.["@id"] === semanticId
+  );
+  if (!catalogEntry) throw new Error("No catalog entry found for semanticId: " + semanticId);
+
+  const rawOffer = catalogEntry["odrl:hasPolicy"];
+  const offer = Array.isArray(rawOffer) ? rawOffer[0] : rawOffer;
+  if (!offer) throw new Error("No odrl:hasPolicy found in catalog entry");
+
+  const offerId = offer["@id"];
+  const assetId = catalogEntry["@id"] || catalogEntry.id;
+  if (!offerId || !assetId) throw new Error("Missing offerId or assetId in catalog entry");
+
+  const constraint = offer["odrl:permission"]?.["odrl:constraint"];
+
+  const builtOffer = {
+    "@context": "http://www.w3.org/ns/odrl.jsonld",
+    "@type": "odrl:Offer",
+    "@id": offerId,
+    "assigner": jsonData["dspace:participantId"],
+    "odrl:permission": {
+      "odrl:target": assetId,
+      "odrl:action": { "odrl:type": "http://www.w3.org/ns/odrl/2/use" },
+      "odrl:constraint": constraint
+    },
+    "odrl:prohibition": [],
+    "odrl:obligation": [],
+    "odrl:target": { "@id": assetId }
+  };
+
+  bru.setVar("SUBMODEL_CATALOG_OFFER", JSON.stringify(builtOffer));
+  bru.setVar("SUBMODEL_CATALOG_OFFER_ID", offerId);
 }
 
 tests {

@@ -3834,7 +3834,7 @@ paths:
       summary: Deletes a planned production by its UUID
       tags:
       - production-controller
-  /single-level-bom-as-planned/{materialnumber}/submodel/{representation}:
+  /single-level-bom-as-planned/request/{materialnumber}/submodel/{representation}:
     get:
       description: 'Endpoint that delivers SingleLevelBomAsPlanned of own products.
         ''materialnumber'' must be set to the ownMaterialNumber. This endpoint is
@@ -3848,8 +3848,7 @@ paths:
           additionalProperties: false
           maxItems: 50
           type: string
-      - description: The material number that the request receiving party uses for
-          the material in question
+      - description: The CatenaX material number (UUID) of the material in question
         in: path
         name: materialnumber
         required: true

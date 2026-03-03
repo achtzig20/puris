@@ -20,8 +20,6 @@
 
 package org.eclipse.tractusx.puris.backend.masterdata.controller;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.regex.Pattern;
 
 import org.eclipse.tractusx.puris.backend.common.util.PatternStore;
@@ -80,11 +78,10 @@ public class SingleLevelBomAsPlannedController {
             @ApiResponse(responseCode = "404", description = "Product not found for given parameters. ", content = @Content),
             @ApiResponse(responseCode = "501", description = "Unsupported representation requested. ", content = @Content)
     })
-    @GetMapping("/{materialnumber}/submodel/{representation}")
+    @GetMapping("/request/{materialnumber}/submodel/{representation}")
     public ResponseEntity<SingleLevelBomAsPlannedSAMM> getMapping(@RequestHeader("edc-bpn") String bpnl,
-            @Parameter(description = "The material number that the request receiving party uses for the material in question") @PathVariable String materialnumber,
+            @Parameter(description = "The CatenaX material number (UUID) of the material in question") @PathVariable String materialnumber,
             @Parameter(description = "Must be set to '$value'") @PathVariable String representation) {
-        materialnumber = new String(Base64.getDecoder().decode(materialnumber.getBytes(StandardCharsets.UTF_8)));
         if (!bpnlPattern.matcher(bpnl).matches() || !materialNumberPattern.matcher(materialnumber).matches()) {
             return ResponseEntity.badRequest().build();
         }
@@ -100,7 +97,7 @@ public class SingleLevelBomAsPlannedController {
         }
 
         log.info("Self-request for single level bom as planned on {}", materialnumber);
-        Material material = materialService.findByOwnMaterialNumber(materialnumber);
+        Material material = materialService.findByMaterialNumberCx(materialnumber);
         if (material == null || !material.isProductFlag()) {
             return ResponseEntity.status(404).build();
         }

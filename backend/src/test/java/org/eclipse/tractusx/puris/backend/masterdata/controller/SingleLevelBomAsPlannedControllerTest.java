@@ -37,17 +37,11 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.HashSet;
-import java.util.UUID;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(SingleLevelBomAsPlannedController.class)
@@ -69,16 +63,13 @@ class SingleLevelBomAsPlannedControllerTest {
     private static final String OWN_BPNL = "BPNL4444444444XX"; // Default test BPNL from application.properties
     private static final String OTHER_BPNL = "BPNL1234567890ZZ";
     private static final String MATERIAL_NUMBER = "MNR-7307-AU340474.001";
-
-    private String base64Encode(String value) {
-        return Base64.getEncoder().encodeToString(value.getBytes(StandardCharsets.UTF_8));
-    }
+    private static final String MATERIAL_CX_NUMBER = "860fb504-b884-4009-9313-c6fb6cdc776b";
 
     private Material createTestMaterial(boolean isProduct) {
         return Material.builder()
             .ownMaterialNumber(MATERIAL_NUMBER)
             .materialFlag(true)
-            .materialNumberCx(UUID.randomUUID().toString())
+            .materialNumberCx(MATERIAL_CX_NUMBER)
             .name("Test Product")
             .productFlag(isProduct)
             .build();
@@ -91,17 +82,17 @@ class SingleLevelBomAsPlannedControllerTest {
         Material material = createTestMaterial(true);
         SingleLevelBomAsPlannedSAMM samm = new SingleLevelBomAsPlannedSAMM();
 
-        when(materialService.findByOwnMaterialNumber(MATERIAL_NUMBER)).thenReturn(material);
+        when(materialService.findByMaterialNumberCx(MATERIAL_CX_NUMBER)).thenReturn(material);
         when(sammMapper.materialToSamm(material)).thenReturn(samm);
 
         // when/then
         mockMvc.perform(
-            get("/single-level-bom-as-planned/{materialnumber}/submodel/{representation}",
-                base64Encode(MATERIAL_NUMBER), "$value")
+            get("/single-level-bom-as-planned/request/{materialnumber}/submodel/{representation}",
+                MATERIAL_CX_NUMBER, "$value")
                 .header("edc-bpn", OWN_BPNL)
         ).andExpect(status().isOk());
 
-        verify(materialService).findByOwnMaterialNumber(MATERIAL_NUMBER);
+        verify(materialService).findByMaterialNumberCx(MATERIAL_CX_NUMBER);
         verify(sammMapper).materialToSamm(material);
     }
 
@@ -110,104 +101,62 @@ class SingleLevelBomAsPlannedControllerTest {
     void getMapping_OtherPartnerAccess_Returns403() throws Exception {
         // when/then
         mockMvc.perform(
-            get("/single-level-bom-as-planned/{materialnumber}/submodel/{representation}",
-                base64Encode(MATERIAL_NUMBER), "$value")
+            get("/single-level-bom-as-planned/request/{materialnumber}/submodel/{representation}",
+                MATERIAL_CX_NUMBER, "$value")
                 .header("edc-bpn", OTHER_BPNL)
         ).andExpect(status().isForbidden());
 
-        // Verify that service methods are never called due to early auth check
-        verify(materialService, never()).findByOwnMaterialNumber(any());
+        verify(materialService, never()).findByMaterialNumberCx(any());
         verify(sammMapper, never()).materialToSamm(any());
     }
 
     @Test
     @WithMockApiKey
     void getMapping_InvalidBpnlPattern_Returns400() throws Exception {
-        // given
-        String invalidBpnl = "INVALID-BPNL";
-
         // when/then
         mockMvc.perform(
-            get("/single-level-bom-as-planned/{materialnumber}/submodel/{representation}",
-                base64Encode(MATERIAL_NUMBER), "$value")
-                .header("edc-bpn", invalidBpnl)
+            get("/single-level-bom-as-planned/request/{materialnumber}/submodel/{representation}",
+                MATERIAL_CX_NUMBER, "$value")
+                .header("edc-bpn", "INVALID-BPNL")
         ).andExpect(status().isBadRequest());
 
-        verify(materialService, never()).findByOwnMaterialNumber(any());
-    }
-
-    @Test
-    @WithMockApiKey
-    void getMapping_InvalidMaterialNumberPattern_Returns400() throws Exception {
-        // given - base64 encoded vertical whitespace character (should fail pattern check)
-        String invalidMaterialNumber = base64Encode("\u000B"); // vertical tab
-
-        // when/then
-        mockMvc.perform(
-            get("/single-level-bom-as-planned/{materialnumber}/submodel/{representation}",
-                invalidMaterialNumber, "$value")
-                .header("edc-bpn", OWN_BPNL)
-        ).andExpect(status().isBadRequest());
-
-        verify(materialService, never()).findByOwnMaterialNumber(any());
-    }
-
-    @Test
-    @WithMockApiKey
-    void getMapping_EmptyMaterialNumber_Returns400() throws Exception {
-        // given
-        String emptyMaterialNumber = base64Encode("");
-
-        // when/then
-        mockMvc.perform(
-            get("/single-level-bom-as-planned/{materialnumber}/submodel/{representation}",
-                emptyMaterialNumber, "$value")
-                .header("edc-bpn", OWN_BPNL)
-        ).andExpect(status().isBadRequest());
-
-        verify(materialService, never()).findByOwnMaterialNumber(any());
+        verify(materialService, never()).findByMaterialNumberCx(any());
     }
 
     @Test
     @WithMockApiKey
     void getMapping_NonExistentMaterial_Returns404() throws Exception {
         // given
-        when(materialService.findByOwnMaterialNumber(MATERIAL_NUMBER)).thenReturn(null);
+        when(materialService.findByMaterialNumberCx(MATERIAL_CX_NUMBER)).thenReturn(null);
 
         // when/then
         mockMvc.perform(
-            get("/single-level-bom-as-planned/{materialnumber}/submodel/{representation}",
-                base64Encode(MATERIAL_NUMBER), "$value")
+            get("/single-level-bom-as-planned/request/{materialnumber}/submodel/{representation}",
+                MATERIAL_CX_NUMBER, "$value")
                 .header("edc-bpn", OWN_BPNL)
         ).andExpect(status().isNotFound());
 
-        verify(materialService).findByOwnMaterialNumber(MATERIAL_NUMBER);
+        verify(materialService).findByMaterialNumberCx(MATERIAL_CX_NUMBER);
         verify(sammMapper, never()).materialToSamm(any());
     }
 
     @Test
     @WithMockApiKey
-    void getMapping_MaterialNotAProduct_ReturnsEmptyBom() throws Exception {
+    void getMapping_MaterialNotAProduct_Returns404() throws Exception {
         // given
         Material material = createTestMaterial(false); // productFlag = false
-        SingleLevelBomAsPlannedSAMM emptyBom = new SingleLevelBomAsPlannedSAMM();
-        emptyBom.setCatenaXId(material.getMaterialNumberCx());
-        emptyBom.setChildItems(new HashSet<>());
 
-        when(materialService.findByOwnMaterialNumber(MATERIAL_NUMBER)).thenReturn(material);
-        when(sammMapper.materialToSamm(material)).thenReturn(emptyBom);
+        when(materialService.findByMaterialNumberCx(MATERIAL_CX_NUMBER)).thenReturn(material);
 
         // when/then
         mockMvc.perform(
-            get("/single-level-bom-as-planned/{materialnumber}/submodel/{representation}",
-                base64Encode(MATERIAL_NUMBER), "$value")
+            get("/single-level-bom-as-planned/request/{materialnumber}/submodel/{representation}",
+                MATERIAL_CX_NUMBER, "$value")
                 .header("edc-bpn", OWN_BPNL)
-        ).andExpect(status().isOk())
-         .andExpect(jsonPath("$.catenaXId").value(material.getMaterialNumberCx()))
-         .andExpect(jsonPath("$.childItems").isEmpty());
+        ).andExpect(status().isNotFound());
 
-        verify(materialService).findByOwnMaterialNumber(MATERIAL_NUMBER);
-        verify(sammMapper).materialToSamm(material);
+        verify(materialService).findByMaterialNumberCx(MATERIAL_CX_NUMBER);
+        verify(sammMapper, never()).materialToSamm(any());
     }
 
     @Test
@@ -215,25 +164,12 @@ class SingleLevelBomAsPlannedControllerTest {
     void getMapping_UnsupportedRepresentation_Returns501() throws Exception {
         // when/then
         mockMvc.perform(
-            get("/single-level-bom-as-planned/{materialnumber}/submodel/{representation}",
-                base64Encode(MATERIAL_NUMBER), "unsupported")
+            get("/single-level-bom-as-planned/request/{materialnumber}/submodel/{representation}",
+                MATERIAL_CX_NUMBER, "unsupported")
                 .header("edc-bpn", OWN_BPNL)
         ).andExpect(status().isNotImplemented());
 
-        verify(materialService, never()).findByOwnMaterialNumber(any());
-    }
-
-    @Test
-    @WithMockApiKey
-    void getMapping_EmptyRepresentation_Returns501() throws Exception {
-        // when/then
-        mockMvc.perform(
-            get("/single-level-bom-as-planned/{materialnumber}/submodel/{representation}",
-                base64Encode(MATERIAL_NUMBER), "")
-                .header("edc-bpn", OWN_BPNL)
-        ).andExpect(status().isNotImplemented());
-
-        verify(materialService, never()).findByOwnMaterialNumber(any());
+        verify(materialService, never()).findByMaterialNumberCx(any());
     }
 
     @Test
