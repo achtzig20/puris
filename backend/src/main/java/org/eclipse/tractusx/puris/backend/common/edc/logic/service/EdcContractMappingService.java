@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.tractusx.puris.backend.common.edc.domain.model.ContractMapping;
 import org.eclipse.tractusx.puris.backend.common.edc.domain.model.DtrContractMapping;
 import org.eclipse.tractusx.puris.backend.common.edc.domain.model.AssetType;
+import org.eclipse.tractusx.puris.backend.common.edc.domain.repository.ProductionAnonymizedContractMappingRepository;
 import org.eclipse.tractusx.puris.backend.common.edc.domain.repository.DaysOfSupplyContractMappingRepository;
 import org.eclipse.tractusx.puris.backend.common.edc.domain.repository.DeliveryContractMappingRepository;
 import org.eclipse.tractusx.puris.backend.common.edc.domain.repository.DemandAndCapacityNotificationContractMappingRepository;
@@ -63,6 +64,9 @@ public class EdcContractMappingService {
 
     @Autowired
     private DaysOfSupplyContractMappingRepository daysOfSupplyContractMappingRepository;
+
+    @Autowired
+    private ProductionAnonymizedContractMappingRepository productionAnonymizedContractMappingRepository;
 
     @Autowired
     private PartTypeContractMappingRepository partTypeContractMappingRepository;
@@ -129,6 +133,7 @@ public class EdcContractMappingService {
             case DELIVERY_SUBMODEL -> deliveryContractMappingRepository;
             case NOTIFICATION -> demandAndCapacityNotificationContractMappingRepository;
             case DAYS_OF_SUPPLY -> daysOfSupplyContractMappingRepository;
+            case PRODUCTION_ANONYMIZED_SUBMODEL -> productionAnonymizedContractMappingRepository;
             case PART_TYPE_INFORMATION_SUBMODEL -> partTypeContractMappingRepository;
         };
         return repository;
