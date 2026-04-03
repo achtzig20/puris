@@ -486,6 +486,9 @@ backend:
     dataexchangerequestreceiveapi:
       # -- Asset ID for Data Exchange Request Receive API
       apiassetid: dataexchangerequestreceiveapi-api-asset
+    dataexchangeapprovalreceiveapi:
+      # -- Asset ID for Data Exchange Approval Receive API
+      apiassetid: dataexchangeapprovalreceiveapi-api-asset
     frameworkagreement:
       # -- The name of the framework agreement. Starting with Uppercase and using CamelCase.
       credential: DataExchangeGovernance

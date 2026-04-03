@@ -2964,6 +2964,7 @@ paths:
           - DAYS_OF_SUPPLY
           - PART_TYPE_INFORMATION_SUBMODEL
           - DATA_EXCHANGE_REQUEST
+          - DATA_EXCHANGE_APPROVAL
           maxItems: 50
           type: string
       - in: query

@@ -660,6 +660,7 @@ public class EdcAdapterService {
             case NOTIFICATION -> throw new IllegalArgumentException("DemandAndCapacityNotification not supported");
             case DAYS_OF_SUPPLY -> fetchSubmodelDataByDirection(mpr, AssetType.DAYS_OF_SUPPLY.URN_SEMANTIC_ID, direction);
             case DATA_EXCHANGE_REQUEST -> throw new IllegalArgumentException("DataExchangeRequest not supported");
+            case DATA_EXCHANGE_APPROVAL -> throw new IllegalArgumentException("DataExchangeApproval not supported");
             case PART_TYPE_INFORMATION_SUBMODEL -> fetchPartTypeSubmodelData(mpr);
         };
         boolean failed = true;
@@ -1092,6 +1093,7 @@ public class EdcAdapterService {
             case NOTIFICATION -> throw new IllegalArgumentException("DemandAndCapacityNotification not supported");
             case DAYS_OF_SUPPLY -> fetchSubmodelDataByDirection(mpr, AssetType.DAYS_OF_SUPPLY.URN_SEMANTIC_ID, direction);
             case DATA_EXCHANGE_REQUEST -> throw new IllegalArgumentException("DataExchangeRequest not supported");
+            case DATA_EXCHANGE_APPROVAL -> throw new IllegalArgumentException("DataExchangeApproval not supported");
             case PART_TYPE_INFORMATION_SUBMODEL -> fetchPartTypeSubmodelData(mpr);
         };
         Map<String, String> equalFilters = new HashMap<>();

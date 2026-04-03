@@ -31,7 +31,8 @@ public enum AssetType {
     NOTIFICATION("urn:samm:io.catenax.demand_and_capacity_notification:3.0.0#DemandAndCapacityNotification", "none", "none", "3.0"),
     DAYS_OF_SUPPLY("urn:samm:io.catenax.days_of_supply:2.0.0#DaysOfSupply", "$value", "DaysOfSupply", "2.0"),
     PART_TYPE_INFORMATION_SUBMODEL("urn:samm:io.catenax.part_type_information:1.0.0#PartTypeInformation", "$value", "none", "1.0"),
-    DATA_EXCHANGE_REQUEST("urn:samm:io.catenax.data_exchange_request:1.0.0#DataExchangeRequest", "none", "none", "1.0");
+    DATA_EXCHANGE_REQUEST("urn:samm:io.catenax.data_exchange_request:1.0.0#DataExchangeRequest", "none", "none", "1.0"),
+    DATA_EXCHANGE_APPROVAL("urn:samm:io.catenax.data_exchange_approval:1.0.0#DataExchangeApproval", "none", "none", "1.0");
 
     public final String URN_SEMANTIC_ID;
     public final String REPRESENTATION;
@@ -53,6 +54,8 @@ public enum AssetType {
                 AssetType.PART_TYPE_INFORMATION_SUBMODEL;
             case "urn:samm:io.catenax.data_exchange_request:1.0.0#DataExchangeRequest" ->
                 AssetType.DATA_EXCHANGE_REQUEST;
+            case "urn:samm:io.catenax.data_exchange_approval:1.0.0#DataExchangeApproval" ->
+                AssetType.DATA_EXCHANGE_APPROVAL;
             default -> AssetType.DTR; // Handle unknown URN by returning a default enum value
         };
     }
