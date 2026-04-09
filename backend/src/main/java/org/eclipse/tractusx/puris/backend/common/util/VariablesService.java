@@ -21,9 +21,10 @@
  */
 package org.eclipse.tractusx.puris.backend.common.util;
 
-import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import lombok.Getter;
 
 @Getter
 @Service
@@ -174,7 +175,7 @@ public class VariablesService {
      * be reached by external machines.
      */
     public String getDataExchangeApprovalEndpoint() {
-        return getPurisBaseUrl() + getContextPath() + "data-exchange-request/approval";
+        return getPurisBaseUrl() + getContextPath() + "data-exchange-approval/request";
     }
 
     @Value("${puris.dataExchangeRequestReceiveApi.apiassetid}")

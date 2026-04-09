@@ -199,6 +199,10 @@ public class EdcAdapterService {
             variablesService.getDataExchangeRequestReceiveApiAssetId(),
             variablesService.getDataExchangeRequestEndpoint()
         )));
+        log.info("Registration of DataExchangeApproval 1.0.0 asset successful {}", (assetRegistration = registerDataExchangeApprovalAsset(
+            variablesService.getDataExchangeApprovalReceiveApiAssetId(),
+            variablesService.getDataExchangeApprovalEndpoint()
+        )));
         log.info("Registration of PartTypeInformation 1.0.0 submodel successful {}", (assetRegistration = registerPartTypeInfoSubmodelAsset()));
         result &= assetRegistration;
         return result;
@@ -224,6 +228,7 @@ public class EdcAdapterService {
         result &= createSubmodelContractDefinitionForPartner(AssetType.DELIVERY_SUBMODEL.URN_SEMANTIC_ID, variablesService.getDeliverySubmodelApiAssetId(), partner);
         result &= createSubmodelContractDefinitionForPartner(AssetType.NOTIFICATION.URN_SEMANTIC_ID, variablesService.getNotificationApiAssetId(), partner);
         result &= createSubmodelContractDefinitionForPartner(AssetType.DATA_EXCHANGE_REQUEST.URN_SEMANTIC_ID, variablesService.getDataExchangeRequestReceiveApiAssetId(), partner);
+        result &= createSubmodelContractDefinitionForPartner(AssetType.DATA_EXCHANGE_APPROVAL.URN_SEMANTIC_ID, variablesService.getDataExchangeApprovalReceiveApiAssetId(), partner);
         result &= createSubmodelContractDefinitionForPartner(AssetType.DAYS_OF_SUPPLY.URN_SEMANTIC_ID, variablesService.getDaysOfSupplySubmodelApiAssetId(), partner);
         return createSubmodelContractDefinitionForPartner(AssetType.PART_TYPE_INFORMATION_SUBMODEL.URN_SEMANTIC_ID, variablesService.getPartTypeSubmodelApiAssetId(), partner) && result;
     }
@@ -333,6 +338,11 @@ public class EdcAdapterService {
 
     private boolean registerDataExchangeRequestAsset(String assetId, String endpoint) {
         var body = edcRequestBodyBuilder.buildDataExchangeRequestRegistrationBody(assetId, endpoint);
+        return sendAssetRegistrationRequest(body, assetId);
+    }
+
+    private boolean registerDataExchangeApprovalAsset(String assetId, String endpoint) {
+        var body = edcRequestBodyBuilder.buildDataExchangeApprovalRegistrationBody(assetId, endpoint);
         return sendAssetRegistrationRequest(body, assetId);
     }
 
@@ -574,6 +584,7 @@ public class EdcAdapterService {
         String assetId = switch (type) {
             case NOTIFICATION -> variablesService.getNotificationApiAssetId();
             case DATA_EXCHANGE_REQUEST -> variablesService.getDataExchangeRequestReceiveApiAssetId();
+            case DATA_EXCHANGE_APPROVAL -> variablesService.getDataExchangeApprovalReceiveApiAssetId();
             default -> throw new IllegalArgumentException("Unsupported type " + type);
         };
 
@@ -586,6 +597,7 @@ public class EdcAdapterService {
                 boolean negotiated = switch (type) {
                     case NOTIFICATION -> negotiateContractForNotification(partner, type);
                     case DATA_EXCHANGE_REQUEST -> negotiateContractForDataExchangeRequest(partner, type);
+                    case DATA_EXCHANGE_APPROVAL -> negotiateContractForDataExchangeApproval(partner, type);
                     default -> throw new IllegalArgumentException("Unsupported type " + type);
                 };
 
@@ -626,6 +638,7 @@ public class EdcAdapterService {
                     switch (type) {
                         case NOTIFICATION -> log.info("Failed to post Notification to Partner.");
                         case DATA_EXCHANGE_REQUEST -> log.info("Failed to post Data Exchange Request to Partner.");
+                        case DATA_EXCHANGE_APPROVAL -> log.info("Failed to post Data Exchange Approval to Partner.");
                         default -> throw new IllegalArgumentException("Unsupported type " + type);
                     }
                 }
@@ -766,6 +779,10 @@ public class EdcAdapterService {
 
     public JsonNode doDataExchangePostRequest(Partner partner, JsonNode body) {
         return postAssetToPartner(partner, AssetType.DATA_EXCHANGE_REQUEST, body, 2);
+    }
+
+    public JsonNode doDataExchangeApprovalPostRequest(Partner partner, JsonNode body) {
+        return postAssetToPartner(partner, AssetType.DATA_EXCHANGE_APPROVAL, body, 2);
     }
 
     private boolean negotiateForPartnerDtr(Partner partner) {
@@ -1125,6 +1142,16 @@ public class EdcAdapterService {
             EdcRequestBodyBuilder.CX_TAXO_NAMESPACE + "DataExchangeRequestReceiveApi"
         );
         return negotiateContract(partner, variablesService.getDataExchangeRequestReceiveApiAssetId(), type, partner.getEdcUrl(), equalFilters);
+    }
+
+    public boolean negotiateContractForDataExchangeApproval(Partner partner, AssetType type) {
+        Map<String, String> equalFilters = new HashMap<>();
+        equalFilters.put(EdcRequestBodyBuilder.CX_COMMON_NAMESPACE + "version", "1.0");
+        equalFilters.put(
+            "'" + EdcRequestBodyBuilder.DCT_NAMESPACE + "type'.'@id'",
+            EdcRequestBodyBuilder.CX_TAXO_NAMESPACE + "DataExchangeApprovalReceiveApi"
+        );
+        return negotiateContract(partner, variablesService.getDataExchangeApprovalReceiveApiAssetId(), type, partner.getEdcUrl(), equalFilters);
     }
 
     public boolean negotiateContract(Partner partner, String assetId, AssetType type, String dspUrl, Map<String, String> equalFilters) {

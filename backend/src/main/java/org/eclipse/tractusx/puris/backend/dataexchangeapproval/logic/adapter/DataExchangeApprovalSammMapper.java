@@ -18,12 +18,14 @@ SPDX-License-Identifier: Apache-2.0
 */
 package org.eclipse.tractusx.puris.backend.dataexchangeapproval.logic.adapter;
 import java.util.ArrayList;
+
 import org.eclipse.tractusx.puris.backend.dataexchangeapproval.domain.model.OwnDataExchangeApproval;
 import org.eclipse.tractusx.puris.backend.dataexchangeapproval.domain.model.ReportedDataExchangeApproval;
 import org.eclipse.tractusx.puris.backend.dataexchangeapproval.logic.dto.dataexchangeapprovalsamm.DataExchangeApprovalSamm;
 import org.eclipse.tractusx.puris.backend.dataexchangerequest.logic.service.OwnDataExchangeRequestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -43,7 +45,8 @@ public class DataExchangeApprovalSammMapper {
             .build();
     }
 
-    public ReportedDataExchangeApproval sammToReportedDataExchangeApproval(DataExchangeApprovalSamm samm) {
+    public ReportedDataExchangeApproval sammToReportedDataExchangeApproval(String bpnl, DataExchangeApprovalSamm samm) {
+        // CHECK: WHAT DO I NEED THE BPNL FOR?
         var dataExchangeRequest = ownDataExchangeRequestService.findById(samm.getDataExchangeRequestId());
         if (dataExchangeRequest == null) {
             log.error("No matching data exchange request found for ID {}", samm.getDataExchangeRequestId());
