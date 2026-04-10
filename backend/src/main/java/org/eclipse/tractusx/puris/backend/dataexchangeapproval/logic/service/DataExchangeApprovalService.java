@@ -37,6 +37,11 @@ public abstract class DataExchangeApprovalService<T extends DataExchangeApproval
         return repository.findById(uuid).orElse(null);
     }
 
+    public final T findByRequestId(UUID requestId) {
+        return repository.findAll().stream().filter(approval -> approval.getRequestId().equals(requestId))
+                .findFirst().orElse(null);
+    }
+
     protected boolean basicValidation(DataExchangeApproval dataExchangeApproval) {
         return (dataExchangeApproval.getUuid() == null || dataExchangeApproval.getTimestamp() != null) &&
             dataExchangeApproval.getApprovedTypes() != null &&

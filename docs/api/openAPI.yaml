@@ -125,6 +125,10 @@ components:
           type: string
         finalized:
           type: boolean
+        requestId:
+          format: uuid
+          maxItems: 50
+          type: string
         timestamp:
           format: date-time
           maxItems: 50
@@ -1797,7 +1801,7 @@ paths:
       summary: Get all reported data exchange requests
       tags:
       - data-exchange-request-controller
-  /data-exchange-request/reported/{id}/approval:
+  /data-exchange-request/reported/{requestId}/approval:
     post:
       description: "Creates a new own data exchange approval. \n"
       operationId: createDataExchangeApproval

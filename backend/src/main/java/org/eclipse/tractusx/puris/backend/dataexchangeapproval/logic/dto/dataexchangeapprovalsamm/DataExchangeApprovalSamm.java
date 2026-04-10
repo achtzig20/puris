@@ -21,12 +21,13 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+
 import org.eclipse.tractusx.puris.backend.common.util.PatternStore;
 import org.eclipse.tractusx.puris.backend.dataexchangerequest.domain.model.RequestedTypeEnumeration;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -41,10 +42,8 @@ import lombok.experimental.SuperBuilder;
 @ToString
 public class DataExchangeApprovalSamm {
     @NotNull
-    @Id
-    @GeneratedValue
     @Pattern(regexp = PatternStore.URN_OR_UUID_STRING)
-    private UUID id;
+    private String requestId;
 
     @NotNull
     @JsonProperty("isFinalized")
@@ -61,12 +60,12 @@ public class DataExchangeApprovalSamm {
 
     @JsonCreator
     public DataExchangeApprovalSamm(
-            @JsonProperty(value = "id") UUID id,
+            @JsonProperty(value = "requestId") String requestId,
             @JsonProperty(value = "dataExchangeRequestId") UUID dataExchangeRequestId,
             @JsonProperty(value = "isFinalized") boolean isFinalized,
             @JsonProperty(value = "approvedTypes") List<RequestedTypeEnumeration> approvedTypes,
             @JsonProperty(value = "timestamp") Date timestamp) {
-        this.id = id;
+        this.requestId = requestId;
         this.dataExchangeRequestId = dataExchangeRequestId;
         this.finalized = isFinalized;
         this.approvedTypes = approvedTypes;
@@ -82,7 +81,7 @@ public class DataExchangeApprovalSamm {
             return false;
         }
         final DataExchangeApprovalSamm that = (DataExchangeApprovalSamm) o;
-        return Objects.equals(id, that.id)
+        return Objects.equals(requestId, that.requestId)
                 && Objects.equals(dataExchangeRequestId, that.dataExchangeRequestId)
                 && Objects.equals(finalized, that.finalized)
                 && Objects.equals(approvedTypes, that.approvedTypes)
@@ -91,6 +90,6 @@ public class DataExchangeApprovalSamm {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, dataExchangeRequestId, finalized, approvedTypes, timestamp);
+        return Objects.hash(requestId, dataExchangeRequestId, finalized, approvedTypes, timestamp);
     }
 }

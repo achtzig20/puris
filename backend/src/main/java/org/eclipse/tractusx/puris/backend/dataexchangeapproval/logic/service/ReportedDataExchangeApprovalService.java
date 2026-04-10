@@ -48,6 +48,13 @@ public class ReportedDataExchangeApprovalService extends DataExchangeApprovalSer
         if (repository.findAll().stream().filter(existing -> existing.equals(reportedDataExchangeApproval)).findFirst().isPresent()) {
             throw new KeyAlreadyExistsException("Reported data exchange approval already exists");
         }
+        
+        if (repository.findAll().stream().anyMatch(d -> d.getRequestId().equals(reportedDataExchangeApproval.getRequestId()))) {
+            throw new KeyAlreadyExistsException("Data exchange approval already exists");
+        }
+        if (reportedDataExchangeApproval.getRequestId() == null) {
+            reportedDataExchangeApproval.setRequestId(UUID.randomUUID());
+        }
         return repository.save(reportedDataExchangeApproval);
     }
 

@@ -50,7 +50,8 @@ import lombok.experimental.SuperBuilder;
 public abstract class DataExchangeApproval {
     @Id
     @GeneratedValue
-    private UUID uuid;
+    protected UUID uuid;
+    protected UUID requestId;
 
     @NotNull
     @Column(name = "is_finalized", nullable = false)
@@ -78,12 +79,13 @@ public abstract class DataExchangeApproval {
         }
 
         final DataExchangeApproval that = (DataExchangeApproval) o;
-        return this.isFinalized() == that.isFinalized() &&
+        return this.getRequestId().equals(that.getRequestId()) &&
+            this.isFinalized() == that.isFinalized() &&
             Objects.equals(this.getApprovedTypes(), that.getApprovedTypes());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(isFinalized, approvedTypes);
+        return Objects.hash(requestId, isFinalized, approvedTypes);
     }
 }

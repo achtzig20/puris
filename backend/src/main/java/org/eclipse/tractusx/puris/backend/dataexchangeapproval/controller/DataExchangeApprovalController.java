@@ -114,7 +114,7 @@ public class DataExchangeApprovalController {
 
     private DataExchangeApprovalDto convertToDto(ReportedDataExchangeApproval entity) {
         DataExchangeApprovalDto dto = modelMapper.map(entity, DataExchangeApprovalDto.class);
-        dto.setDataExchangeRequestId(entity.getDataExchangeRequest().getUuid());
+        dto.setDataExchangeRequestId(entity.getDataExchangeRequest().getRequestId());
         return dto;
     }
     

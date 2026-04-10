@@ -190,6 +190,11 @@ databaseChangeLog:
                     primaryKey: true
                     primaryKeyName: own_data_exchange_approval_pkey
               - column:
+                  name: request_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
                   name: is_finalized
                   type: BOOLEAN
                   constraints:
@@ -256,6 +261,11 @@ databaseChangeLog:
                     nullable: false
                     primaryKey: true
                     primaryKeyName: reported_data_exchange_approval_pkey
+              - column:
+                  name: request_id
+                  type: UUID
+                  constraints:
+                    nullable: false
               - column:
                   name: is_finalized
                   type: BOOLEAN

@@ -68,7 +68,7 @@ public class DataExchangeApprovalApiService {
         }
         ReportedDataExchangeApproval existingApproval = null;
         if (approval.getUuid() != null) {
-            existingApproval = reportedDataExchangeApprovalService.findById(approval.getUuid());
+            existingApproval = reportedDataExchangeApprovalService.findByRequestId(approval.getRequestId());
         }
 
         if (existingApproval != null) {

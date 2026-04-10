@@ -27,8 +27,5 @@ tests {
   test("Verify response contains one reported data exchange request object", function () {
       expect(res.getBody()).to.be.an("array").with.lengthOf(1);
   });
-
-  const firstUuid = res.getBody()[0].uuid;
-  bru.setVar("reportedRequestUuid", firstUuid);
   
 }

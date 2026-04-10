@@ -18,6 +18,7 @@ SPDX-License-Identifier: Apache-2.0
 */
 package org.eclipse.tractusx.puris.backend.dataexchangeapproval.logic.adapter;
 import java.util.ArrayList;
+import java.util.UUID;
 
 import org.eclipse.tractusx.puris.backend.dataexchangeapproval.domain.model.OwnDataExchangeApproval;
 import org.eclipse.tractusx.puris.backend.dataexchangeapproval.domain.model.ReportedDataExchangeApproval;
@@ -35,10 +36,10 @@ public class DataExchangeApprovalSammMapper {
     private OwnDataExchangeRequestService ownDataExchangeRequestService;
 
     public DataExchangeApprovalSamm ownDataExchangeApprovalToSamm(OwnDataExchangeApproval approval) {
-        var builder = DataExchangeApprovalSamm.builder();
         log.info("In ownDataExchangeApprovalToSamm");
-        return builder
-            .dataExchangeRequestId(approval.getDataExchangeRequest().getUuid())
+        return DataExchangeApprovalSamm.builder()
+            .requestId(approval.getRequestId() != null ? approval.getRequestId().toString() : null)
+            .dataExchangeRequestId(approval.getDataExchangeRequest().getRequestId())
             .timestamp(approval.getTimestamp())
             .approvedTypes(approval.getApprovedTypes() != null ? new ArrayList<>(approval.getApprovedTypes()) : null)
             .finalized(approval.isFinalized())
@@ -46,14 +47,14 @@ public class DataExchangeApprovalSammMapper {
     }
 
     public ReportedDataExchangeApproval sammToReportedDataExchangeApproval(String bpnl, DataExchangeApprovalSamm samm) {
-        // CHECK: WHAT DO I NEED THE BPNL FOR?
-        var dataExchangeRequest = ownDataExchangeRequestService.findById(samm.getDataExchangeRequestId());
+        var dataExchangeRequest = ownDataExchangeRequestService.findByRequestId(samm.getDataExchangeRequestId());
         if (dataExchangeRequest == null) {
             log.error("No matching data exchange request found for ID {}", samm.getDataExchangeRequestId());
             return null;
         }
         var builder = ReportedDataExchangeApproval.builder();
         return builder
+            .requestId(UUID.fromString(samm.getRequestId()))
             .dataExchangeRequest(dataExchangeRequest)
             .timestamp(samm.getTimestamp())
             .approvedTypes(samm.getApprovedTypes() != null ? new ArrayList<>(samm.getApprovedTypes()) : null)
