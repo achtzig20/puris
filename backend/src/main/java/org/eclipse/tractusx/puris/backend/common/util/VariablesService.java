@@ -178,19 +178,12 @@ public class VariablesService {
         return getPurisBaseUrl() + getContextPath() + "data-exchange-approval/request";
     }
 
-    @Value("${puris.dataExchangeRequestReceiveApi.apiassetid}")
+    @Value("${puris.dataExchangeRequestApi.apiassetid}")
     /**
-     * The assetId that shall be assigned to the Data Exchange Request request API
+     * The assetId that shall be assigned to the Data Exchange Request and Approval request API
      * during asset creation.
      */
-    private String dataExchangeRequestReceiveApi;
-
-    @Value("${puris.dataExchangeApprovalReceiveApi.apiassetid}")
-    /**
-     * The assetId that shall be assigned to the Data Exchange Approval request API
-     * during asset creation.
-     */
-    private String dataExchangeApprovalReceiveApi;
+    private String dataExchangeRequestApi;
 
     @Value("${puris.frameworkagreement.credential}")
     /**
@@ -351,12 +344,8 @@ public class VariablesService {
         return notificationAssetId + "@" + ownBpnl;
     }
 
-    public String getDataExchangeRequestReceiveApiAssetId() {
-        return dataExchangeRequestReceiveApi + "@" + ownBpnl;
-    }
-
-    public String getDataExchangeApprovalReceiveApiAssetId() {
-        return dataExchangeApprovalReceiveApi + "@" + ownBpnl;
+    public String getDataExchangeRequestApiAssetId() {
+        return dataExchangeRequestApi + "@" + ownBpnl;
     }
 
     public String getPartTypeSubmodelApiAssetId() {

@@ -52,7 +52,7 @@ public class DataExchangeApprovalApiService {
     @Autowired
     private ObjectMapper objectMapper;
     
-    public static final String DATA_EXCHANGE_APPROVAL_CONTEXT = "CX-DataExchangeApprovalReceiveAPI-Receive:1.0.0";
+    public static final String DATA_EXCHANGE_APPROVAL_CONTEXT = "CX-DataExchangeRequestAPI-ReceiveApproval:1.0.0";
     public static final String MESSAGE_HEADER_VERSION = "3.0.0";
 
     public ReportedDataExchangeApproval handleIncomingDataExchangeApproval(String bpnl, DataExchangeApprovalSamm samm) {

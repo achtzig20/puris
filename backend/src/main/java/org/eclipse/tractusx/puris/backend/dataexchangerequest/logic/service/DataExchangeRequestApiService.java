@@ -51,7 +51,7 @@ public class DataExchangeRequestApiService {
     @Autowired
     private ObjectMapper objectMapper;
 
-    public static final String DATA_EXCHANGE_REQUEST_CONTEXT = "CX-DataExchangeRequestReceiveAPI-Receive:1.0.0";
+    public static final String DATA_EXCHANGE_REQUEST_CONTEXT = "CX-DataExchangeRequestAPI-ReceiveRequest:1.0.0";
     public static final String MESSAGE_HEADER_VERSION = "3.0.0";
 
     public ReportedDataExchangeRequest handleIncomingDataExchangeRequest(String bpnl, DataExchangeRequestSamm samm) {

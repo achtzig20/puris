@@ -196,11 +196,11 @@ public class EdcAdapterService {
             AssetType.DAYS_OF_SUPPLY.URN_SEMANTIC_ID
         )));
         log.info("Registration of DataExchangeRequest 1.0.0 asset successful {}", (assetRegistration = registerDataExchangeRequestAsset(
-            variablesService.getDataExchangeRequestReceiveApiAssetId(),
+            variablesService.getDataExchangeRequestApiAssetId(),
             variablesService.getDataExchangeRequestEndpoint()
         )));
         log.info("Registration of DataExchangeApproval 1.0.0 asset successful {}", (assetRegistration = registerDataExchangeApprovalAsset(
-            variablesService.getDataExchangeApprovalReceiveApiAssetId(),
+            variablesService.getDataExchangeRequestApiAssetId(),
             variablesService.getDataExchangeApprovalEndpoint()
         )));
         log.info("Registration of PartTypeInformation 1.0.0 submodel successful {}", (assetRegistration = registerPartTypeInfoSubmodelAsset()));
@@ -227,8 +227,8 @@ public class EdcAdapterService {
         result &= createSubmodelContractDefinitionForPartner(AssetType.DEMAND_SUBMODEL.URN_SEMANTIC_ID, variablesService.getDemandSubmodelApiAssetId(), partner);
         result &= createSubmodelContractDefinitionForPartner(AssetType.DELIVERY_SUBMODEL.URN_SEMANTIC_ID, variablesService.getDeliverySubmodelApiAssetId(), partner);
         result &= createSubmodelContractDefinitionForPartner(AssetType.NOTIFICATION.URN_SEMANTIC_ID, variablesService.getNotificationApiAssetId(), partner);
-        result &= createSubmodelContractDefinitionForPartner(AssetType.DATA_EXCHANGE_REQUEST.URN_SEMANTIC_ID, variablesService.getDataExchangeRequestReceiveApiAssetId(), partner);
-        result &= createSubmodelContractDefinitionForPartner(AssetType.DATA_EXCHANGE_APPROVAL.URN_SEMANTIC_ID, variablesService.getDataExchangeApprovalReceiveApiAssetId(), partner);
+        result &= createSubmodelContractDefinitionForPartner(AssetType.DATA_EXCHANGE_REQUEST.URN_SEMANTIC_ID, variablesService.getDataExchangeRequestApiAssetId(), partner);
+        result &= createSubmodelContractDefinitionForPartner(AssetType.DATA_EXCHANGE_APPROVAL.URN_SEMANTIC_ID, variablesService.getDataExchangeRequestApiAssetId(), partner);
         result &= createSubmodelContractDefinitionForPartner(AssetType.DAYS_OF_SUPPLY.URN_SEMANTIC_ID, variablesService.getDaysOfSupplySubmodelApiAssetId(), partner);
         return createSubmodelContractDefinitionForPartner(AssetType.PART_TYPE_INFORMATION_SUBMODEL.URN_SEMANTIC_ID, variablesService.getPartTypeSubmodelApiAssetId(), partner) && result;
     }
@@ -583,8 +583,8 @@ public class EdcAdapterService {
 
         String assetId = switch (type) {
             case NOTIFICATION -> variablesService.getNotificationApiAssetId();
-            case DATA_EXCHANGE_REQUEST -> variablesService.getDataExchangeRequestReceiveApiAssetId();
-            case DATA_EXCHANGE_APPROVAL -> variablesService.getDataExchangeApprovalReceiveApiAssetId();
+            case DATA_EXCHANGE_REQUEST -> variablesService.getDataExchangeRequestApiAssetId();
+            case DATA_EXCHANGE_APPROVAL -> variablesService.getDataExchangeRequestApiAssetId();
             default -> throw new IllegalArgumentException("Unsupported type " + type);
         };
 
@@ -1139,9 +1139,9 @@ public class EdcAdapterService {
         equalFilters.put(EdcRequestBodyBuilder.CX_COMMON_NAMESPACE + "version", "1.0");
         equalFilters.put(
             "'" + EdcRequestBodyBuilder.DCT_NAMESPACE + "type'.'@id'",
-            EdcRequestBodyBuilder.CX_TAXO_NAMESPACE + "DataExchangeRequestReceiveApi"
+            EdcRequestBodyBuilder.CX_TAXO_NAMESPACE + "DataExchangeRequestApi"
         );
-        return negotiateContract(partner, variablesService.getDataExchangeRequestReceiveApiAssetId(), type, partner.getEdcUrl(), equalFilters);
+        return negotiateContract(partner, variablesService.getDataExchangeRequestApiAssetId(), type, partner.getEdcUrl(), equalFilters);
     }
 
     public boolean negotiateContractForDataExchangeApproval(Partner partner, AssetType type) {
@@ -1149,9 +1149,9 @@ public class EdcAdapterService {
         equalFilters.put(EdcRequestBodyBuilder.CX_COMMON_NAMESPACE + "version", "1.0");
         equalFilters.put(
             "'" + EdcRequestBodyBuilder.DCT_NAMESPACE + "type'.'@id'",
-            EdcRequestBodyBuilder.CX_TAXO_NAMESPACE + "DataExchangeApprovalReceiveApi"
+            EdcRequestBodyBuilder.CX_TAXO_NAMESPACE + "DataExchangeRequestApi"
         );
-        return negotiateContract(partner, variablesService.getDataExchangeApprovalReceiveApiAssetId(), type, partner.getEdcUrl(), equalFilters);
+        return negotiateContract(partner, variablesService.getDataExchangeRequestApiAssetId(), type, partner.getEdcUrl(), equalFilters);
     }
 
     public boolean negotiateContract(Partner partner, String assetId, AssetType type, String dspUrl, Map<String, String> equalFilters) {
