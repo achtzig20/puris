@@ -159,6 +159,10 @@ components:
           format: uuid
           maxItems: 50
           type: string
+        requestId:
+          format: uuid
+          maxItems: 50
+          type: string
         requestedTypes:
           items:
             enum:
@@ -1799,7 +1803,7 @@ paths:
       operationId: createDataExchangeApproval
       parameters:
       - in: path
-        name: id
+        name: requestId
         required: true
         schema:
           additionalProperties: false
