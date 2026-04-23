@@ -111,6 +111,9 @@ components:
     DataExchangeApprovalDto:
       additionalProperties: false
       properties:
+        approvalId:
+          maxItems: 50
+          type: string
         approvedTypes:
           items:
             enum:
@@ -164,7 +167,6 @@ components:
           maxItems: 50
           type: string
         requestId:
-          format: uuid
           maxItems: 50
           type: string
         requestedTypes:
@@ -1801,43 +1803,6 @@ paths:
       summary: Get all reported data exchange requests
       tags:
       - data-exchange-request-controller
-  /data-exchange-request/reported/{requestId}/approval:
-    post:
-      description: "Creates a new own data exchange approval. \n"
-      operationId: createDataExchangeApproval
-      parameters:
-      - in: path
-        name: requestId
-        required: true
-        schema:
-          additionalProperties: false
-          format: uuid
-          maxItems: 50
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DataExchangeApprovalDto'
-              additionalProperties: false
-        required: true
-      responses:
-        '201':
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/DataExchangeApprovalDto'
-                additionalProperties: false
-          description: Own Data Exchange Approval was created.
-        '400':
-          description: Malformed or invalid request body.
-        '409':
-          description: Own Data Exchange Approval already exists.
-        '500':
-          description: Internal Server Error.
-      summary: Creates a new own data exchange approval
-      tags:
-      - data-exchange-approval-controller
   /data-exchange-request/request:
     post:
       operationId: postDataExchangeRequest
@@ -1868,23 +1833,43 @@ paths:
       tags:
       - data-exchange-request-api-controller
   /data-exchange-request/{id}/approval:
-    get:
-      description: Get all reported data exchange approvals.
-      operationId: getAllReportedDataExchangeApprovals
+    post:
+      description: "Creates a new own data exchange approval in response to an existing\
+        \ ReportedDataExchangeRequest. \n"
+      operationId: createDataExchangeApproval
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          additionalProperties: false
+          format: uuid
+          maxItems: 50
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataExchangeApprovalDto'
+              additionalProperties: false
+        required: true
       responses:
-        '200':
+        '201':
           content:
             '*/*':
               schema:
+                $ref: '#/components/schemas/DataExchangeApprovalDto'
                 additionalProperties: false
-                items:
-                  $ref: '#/components/schemas/DataExchangeApprovalDto'
-                maxItems: 50
-                type: array
-          description: OK
-      summary: Get all reported data exchange approvals
+          description: Own Data Exchange Approval was created.
+        '400':
+          description: Malformed or invalid request body.
+        '409':
+          description: Own Data Exchange Approval already exists.
+        '500':
+          description: Internal Server Error.
+      summary: Creates a new own data exchange approval
       tags:
-      - data-exchange-approval-controller
+      - data-exchange-request-controller
   /days-of-supply/customer:
     get:
       description: Calculate days of supply for customer for given number of days.

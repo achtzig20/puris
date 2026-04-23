@@ -38,7 +38,7 @@ public class DataExchangeApprovalSammMapper {
     public DataExchangeApprovalSamm ownDataExchangeApprovalToSamm(OwnDataExchangeApproval approval) {
         log.info("In ownDataExchangeApprovalToSamm");
         return DataExchangeApprovalSamm.builder()
-            .requestId(approval.getRequestId() != null ? approval.getRequestId().toString() : null)
+            .approvalId(approval.getApprovalId() != null ? approval.getApprovalId() : null)
             .dataExchangeRequestId(approval.getDataExchangeRequest().getRequestId())
             .timestamp(approval.getTimestamp())
             .approvedTypes(approval.getApprovedTypes() != null ? new ArrayList<>(approval.getApprovedTypes()) : null)
@@ -54,7 +54,7 @@ public class DataExchangeApprovalSammMapper {
         }
         var builder = ReportedDataExchangeApproval.builder();
         return builder
-            .requestId(UUID.fromString(samm.getRequestId()))
+            .approvalId(samm.getApprovalId())
             .dataExchangeRequest(dataExchangeRequest)
             .timestamp(samm.getTimestamp())
             .approvedTypes(samm.getApprovedTypes() != null ? new ArrayList<>(samm.getApprovedTypes()) : null)

@@ -19,7 +19,6 @@ SPDX-License-Identifier: Apache-2.0
 package org.eclipse.tractusx.puris.backend.dataexchangeapproval.logic.service;
 
 import java.util.UUID;
-import java.util.function.Function;
 
 import javax.management.openmbean.KeyAlreadyExistsException;
 
@@ -28,34 +27,34 @@ import org.eclipse.tractusx.puris.backend.dataexchangeapproval.domain.repository
 import org.springframework.stereotype.Service;
 
 @Service
-public class OwnDataExchangeApprovalService extends DataExchangeApprovalService<OwnDataExchangeApproval> {
-    private final OwnDataExchangeApprovalRepository repository;
-    protected final Function<OwnDataExchangeApproval, Boolean> validator;
-
+public class OwnDataExchangeApprovalService extends DataExchangeApprovalService<OwnDataExchangeApproval, OwnDataExchangeApprovalRepository> {
+    
     public OwnDataExchangeApprovalService(OwnDataExchangeApprovalRepository repository) {
-        this.repository = repository;
-        this.validator = this::validate;
+        super(repository);
     }
 
     public final OwnDataExchangeApproval create(OwnDataExchangeApproval ownDataExchangeApproval) {
         if (ownDataExchangeApproval == null || !validator.apply(ownDataExchangeApproval)) {  
             throw new IllegalArgumentException("Invalid data exchange approval");
         }
-        if (repository.findAll().stream().filter(existing -> existing.equals(ownDataExchangeApproval)).findFirst().isPresent()) {
+        UUID requestUuid = ownDataExchangeApproval.getDataExchangeRequest().getUuid();
+        if (repository.findByDataExchangeRequest_Uuid(requestUuid).isPresent()) {
+            throw new KeyAlreadyExistsException("Data exchange approval already exists: " + requestUuid);
+        }
+        if (repository.findAll().stream().anyMatch(d -> d.getApprovalId().equals(ownDataExchangeApproval.getApprovalId()))) {
             throw new KeyAlreadyExistsException("Data exchange approval already exists");
         }
-        if (repository.findAll().stream().anyMatch(d -> d.getRequestId().equals(ownDataExchangeApproval.getRequestId()))) {
-            throw new KeyAlreadyExistsException("Data exchange approval already exists");
-        }
-        if (ownDataExchangeApproval.getRequestId() == null) {
-            ownDataExchangeApproval.setRequestId(UUID.randomUUID());
+        if (ownDataExchangeApproval.getApprovalId() == null) {
+            ownDataExchangeApproval.setApprovalId(UUID.randomUUID().toString());
         }
         return repository.save(ownDataExchangeApproval);
     }
 
+    @Override
     public boolean validate(OwnDataExchangeApproval dataExchangeApproval) {
         return dataExchangeApproval != null &&
         basicValidation(dataExchangeApproval) &&
-        dataExchangeApproval.getDataExchangeRequest() != null;
+        dataExchangeApproval.getDataExchangeRequest() != null &&
+        dataExchangeApproval.getDataExchangeRequest().getUuid() != null;
     }
 }

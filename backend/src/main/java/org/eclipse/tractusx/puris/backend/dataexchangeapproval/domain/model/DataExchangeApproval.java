@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+import org.eclipse.tractusx.puris.backend.common.util.PatternStore;
 import org.eclipse.tractusx.puris.backend.dataexchangerequest.domain.model.RequestedTypeEnumeration;
 
 import jakarta.persistence.Column;
@@ -32,6 +33,7 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.PrePersist;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -48,13 +50,18 @@ import lombok.experimental.SuperBuilder;
 @Entity
 @ToString
 public abstract class DataExchangeApproval {
+    /** 
+     * uuid = internally generated unique identifier
+     * approvalId = stable UUID reference for communication with partner, expected to be used in SAMM   
+     */
     @Id
     @GeneratedValue
     protected UUID uuid;
-    protected UUID requestId;
+    @NotNull
+    @Pattern(regexp = PatternStore.URN_OR_UUID_STRING)
+    protected String approvalId;
 
     @NotNull
-    @Column(name = "is_finalized", nullable = false)
     private boolean isFinalized;
 
     @NotNull
@@ -79,13 +86,13 @@ public abstract class DataExchangeApproval {
         }
 
         final DataExchangeApproval that = (DataExchangeApproval) o;
-        return this.getRequestId().equals(that.getRequestId()) &&
+        return this.getApprovalId().equals(that.getApprovalId()) &&
             this.isFinalized() == that.isFinalized() &&
             Objects.equals(this.getApprovedTypes(), that.getApprovedTypes());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(requestId, isFinalized, approvedTypes);
+        return Objects.hash(approvalId, isFinalized, approvedTypes);
     }
 }

@@ -27,13 +27,10 @@ import org.eclipse.tractusx.puris.backend.dataexchangeapproval.domain.repository
 import org.springframework.stereotype.Service;
 
 @Service
-public class ReportedDataExchangeApprovalService extends DataExchangeApprovalService<ReportedDataExchangeApproval> {
-    private final ReportedDataExchangeApprovalRepository repository;
-    protected final Function<ReportedDataExchangeApproval, Boolean> validator;
-
+public class ReportedDataExchangeApprovalService extends DataExchangeApprovalService<ReportedDataExchangeApproval, ReportedDataExchangeApprovalRepository> {
+    
     public ReportedDataExchangeApprovalService(ReportedDataExchangeApprovalRepository repository) {
-        this.repository = repository;
-        this.validator = this::validate;
+        super(repository);
     }
 
     public final ReportedDataExchangeApproval findByOwnDataExchangeRequestId(UUID ownDataExchangeRequestId) {
@@ -49,11 +46,11 @@ public class ReportedDataExchangeApprovalService extends DataExchangeApprovalSer
             throw new KeyAlreadyExistsException("Reported data exchange approval already exists");
         }
         
-        if (repository.findAll().stream().anyMatch(d -> d.getRequestId().equals(reportedDataExchangeApproval.getRequestId()))) {
+        if (repository.findAll().stream().anyMatch(d -> d.getApprovalId().equals(reportedDataExchangeApproval.getApprovalId()))) {
             throw new KeyAlreadyExistsException("Data exchange approval already exists");
         }
-        if (reportedDataExchangeApproval.getRequestId() == null) {
-            reportedDataExchangeApproval.setRequestId(UUID.randomUUID());
+        if (reportedDataExchangeApproval.getApprovalId() == null) {
+            reportedDataExchangeApproval.setApprovalId(UUID.randomUUID().toString());
         }
         return repository.save(reportedDataExchangeApproval);
     }
