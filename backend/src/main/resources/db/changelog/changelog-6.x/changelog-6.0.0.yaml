@@ -263,7 +263,7 @@ databaseChangeLog:
                     primaryKeyName: reported_data_exchange_approval_pkey
               - column:
                   name: approval_id
-                  type: UUID
+                  type: VARCHAR(255)
                   constraints:
                     nullable: false
               - column:

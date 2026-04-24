@@ -119,9 +119,9 @@ public class DataExchangeRequestController {
             @ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content)
     })
     @ResponseStatus(HttpStatus.CREATED)
-    public DataExchangeApprovalDto createDataExchangeApproval(@PathVariable UUID id, @RequestBody DataExchangeApprovalDto requestDto) {
+    public DataExchangeApprovalDto createDataExchangeApproval(@PathVariable String id, @RequestBody DataExchangeApprovalDto requestDto) {
         ReportedDataExchangeRequest reportedRequest =
-                reportedDataExchangeRequestService.findById(id);
+                reportedDataExchangeRequestService.findById(UUID.fromString(id));
 
         if (reportedRequest == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Referenced reported data exchange request does not exist.");
