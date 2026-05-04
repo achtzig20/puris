@@ -1,17 +1,17 @@
 meta {
-  name: Get Reported Data Exchange Request as Supplier
+  name: Get Reported Data Exchange Approval as Customer
   type: http
-  seq: 2
+  seq: 4
 }
 
 get {
-  url: {{SUPPLIER_PURIS_BACKEND}}/catena/data-exchange-request/reported
+  url: {{CUSTOMER_PURIS_BACKEND}}/catena/data-exchange-request/{{reportedRequestUuid}}/approval
   body: none
   auth: none
 }
 
 headers {
-  X-Api-Key: {{SUPPLIER_PURIS_BACKEND_API_KEY}}
+  X-Api-Key: {{CUSTOMER_PURIS_BACKEND_API_KEY}}
 }
 
 script:pre-request {
@@ -24,11 +24,11 @@ tests {
       expect(res.getStatus()).to.equal(200);
   })
 
-  test("Verify response contains one reported data exchange request object", function () {
+  test("Verify response contains one reported data exchange approval object", function () {
       expect(res.getBody()).to.be.an("array").with.lengthOf(1);
   });
 
   const firstUuid = res.getBody()[0].uuid;
-  bru.setVar("reportedRequestUuid", firstUuid);
+  bru.setVar("reportedApprovalUuid", firstUuid);
   
 }

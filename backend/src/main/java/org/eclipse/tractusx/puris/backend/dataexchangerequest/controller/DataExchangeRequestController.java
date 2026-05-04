@@ -26,6 +26,7 @@ import javax.management.openmbean.KeyAlreadyExistsException;
 
 import org.eclipse.tractusx.puris.backend.dataexchangeapproval.domain.model.OwnDataExchangeApproval;
 import org.eclipse.tractusx.puris.backend.dataexchangeapproval.logic.dto.DataExchangeApprovalDto;
+import org.eclipse.tractusx.puris.backend.dataexchangeapproval.logic.service.DataExchangeApprovalApiService;
 import org.eclipse.tractusx.puris.backend.dataexchangeapproval.logic.service.OwnDataExchangeApprovalService;
 import org.eclipse.tractusx.puris.backend.dataexchangerequest.domain.model.OwnDataExchangeRequest;
 import org.eclipse.tractusx.puris.backend.dataexchangerequest.domain.model.ReportedDataExchangeRequest;
@@ -70,6 +71,8 @@ public class DataExchangeRequestController {
     private DataExchangeRequestApiService dataExchangeRequestApiService;
     @Autowired
     private OwnDataExchangeApprovalService ownDataExchangeApprovalService;
+    @Autowired
+    private DataExchangeApprovalApiService dataExchangeApprovalApiService;
     @Autowired
     private ModelMapper modelMapper;
     @Autowired
@@ -119,21 +122,23 @@ public class DataExchangeRequestController {
             @ApiResponse(responseCode = "500", description = "Internal Server Error.", content = @Content)
     })
     @ResponseStatus(HttpStatus.CREATED)
-    public DataExchangeApprovalDto createDataExchangeApproval(@PathVariable String id, @RequestBody DataExchangeApprovalDto requestDto) {
+    public DataExchangeApprovalDto createDataExchangeApproval(@PathVariable UUID id, @RequestBody DataExchangeApprovalDto requestDto) {
         ReportedDataExchangeRequest reportedRequest =
-                reportedDataExchangeRequestService.findById(UUID.fromString(id));
+                reportedDataExchangeRequestService.findById(id);
 
         if (reportedRequest == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Referenced reported data exchange request does not exist.");
         }
-
+        Partner partner = reportedRequest.getNotification().getPartner();
         OwnDataExchangeApproval ownDataExchangeApproval = modelMapper.map(requestDto, OwnDataExchangeApproval.class);
         ownDataExchangeApproval.setDataExchangeRequest(reportedRequest);
+        
 
         try {
             OwnDataExchangeApproval newEntity = ownDataExchangeApprovalService.create(ownDataExchangeApproval);
+            executorService.submit(() -> dataExchangeApprovalApiService.sendDataExchangeApproval(newEntity, partner));
             DataExchangeApprovalDto responseDto = modelMapper.map(newEntity, DataExchangeApprovalDto.class);
-            responseDto.setDataExchangeRequestId(reportedRequest.getUuid());
+            responseDto.setDataExchangeRequestId(reportedRequest.getRequestId());
             return responseDto;
         } catch (KeyAlreadyExistsException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Own Data Exchange Approval already exists." + e.getMessage());

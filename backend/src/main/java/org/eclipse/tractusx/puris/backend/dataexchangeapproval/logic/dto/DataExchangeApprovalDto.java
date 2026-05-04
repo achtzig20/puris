@@ -46,7 +46,7 @@ public class DataExchangeApprovalDto implements Serializable {
     private Date timestamp;
 
     @NotNull
-    private UUID dataExchangeRequestId;
+    private String dataExchangeRequestId;
 
     @NotEmpty
     private List<RequestedTypeEnumeration> approvedTypes;

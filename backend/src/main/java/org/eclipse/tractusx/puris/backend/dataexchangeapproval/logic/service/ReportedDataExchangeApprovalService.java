@@ -33,16 +33,12 @@ public class ReportedDataExchangeApprovalService extends DataExchangeApprovalSer
         super(repository);
     }
 
-    public final ReportedDataExchangeApproval findByOwnDataExchangeRequestId(UUID ownDataExchangeRequestId) {
-        return repository.findAll().stream().filter(request -> request.getDataExchangeRequest().getUuid().equals(ownDataExchangeRequestId))
-                .findFirst().orElse(null);
-    }
-
     public final ReportedDataExchangeApproval create(ReportedDataExchangeApproval reportedDataExchangeApproval) {
         if (reportedDataExchangeApproval == null || !validator.apply(reportedDataExchangeApproval)) {  
             throw new IllegalArgumentException("Invalid data exchange approval");
         }
-        if (repository.findAll().stream().filter(existing -> existing.equals(reportedDataExchangeApproval)).findFirst().isPresent()) {
+        UUID requestUuid = reportedDataExchangeApproval.getDataExchangeRequest().getUuid();
+        if (repository.findByDataExchangeRequest_Uuid(requestUuid).isPresent()) {
             throw new KeyAlreadyExistsException("Reported data exchange approval already exists");
         }
         
@@ -68,6 +64,7 @@ public class ReportedDataExchangeApprovalService extends DataExchangeApprovalSer
     public boolean validate(ReportedDataExchangeApproval dataExchangeApproval) {
         return dataExchangeApproval != null && 
         basicValidation(dataExchangeApproval) &&
-        dataExchangeApproval.getDataExchangeRequest() != null;
+        dataExchangeApproval.getDataExchangeRequest() != null &&
+        dataExchangeApproval.getDataExchangeRequest().getUuid() != null;
     }
 }
