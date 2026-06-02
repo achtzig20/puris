@@ -380,6 +380,26 @@ public class DataInjectionCommandLineRunner implements CommandLineRunner {
            .locationBpns(customerPartner.getSites().first().getBpns())
            .build();
        reportedMaterialItemStockService.create(reportedMaterialItemStock);
+
+       // Register tier2 as an upstream supplier partner so the Supplier PURIS backend
+       // knows tier2's DSP URL and can negotiate contracts with the tier2 mock.
+       Partner tier2Partner = partnerService.findByBpnl("BPNL3333333333T3");
+       if (tier2Partner == null) {
+           tier2Partner = new Partner(
+               "Tier2 Supplier Inc.",
+               "http://puris-tier2-mock:8083/api/v1/dsp",
+               "BPNL3333333333T3",
+               "BPNS3333333333T3",
+               "Tier2 Supplier Inc. Production Site",
+               "BPNA3333333333T3",
+               "Main Street 1",
+               "20001 Hamburg",
+               "Germany",
+               PolicyProfileVersionEnumeration.POLICY_PROFILE_2405
+           );
+           tier2Partner = partnerService.create(tier2Partner);
+           log.info("Created tier2 partner: {}", tier2Partner);
+       }
     }
 
     /**

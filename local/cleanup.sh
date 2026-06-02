@@ -21,7 +21,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-docker compose down -v
+docker compose --profile tier2 down -v
 docker compose -f docker-compose-infrastructure.yaml down -v
 
 # renamed mock-util-service to wallet, thus to not confuse others, remove it

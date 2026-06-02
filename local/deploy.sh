@@ -26,8 +26,9 @@ int_seed=0
 logs=0
 attach=0
 preserve_images=0
+tier2=0
 # Remove previous installations if -c flag has been specified, and generate new keys
-while getopts "acbeilph" opt;do
+while getopts "acbeilpth" opt;do
   case $opt in
     a)
         echo "Alright, we'll run PURIS backends in attached mode."
@@ -53,6 +54,10 @@ while getopts "acbeilph" opt;do
       echo "Preserving existing images (skip rebuild of backend/frontend)."
       preserve_images=1
       ;;
+    t)
+      echo "Alright, we'll start the tier2 mock container."
+      tier2=1
+      ;;
     h)
       echo "By default the tool does the following:"
       echo "- ensure that environment and keys have been generated"
@@ -74,6 +79,7 @@ while getopts "acbeilph" opt;do
       echo "-l logs                 = Follows the logs of the EDC, DTR and PURIS same as with docker-compose but detached mode."
       echo "-p preserve-img         = Do not rebuild backend/frontend images; use existing ones"
       echo "- If -p is used but images are missing, a one-time build will run to avoid compose failures."
+      echo "-t tier2         = Start the tier2 mock container (single-container mock for n-tier simulation)"
       echo "\nExiting..."
       exit 1
       ;;
@@ -83,6 +89,11 @@ done
 if [ $cleanup -eq 1 ]; then
   echo "Cleaning up previous installations and generating new keys..."
   sh cleanup.sh
+fi
+
+TIER2_PROFILE=""
+if [ $tier2 -eq 1 ]; then
+  TIER2_PROFILE="--profile tier2"
 fi
 
 env_created=0
@@ -142,8 +153,13 @@ else
   echo "Both images rebuilt."
 fi
 
+if [ $tier2 -eq 1 ]; then
+  echo "Building Tier2 Mock..."
+  docker compose $TIER2_PROFILE build puris-tier2-mock || { echo "Tier2 mock build failed \nExiting..."; exit 1; }
+fi
+
 echo "Removing the PURIS + EDCs with their DTR and Database..."
-docker compose down -v
+docker compose $TIER2_PROFILE down -v
 
 compose_file="docker-compose.yaml"
 
@@ -156,11 +172,17 @@ if [ $int_seed -eq 1 ]; then
   # overwrite role to enable the local integration test
   # don't register customer dtr asset as we simulate the sceanrio in which another application has been onboarded before
   echo "Starting PURIS demonstrator containers without demonstration role..."
-  CUSTOMER_DEMONSTRATOR_ROLE="" SUPPLIER_DEMONSTRATOR_ROLE="" CUSTOMER_PURIS_DTR_EDC_ASSET_REGISTER="false" docker compose -f $compose_file up -d
+  CUSTOMER_DEMONSTRATOR_ROLE="" SUPPLIER_DEMONSTRATOR_ROLE="" CUSTOMER_PURIS_DTR_EDC_ASSET_REGISTER="false" docker compose $TIER2_PROFILE -f $compose_file up -d
 else
   # Start the PURIS demonstrator containers
   echo "Starting PURIS demonstrator containers..."
-  docker compose -f $compose_file up -d
+  docker compose $TIER2_PROFILE -f $compose_file up -d
+fi
+
+# Explicitly start tier2-mock if tier2 flag is set
+if [ $tier2 -eq 1 ]; then
+  echo "Starting tier2-mock service..."
+  docker compose $TIER2_PROFILE up -d puris-tier2-mock
 fi
 
 # Prepare the following asset data:
