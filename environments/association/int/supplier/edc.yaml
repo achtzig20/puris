@@ -194,8 +194,8 @@ postgresql:
   #   persistence:
   #     enabled: true
   auth:
-    database: "postgres"
-    username: "postgres"
+    database: "edc"
+    username: "user"
     password: <path:puris/data/supplier/edc/postgres#postgresPassword>
   # customUser:
     # --  Name of the custom user to be created. If an existing secret is used, this value is overwritten into the existing secret.
