@@ -1,0 +1,103 @@
+meta {
+  name: Fetch Catalog for ItemStock Asset
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{SUPPLIER_EDC}}/{{MANAGEMENT_PATH}}/v3/catalog/request
+  body: json
+  auth: none
+}
+
+headers {
+  X-Api-Key: {{SUPPLIER_EDC_API_KEY}}
+}
+
+body:json {
+  {
+    "@context": {
+      "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+    },
+    "@type": "CatalogRequest",
+    "protocol": "dataspace-protocol-http",
+    "counterPartyAddress": "{{TIER2_MOCK_INT}}/api/v1/dsp",
+    "counterPartyId": "{{TIER2_BPNL}}",
+    "querySpec": {
+      "offset": 0,
+      "limit": 100,
+      "filterExpression": []
+    }
+  }
+}
+
+script:post-response {
+  const jsonData = res.getBody();
+  let datasets = jsonData['dcat:dataset'];
+
+  // dcat:dataset may be a single object or an array
+  if (!Array.isArray(datasets)) {
+    datasets = [datasets];
+  }
+
+  console.log("\n========== CATALOG FETCH ==========");
+  console.log("Datasets found:", datasets.length);
+  
+  const dataset = datasets.find(d => d["@id"] && d["@id"].includes("itemstocksubmodel-api-asset"));
+  if (!dataset) {
+    console.error("❌ itemstocksubmodel-api-asset asset not found in catalog");
+    console.log("Available datasets:", datasets.map(d => d["@id"]));
+    return;
+  }
+
+  const assetId = dataset["@id"];
+  const offer = dataset["odrl:hasPolicy"];
+  const offerId = offer["@id"];
+
+  console.log("✓ Found Asset ID:", assetId);
+  console.log("✓ Found Policy ID:", offerId);
+
+  const negotiationOffer = {
+    "@context": "http://www.w3.org/ns/odrl.jsonld",
+    "@type": "odrl:Offer",
+    "@id": offerId,
+    "assigner": jsonData["dspace:participantId"],
+    "odrl:permission": {
+      "odrl:target": assetId,
+      "odrl:action": {
+        "odrl:type": "http://www.w3.org/ns/odrl/2/use"
+      },
+      "odrl:constraint": offer["odrl:permission"]["odrl:constraint"]
+    },
+    "odrl:prohibition": [],
+    "odrl:obligation": [],
+    "odrl:target": {
+      "@id": assetId
+    }
+  };
+
+  bru.setVar("TIER2_ITEMSTOCK_ASSET_ID", assetId);
+  bru.setVar("TIER2_ITEMSTOCK_OFFER", JSON.stringify(negotiationOffer));
+  console.log("===================================\n");
+}
+
+tests {
+  test("response is ok", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("itemstock asset found", function() {
+    let datasets = res.getBody()["dcat:dataset"];
+    if (!Array.isArray(datasets)) datasets = [datasets];
+    const asset = datasets.find(d => d["@id"] && d["@id"].includes("itemstocksubmodel-api-asset"));
+    expect(asset).to.exist;
+  });
+
+  test("offer policy present", function() {
+    let datasets = res.getBody()["dcat:dataset"];
+    if (!Array.isArray(datasets)) datasets = [datasets];
+    const asset = datasets.find(d => d["@id"] && d["@id"].includes("itemstocksubmodel-api-asset"));
+    expect(asset["odrl:hasPolicy"]).to.exist;
+    expect(asset["odrl:hasPolicy"]["@id"]).to.exist;
+  });
+}

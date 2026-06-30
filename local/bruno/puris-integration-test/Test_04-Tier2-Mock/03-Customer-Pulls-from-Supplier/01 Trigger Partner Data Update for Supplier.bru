@@ -1,0 +1,27 @@
+meta {
+  name: Trigger Partner Data Update for Supplier
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{CUSTOMER_PURIS_BACKEND}}/catena/partner-data-update
+  body: json
+  auth: none
+}
+
+headers {
+  X-Api-Key: {{CUSTOMER_PURIS_BACKEND_API_KEY}}
+}
+
+body:json {
+  {
+    "bpnl": "{{SUPPLIER_BPNL}}"
+  }
+}
+
+tests {
+  test("response is ok", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

@@ -1,0 +1,53 @@
+meta {
+  name: Tier2 Mock DSP Catalog
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{TIER2_MOCK}}/api/v1/dsp/catalog/request
+  body: json
+  auth: none
+}
+
+body:json {
+  {}
+}
+
+tests {
+  test("response is ok", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  const datasets = res.getBody()["dcat:dataset"];
+
+  test("catalog contains 8 assets", function() {
+    expect(datasets).to.be.an("array");
+    expect(datasets.length).to.equal(8);
+  });
+
+  test("DTR asset is present", function() {
+    const dtr = datasets.find(d => d["dct:type"]["@id"] === "cx-taxo:DigitalTwinRegistry");
+    expect(dtr).to.exist;
+    expect(dtr["cx-common:version"]).to.equal("3.0");
+  });
+
+  const expectedSemanticIds = [
+    "urn:samm:io.catenax.item_stock:2.0.0#ItemStock",
+    "urn:samm:io.catenax.planned_production_output:2.0.0#PlannedProductionOutput",
+    "urn:samm:io.catenax.short_term_material_demand:1.0.0#ShortTermMaterialDemand",
+    "urn:samm:io.catenax.delivery_information:2.0.0#DeliveryInformation",
+    "urn:samm:io.catenax.days_of_supply:2.0.0#DaysOfSupply",
+    "urn:samm:io.catenax.part_type_information:1.0.0#PartTypeInformation"
+  ];
+
+  expectedSemanticIds.forEach(function(semanticId) {
+    const name = semanticId.split("#")[1];
+    test("submodel " + name + " is present", function() {
+      const asset = datasets.find(d =>
+        d["aas-semantics:semanticId"] && d["aas-semantics:semanticId"]["@id"] === semanticId
+      );
+      expect(asset).to.exist;
+    });
+  });
+}

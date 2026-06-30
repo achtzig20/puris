@@ -1,0 +1,28 @@
+meta {
+  name: Get Reported Material Item Stocks from Tier2
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{SUPPLIER_PURIS_BACKEND}}/catena/stocks/material/reported?ownMaterialNumber={{MATERIAL_NUMBER_SUPPLIER}}
+  body: none
+  auth: none
+}
+
+headers {
+  X-Api-Key: {{SUPPLIER_PURIS_BACKEND_API_KEY}}
+}
+
+tests {
+  test("response is ok", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("contains tier2 reported stock", function() {
+    const stocks = res.getBody();
+    const tier2Stock = stocks.find(s => s.partner && s.partner.bpnl === bru.getEnvVar("TIER2_BPNL"));
+    expect(tier2Stock).to.exist;
+    expect(tier2Stock.stockQuantity).to.be.above(0);
+  });
+}

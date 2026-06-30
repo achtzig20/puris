@@ -1,0 +1,59 @@
+meta {
+  name: Start Transfer
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{SUPPLIER_EDC}}/{{MANAGEMENT_PATH}}/v3/transferprocesses
+  body: json
+  auth: none
+}
+
+headers {
+  X-Api-Key: {{SUPPLIER_EDC_API_KEY}}
+}
+
+script:pre-request {
+  const contractId = bru.getVar("TIER2_CONTRACT_AGREEMENT_ID");
+  console.log("\n========== STARTING TRANSFER ==========");
+  console.log("Using Contract ID:", contractId);
+  console.log("Asset ID:", bru.getVar("TIER2_ITEMSTOCK_ASSET_ID"));
+  console.log("Counter Party:", bru.getVar("TIER2_MOCK_INT"));
+  if (!contractId) {
+    console.error("❌ ERROR: contractId is null/undefined!");
+  }
+  console.log("======================================\n");
+}
+
+body:json {
+  {
+    "@context": {
+      "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+    },
+    "assetId": "{{TIER2_ITEMSTOCK_ASSET_ID}}",
+    "counterPartyAddress": "{{TIER2_MOCK_INT}}/api/v1/dsp",
+    "connectorId": "{{TIER2_BPNL}}",
+    "contractId": "{{TIER2_CONTRACT_AGREEMENT_ID}}",
+    "transferType": "HttpData-PULL",
+    "dataDestination": {
+      "type": "HttpProxy"
+    },
+    "protocol": "dataspace-protocol-http"
+  }
+}
+
+script:post-response {
+  const jsonData = res.getBody();
+  bru.setVar("TIER2_TRANSFER_PROCESS_ID", jsonData["@id"]);
+}
+
+tests {
+  test("response is ok", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("transfer process ID returned", function() {
+    expect(res.getBody()["@id"]).to.exist;
+  });
+}

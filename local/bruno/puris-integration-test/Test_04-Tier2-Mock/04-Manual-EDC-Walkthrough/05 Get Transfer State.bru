@@ -1,0 +1,25 @@
+meta {
+  name: Get Transfer State
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{SUPPLIER_EDC}}/{{MANAGEMENT_PATH}}/v3/transferprocesses/{{TIER2_TRANSFER_PROCESS_ID}}
+  body: none
+  auth: none
+}
+
+headers {
+  X-Api-Key: {{SUPPLIER_EDC_API_KEY}}
+}
+
+tests {
+  test("response is ok", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("transfer started", function() {
+    expect(res.getBody().state).to.equal("STARTED");
+  });
+}

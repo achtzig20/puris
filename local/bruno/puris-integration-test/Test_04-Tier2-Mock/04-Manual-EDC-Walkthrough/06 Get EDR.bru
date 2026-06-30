@@ -1,0 +1,47 @@
+meta {
+  name: Get EDR
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{SUPPLIER_EDC}}/{{MANAGEMENT_PATH}}/v3/edrs/{{TIER2_TRANSFER_PROCESS_ID}}/dataaddress
+  body: none
+  auth: none
+}
+
+params:query {
+  auto_refresh: true
+}
+
+headers {
+  X-Api-Key: {{SUPPLIER_EDC_API_KEY}}
+}
+
+script:pre-request {
+  console.log("Waiting 10s for transfer to start...");
+  await new Promise(resolve => setTimeout(resolve, 10000));
+}
+
+script:post-response {
+  const jsonData = res.getBody();
+  console.log("EDR raw response:", JSON.stringify(jsonData, null, 2));
+  bru.setVar("TIER2_EDR_ENDPOINT", jsonData.endpoint);
+  // TX-EDC 0.13+ returns the token under tx-auth:token, not authorization
+  bru.setVar("TIER2_EDR_AUTH", jsonData["tx-auth:token"] || jsonData.authorization);
+}
+
+tests {
+  test("response is ok", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("EDR endpoint present", function() {
+    expect(res.getBody().endpoint).to.exist;
+  });
+
+  test("EDR auth token present", function() {
+    const body = res.getBody();
+    expect(body["tx-auth:token"] || body.authorization).to.exist;
+  });
+}

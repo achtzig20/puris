@@ -71,16 +71,24 @@ def _build_shell(bpnl: str, base_url: str) -> dict:
 
     submodel_descriptors = [
         _submodel_descriptor(
-            "urn:samm:io.catenax.item_stock_anonymized:1.0.0#ItemStockAnonymized",
-            f"itemstockanonymizedsubmodel-api-asset@{bpnl}",
+            "urn:samm:io.catenax.item_stock:2.0.0#ItemStock",
+            f"itemstocksubmodel-api-asset@{bpnl}",
         ),
         _submodel_descriptor(
-            "urn:samm:io.catenax.delivery_information_anonymized:1.0.0#DeliveryInformationAnonymized",
-            f"deliveryanonymizedsubmodel-api-asset@{bpnl}",
+            "urn:samm:io.catenax.planned_production_output:2.0.0#PlannedProductionOutput",
+            f"productionsubmodel-api-asset@{bpnl}",
         ),
         _submodel_descriptor(
-            "urn:samm:io.catenax.planned_production_output_anonymized:1.0.0#PlannedProductionOutputAnonymized",
-            f"productionanonymizedsubmodel-api-asset@{bpnl}",
+            "urn:samm:io.catenax.short_term_material_demand:1.0.0#ShortTermMaterialDemand",
+            f"demandsubmodel-api-asset@{bpnl}",
+        ),
+        _submodel_descriptor(
+            "urn:samm:io.catenax.delivery_information:2.0.0#DeliveryInformation",
+            f"deliverysubmodel-api-asset@{bpnl}",
+        ),
+        _submodel_descriptor(
+            "urn:samm:io.catenax.days_of_supply:2.0.0#DaysOfSupply",
+            f"daysofsupplysubmodel-api-asset@{bpnl}",
         ),
         _submodel_descriptor(
             "urn:samm:io.catenax.part_type_information:1.0.0#PartTypeInformation",
@@ -108,9 +116,12 @@ def _build_shell(bpnl: str, base_url: str) -> dict:
 def get_submodel(asset_id: str, bpnl: str) -> Optional[dict]:
     prefix = asset_id.split("@")[0]
     dispatch = {
-        "itemstockanonymizedsubmodel-api-asset": _item_stock_anonymized,
-        "deliveryanonymizedsubmodel-api-asset": _delivery_anonymized,
-        "productionanonymizedsubmodel-api-asset": _production_anonymized,
+        "itemstocksubmodel-api-asset": _item_stock,
+        "productionsubmodel-api-asset": _production,
+        "demandsubmodel-api-asset": _demand,
+        "deliverysubmodel-api-asset": _delivery,
+        "daysofsupplysubmodel-api-asset": _days_of_supply,
+        "notification-api-asset": _notification,
         "PartTypeInformationSubmodelApi": _part_type_info,
     }
     fn = dispatch.get(prefix)
@@ -127,24 +138,74 @@ def _future(days: int) -> str:
     return (date.today() + timedelta(days=days)).isoformat()
 
 
-def _item_stock_anonymized(_bpnl: str) -> dict:
+def _bpns(bpnl: str) -> str:
+    return bpnl.replace("BPNL", "BPNS", 1)
+
+
+def _item_stock(bpnl: str) -> dict:
     return {
-        "allocatedStocksAnonymized": [
+        "positions": [
             {
-                "quantityOnAllocatedStock": {"value": 200.0, "unit": "unit:piece"},
-                "stockLocationBPNSAnonymized": "enc:tier2-site-a1b2c3",
-                "isBlocked": False,
                 "lastUpdatedOnDateTime": f"{_today()}T00:00:00Z",
+                "allocatedStocks": [
+                    {
+                        "quantityOnAllocatedStock": {"value": 200.0, "unit": "unit:piece"},
+                        "stockLocationBPNS": _bpns(bpnl),
+                        "isBlocked": False,
+                    }
+                ],
             }
         ],
-        "materialGlobalAssetIdAnonymized": "enc:tier2-mat-d4e5f6",
+        "materialNumberSupplier": TIER2_MATERIAL_NUMBER,
+        "materialGlobalAssetId": f"urn:uuid:global-{bpnl}-mat-01",
         "direction": "OUTBOUND",
     }
 
 
-def _delivery_anonymized(_bpnl: str) -> dict:
+def _production(bpnl: str) -> dict:
     return {
-        "materialGlobalAssetIdAnonymized": "enc:tier2-mat-d4e5f6",
+        "positions": [
+            {
+                "lastUpdatedOnDateTime": f"{_today()}T00:00:00Z",
+                "allocatedPlannedProductionOutputs": [
+                    {
+                        "plannedProductionQuantity": {"value": 500.0, "unit": "unit:piece"},
+                        "productionSiteBpns": _bpns(bpnl),
+                        "estimatedTimeOfCompletion": f"{_future(7)}T00:00:00Z",
+                    }
+                ],
+            }
+        ],
+        "materialNumberSupplier": TIER2_MATERIAL_NUMBER,
+        "materialGlobalAssetId": f"urn:uuid:global-{bpnl}-mat-01",
+        "direction": "OUTBOUND",
+    }
+
+
+def _demand(bpnl: str) -> dict:
+    return {
+        "demandSeries": [
+            {
+                "customerLocationBpns": "BPNS1234567890ZZ",
+                "expectedSupplierLocationBpns": _bpns(bpnl),
+                "demands": [
+                    {
+                        "demand": {"value": 100.0, "unit": "unit:piece"},
+                        "pointInTime": _future(9),
+                    }
+                ],
+                "demandCategoryCode": "0001",
+            }
+        ],
+        "materialNumberSupplier": TIER2_MATERIAL_NUMBER,
+        "materialGlobalAssetId": f"urn:uuid:global-{bpnl}-mat-01",
+        "materialNumberCustomer": TIER2_MATERIAL_NUMBER,
+        "customer": "BPNL1234567890ZZ",
+    }
+
+
+def _delivery(bpnl: str) -> dict:
+    return {
         "deliveries": [
             {
                 "deliveryQuantity": {"value": 100.0, "unit": "unit:piece"},
@@ -153,24 +214,49 @@ def _delivery_anonymized(_bpnl: str) -> dict:
                     {"dateTimeOfEvent": f"{_future(3)}T00:00:00Z", "eventType": "estimated-departure"},
                     {"dateTimeOfEvent": f"{_future(5)}T00:00:00Z", "eventType": "estimated-arrival"},
                 ],
-                "originBpnsAnonymized": "enc:tier2-origin-g7h8i9",
-                "destinationBpnsAnonymized": "enc:supplier-dest-j0k1l2",
+                "transitLocations": {
+                    "origin": {"bpns": _bpns(bpnl)},
+                    "destination": {"bpns": "BPNS1234567890ZZ"},
+                },
+                "incoterm": "EXW",
             }
         ],
+        "materialNumberSupplier": TIER2_MATERIAL_NUMBER,
+        "materialGlobalAssetId": f"urn:uuid:global-{bpnl}-mat-01",
+        "direction": "OUTBOUND",
     }
 
 
-def _production_anonymized(_bpnl: str) -> dict:
+def _days_of_supply(bpnl: str) -> dict:
     return {
-        "materialGlobalAssetIdAnonymized": "enc:tier2-mat-d4e5f6",
-        "allocatedPlannedProductionOutputs": [
+        "allocated": [
             {
-                "plannedProductionQuantity": {"value": 500.0, "unit": "unit:piece"},
-                "productionSiteBpnsAnonymized": "enc:tier2-site-a1b2c3",
-                "estimatedTimeOfCompletion": f"{_future(7)}T00:00:00Z",
-                "lastUpdatedOnDateTime": f"{_today()}T00:00:00Z",
+                "stockLocationBpns": _bpns(bpnl),
+                "daysOfSupply": [
+                    {"date": _today(), "daysOfSupply": 5.0},
+                    {"date": _future(1), "daysOfSupply": 4.5},
+                ],
             }
         ],
+        "materialNumberSupplier": TIER2_MATERIAL_NUMBER,
+        "materialGlobalAssetId": f"urn:uuid:global-{bpnl}-mat-01",
+        "direction": "OUTBOUND",
+    }
+
+
+def _notification(_bpnl: str) -> dict:
+    return {
+        "affectedSitesBpnsSender": [],
+        "affectedSitesBpnsRecipient": [],
+        "leadingRootCause": "STRIKE",
+        "effect": "DEMAND-VOLATILITY",
+        "startDateOfEffect": _today(),
+        "expectedEndDateOfEffect": _future(14),
+        "status": "OPEN",
+        "contentChangedAt": f"{_today()}T00:00:00Z",
+        "relatedNotificationId": None,
+        "sourceNotificationId": None,
+        "text": "Mock notification",
     }
 
 

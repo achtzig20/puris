@@ -1,0 +1,21 @@
+meta {
+  name: Health Check Tier2 Mock
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{TIER2_MOCK}}/health
+  body: none
+  auth: none
+}
+
+tests {
+  test("mock is up", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("correct BPNL", function() {
+    expect(res.getBody().bpnl).to.equal(bru.getEnvVar("TIER2_BPNL"));
+  });
+}

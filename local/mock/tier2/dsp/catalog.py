@@ -18,19 +18,34 @@ USAGE_PURPOSE = "cx.puris.base:1"
 
 SUBMODELS = [
     {
-        "asset_id_prefix": "itemstockanonymizedsubmodel-api-asset",
-        "semantic_id": "urn:samm:io.catenax.item_stock_anonymized:1.0.0#ItemStockAnonymized",
+        "asset_id_prefix": "itemstocksubmodel-api-asset",
+        "semantic_id": "urn:samm:io.catenax.item_stock:2.0.0#ItemStock",
+        "version": "2.0",
+    },
+    {
+        "asset_id_prefix": "productionsubmodel-api-asset",
+        "semantic_id": "urn:samm:io.catenax.planned_production_output:2.0.0#PlannedProductionOutput",
+        "version": "2.0",
+    },
+    {
+        "asset_id_prefix": "demandsubmodel-api-asset",
+        "semantic_id": "urn:samm:io.catenax.short_term_material_demand:1.0.0#ShortTermMaterialDemand",
         "version": "1.0",
     },
     {
-        "asset_id_prefix": "productionanonymizedsubmodel-api-asset",
-        "semantic_id": "urn:samm:io.catenax.planned_production_output_anonymized:1.0.0#PlannedProductionOutputAnonymized",
-        "version": "1.0",
+        "asset_id_prefix": "deliverysubmodel-api-asset",
+        "semantic_id": "urn:samm:io.catenax.delivery_information:2.0.0#DeliveryInformation",
+        "version": "2.0",
     },
     {
-        "asset_id_prefix": "deliveryanonymizedsubmodel-api-asset",
-        "semantic_id": "urn:samm:io.catenax.delivery_information_anonymized:1.0.0#DeliveryInformationAnonymized",
-        "version": "1.0",
+        "asset_id_prefix": "daysofsupplysubmodel-api-asset",
+        "semantic_id": "urn:samm:io.catenax.days_of_supply:2.0.0#DaysOfSupply",
+        "version": "2.0",
+    },
+    {
+        "asset_id_prefix": "notification-api-asset",
+        "semantic_id": "urn:samm:io.catenax.demand_and_capacity_notification:3.0.0#DemandAndCapacityNotification",
+        "version": "3.0",
     },
 ]
 
