@@ -26,7 +26,7 @@ script:pre-request {
 script:post-response {
   const jsonData = res.getBody();
   console.log("EDR raw response:", JSON.stringify(jsonData, null, 2));
-  bru.setVar("TIER2_EDR_ENDPOINT", jsonData.endpoint);
+  bru.setVar("TIER2_EDR_ENDPOINT", jsonData.endpoint.replace("puris-tier2-mock", "localhost"));
   // TX-EDC 0.13+ returns the token under tx-auth:token, not authorization
   bru.setVar("TIER2_EDR_AUTH", jsonData["tx-auth:token"] || jsonData.authorization);
 }

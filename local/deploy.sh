@@ -168,13 +168,6 @@ if [ $backwards_compatibility -eq 1 ]; then
   compose_file="docker-compose-legacy.yaml"
 fi
 
-compose_file="docker-compose.yaml"
-
-if [ $backwards_compatibility -eq 1 ]; then
-  echo "Using docker-compose-legacy.yaml to start EDCs with different versions."
-  compose_file="docker-compose-legacy.yaml"
-fi
-
 if [ $int_seed -eq 1 ]; then
   # overwrite role to enable the local integration test
   # don't register customer dtr asset as we simulate the sceanrio in which another application has been onboarded before

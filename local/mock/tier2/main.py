@@ -32,7 +32,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 import data as mock_data
-from dsp import catalog, negotiations, transfers
+from dsp import catalog, negotiations, outbound, transfers
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("tier2-mock")
@@ -50,6 +50,19 @@ WALLET_OAUTH_SECRET = os.getenv("WALLET_OAUTH_SECRET", "miw_private_client")
 SUPPLIER_DSP_URL = os.getenv("SUPPLIER_DSP_URL", "http://supplier-control-plane:9184/api/v1/dsp")
 
 app = FastAPI(title="PURIS Tier2 Mock", version="1.0.0")
+
+
+# --------------------------------------------------------------------------
+# DSP: Version discovery (required by Tractus-X EDC before accepting negotiations)
+# --------------------------------------------------------------------------
+
+@app.get("/api/v1/dsp/.well-known/dspace-version")
+async def dsp_version():
+    return {
+        "protocolVersions": [
+            {"version": "v0.8", "path": "/", "binding": "HTTPS"}
+        ]
+    }
 
 
 # --------------------------------------------------------------------------
@@ -176,6 +189,119 @@ async def complete_transfer(transfer_id: str, request: Request):
 async def terminate_transfer(transfer_id: str, request: Request):
     logger.info("Transfer termination for %s", transfer_id)
     return JSONResponse(status_code=200, content={})
+
+
+# --------------------------------------------------------------------------
+# DSP: Consumer callbacks (tier2 acting as consumer, e.g. for sending notifications)
+# --------------------------------------------------------------------------
+
+@app.post("/api/v1/dsp/negotiations/{consumer_pid}/agreement")
+async def consumer_negotiation_agreement(consumer_pid: str, request: Request):
+    """Receive ContractAgreementMessage from supplier EDC and fire verification."""
+    body = await request.json()
+    logger.info("Consumer: received ContractAgreementMessage for consumer_pid=%s", consumer_pid)
+    asyncio.create_task(
+        outbound.handle_agreement_and_send_verification(
+            consumer_pid=consumer_pid,
+            body=body,
+            supplier_dsp_url=SUPPLIER_DSP_URL,
+            bpnl=BPNL,
+            supplier_bpnl=SUPPLIER_BPNL,
+            wallet_url=WALLET_URL,
+            wallet_secret=WALLET_OAUTH_SECRET,
+        )
+    )
+    return JSONResponse(status_code=200, content={})
+
+
+@app.post("/api/v1/dsp/negotiations/{consumer_pid}/events")
+async def consumer_negotiation_events(consumer_pid: str, request: Request):
+    """Receive ContractNegotiationEventMessage (FINALIZED) from supplier EDC."""
+    body = await request.json()
+    logger.info("Consumer: received negotiation event for consumer_pid=%s", consumer_pid)
+    outbound.handle_negotiation_event(consumer_pid, body)
+    return JSONResponse(status_code=200, content={})
+
+
+@app.post("/api/v1/dsp/transfers/{consumer_pid}/start")
+async def consumer_transfer_start(consumer_pid: str, request: Request):
+    """Receive TransferStartMessage (with EDR) from supplier EDC."""
+    body = await request.json()
+    logger.info("Consumer: received TransferStartMessage for consumer_pid=%s", consumer_pid)
+    outbound.handle_transfer_start(consumer_pid, body)
+    return JSONResponse(status_code=200, content={})
+
+
+# --------------------------------------------------------------------------
+# Mock trigger: tier2 sends a notification to the supplier
+# --------------------------------------------------------------------------
+
+@app.post("/api/mock/send-notification")
+async def mock_send_notification():
+    """Trigger tier2 to send a DemandAndCapacityNotification to the supplier via full DSP flow."""
+    logger.info("Mock trigger: tier2 initiating outbound notification to supplier")
+    ok, step = await outbound.negotiate_and_send_notification(
+        supplier_dsp_url=SUPPLIER_DSP_URL,
+        base_url=BASE_URL,
+        bpnl=BPNL,
+        supplier_bpnl=SUPPLIER_BPNL,
+        wallet_url=WALLET_URL,
+        wallet_secret=WALLET_OAUTH_SECRET,
+    )
+    if ok:
+        return {"status": "sent", "notificationId": outbound.FIXED_NOTIFICATION_ID}
+    return JSONResponse(
+        status_code=500,
+        content={"error": f"Failed at step: {step} — check tier2 mock logs"},
+    )
+
+
+@app.get("/api/mock/debug/supplier-catalog")
+async def debug_supplier_catalog():
+    """Fetch and return the supplier's DSP catalog as seen by tier2 (for debugging)."""
+    asset_id, offer = await outbound._fetch_notification_asset(
+        SUPPLIER_DSP_URL, BPNL, SUPPLIER_BPNL, WALLET_URL, WALLET_OAUTH_SECRET
+    )
+    return {
+        "supplier_dsp_url": SUPPLIER_DSP_URL,
+        "notification_asset_id": asset_id,
+        "notification_offer": offer,
+    }
+
+
+@app.get("/api/mock/debug/iatp-token")
+async def debug_iatp_token():
+    """Obtain and decode the IATP token tier2 would use for negotiations (for debugging)."""
+    import base64
+    import json as _json
+    import httpx
+
+    token = await outbound._get_iatp_token(BPNL, SUPPLIER_BPNL, WALLET_URL, WALLET_OAUTH_SECRET)
+    if not token:
+        return JSONResponse(status_code=500, content={"error": "Failed to obtain IATP token — check logs"})
+
+    try:
+        parts = token.split(".")
+        payload_b64 = parts[1] + "==" * (4 - len(parts[1]) % 4)
+        payload = _json.loads(base64.urlsafe_b64decode(payload_b64))
+    except Exception as exc:
+        payload = {"decode_error": str(exc)}
+
+    # Also probe whether the supplier catalog is accessible without any auth
+    catalog_url = f"{SUPPLIER_DSP_URL.rstrip('/')}/catalog/request"
+    catalog_body = {"@context": {"dspace": "https://w3id.org/dspace/v0.8/"}, "@type": "dspace:CatalogRequestMessage"}
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            r = await client.post(catalog_url, json=catalog_body)
+            catalog_no_auth = r.status_code
+    except Exception as exc:
+        catalog_no_auth = f"error: {exc}"
+
+    return {
+        "token_first_80": token[:80],
+        "jwt_payload": payload,
+        "catalog_status_no_auth": catalog_no_auth,
+    }
 
 
 # --------------------------------------------------------------------------

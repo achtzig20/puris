@@ -22,6 +22,6 @@ tests {
   test("tier2 partner is registered with correct DSP URL", function() {
     const partner = res.getBody();
     expect(partner.bpnl).to.equal(bru.getEnvVar("TIER2_BPNL"));
-    expect(partner.edcUrl).to.equal(bru.getEnvVar("TIER2_MOCK") + "/api/v1/dsp");
+    expect(partner.edcUrl).to.equal(bru.getEnvVar("TIER2_MOCK_INT") + "/api/v1/dsp");
   });
 }

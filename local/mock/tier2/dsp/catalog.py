@@ -1,20 +1,19 @@
 import uuid
 
+from dsp.common import DSPACE_NS, ODRL_NS, build_permission
+
 CONTEXT = {
     "@vocab": "https://w3id.org/edc/v0.0.1/ns/",
     "edc": "https://w3id.org/edc/v0.0.1/ns/",
     "cx-policy": "https://w3id.org/catenax/2025/9/policy",
     "dcat": "http://www.w3.org/ns/dcat#",
     "dct": "http://purl.org/dc/terms/",
-    "odrl": "http://www.w3.org/ns/odrl/2/",
-    "dspace": "https://w3id.org/dspace/v0.8/",
+    "odrl": ODRL_NS,
+    "dspace": DSPACE_NS,
     "cx-common": "https://w3id.org/catenax/ontology/common#",
     "cx-taxo": "https://w3id.org/catenax/taxonomy#",
     "aas-semantics": "https://admin-shell.io/aas/3/0/HasSemantics/",
 }
-
-FRAMEWORK_AGREEMENT = "DataExchangeGovernance:1.0"
-USAGE_PURPOSE = "cx.puris.base:1"
 
 SUBMODELS = [
     {
@@ -57,23 +56,7 @@ def _offer_policy(offer_id: str) -> dict:
     return {
         "@id": offer_id,
         "@type": "odrl:Offer",
-        "odrl:permission": {
-            "odrl:action": {"@id": "odrl:use"},
-            "odrl:constraint": {
-                "odrl:and": [
-                    {
-                        "odrl:leftOperand": {"@id": "cx-policy:FrameworkAgreement"},
-                        "odrl:operator": {"@id": "odrl:eq"},
-                        "odrl:rightOperand": FRAMEWORK_AGREEMENT,
-                    },
-                    {
-                        "odrl:leftOperand": {"@id": "cx-policy:UsagePurpose"},
-                        "odrl:operator": {"@id": "odrl:isAnyOf"},
-                        "odrl:rightOperand": USAGE_PURPOSE,
-                    },
-                ]
-            },
-        },
+        "odrl:permission": build_permission(),
         "odrl:prohibition": [],
         "odrl:obligation": [],
     }

@@ -1848,7 +1848,7 @@ components:
       type: apiKey
 info:
   title: PURIS FOSS Open API
-  version: 6.0.0
+  version: 6.0.1
 openapi: 3.1.0
 paths:
   /batch/partner-data-update:

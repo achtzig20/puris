@@ -4,20 +4,14 @@ meta {
   seq: 1
 }
 
-post {
-  url: {{SUPPLIER_PURIS_BACKEND}}/catena/partner-data-update
-  body: json
+get {
+  url: {{SUPPLIER_PURIS_BACKEND}}/catena/stockView/update-reported-material-stocks?ownMaterialNumber={{SEMICONDUCTOR_MATERIAL_NUMBER_SUPPLIER}}
+  body: none
   auth: none
 }
 
 headers {
   X-Api-Key: {{SUPPLIER_PURIS_BACKEND_API_KEY}}
-}
-
-body:json {
-  {
-    "bpnl": "{{TIER2_BPNL}}"
-  }
 }
 
 tests {

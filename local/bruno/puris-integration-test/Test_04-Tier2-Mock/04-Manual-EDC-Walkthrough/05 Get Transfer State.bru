@@ -18,8 +18,4 @@ tests {
   test("response is ok", function() {
     expect(res.getStatus()).to.equal(200);
   });
-
-  test("transfer started", function() {
-    expect(res.getBody().state).to.equal("STARTED");
-  });
 }

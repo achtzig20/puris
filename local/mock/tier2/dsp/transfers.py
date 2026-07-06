@@ -5,6 +5,8 @@ from typing import Optional
 
 import httpx
 
+from dsp.common import CONTEXT_DSPACE, DSPACE_NS, get_iatp_token
+
 logger = logging.getLogger("tier2-mock")
 
 _store: dict[str, dict] = {}
@@ -27,7 +29,7 @@ def create(body: dict, bpnl: str, base_url: str) -> tuple[dict, str, str]:
     }
 
     response = {
-        "@context": {"dspace": "https://w3id.org/dspace/v0.8/"},
+        "@context": CONTEXT_DSPACE,
         "@type": "dspace:TransferProcess",
         "@id": provider_pid,
         "dspace:providerPid": provider_pid,
@@ -42,7 +44,7 @@ def get_state(transfer_id: str) -> Optional[dict]:
     if not entry:
         return None
     return {
-        "@context": {"dspace": "https://w3id.org/dspace/v0.8/"},
+        "@context": CONTEXT_DSPACE,
         "@type": "dspace:TransferProcess",
         "@id": transfer_id,
         "dspace:providerPid": transfer_id,
@@ -56,7 +58,7 @@ def _data_address(endpoint: str, token: str) -> dict:
     bearer = f"Bearer {token}"
     return {
         "@context": {
-            "dspace": "https://w3id.org/dspace/v0.8/",
+            "dspace": DSPACE_NS,
             "edc": "https://w3id.org/edc/v0.0.1/ns/",
             "tx-auth": "https://w3id.org/tractusx/auth/",
         },
@@ -98,10 +100,10 @@ async def push_start_message(
 
     await asyncio.sleep(0.5)
 
-    iatp_token = await _get_iatp_token(bpnl, supplier_bpnl, wallet_url, wallet_secret)
+    iatp_token = await get_iatp_token(bpnl, supplier_bpnl, wallet_url, wallet_secret)
 
     message = {
-        "@context": {"dspace": "https://w3id.org/dspace/v0.8/"},
+        "@context": CONTEXT_DSPACE,
         "@type": "dspace:TransferStartMessage",
         "dspace:providerPid": provider_pid,
         "dspace:consumerPid": entry["consumerPid"],
@@ -125,51 +127,3 @@ async def push_start_message(
                 )
     except Exception as exc:
         logger.warning("Could not push TransferStartMessage to %s: %s", callback_url, exc)
-
-
-async def _get_iatp_token(bpnl: str, supplier_bpnl: str, wallet_url: str, wallet_secret: str) -> Optional[str]:
-    """Get a scoped IATP token from the wallet targeting the supplier's DID."""
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            # Step 1: OAuth2 bearer token
-            resp = await client.post(
-                f"{wallet_url}/oauth/token",
-                data={
-                    "grant_type": "client_credentials",
-                    "client_id": bpnl,
-                    "client_secret": wallet_secret,
-                },
-                headers={"Content-Type": "application/x-www-form-urlencoded"},
-            )
-            if not resp.is_success:
-                logger.warning("Wallet OAuth failed: %s", resp.status_code)
-                return None
-            bearer = resp.json().get("access_token")
-            if not bearer:
-                logger.warning("Wallet OAuth returned no access_token")
-                return None
-
-            # Step 2: STS grantAccess — produces a token with aud=supplier DID
-            resp2 = await client.post(
-                f"{wallet_url}/api/sts",
-                json={
-                    "grantAccess": {
-                        "scope": "read",
-                        "credentialTypes": ["MembershipCredential"],
-                        "consumerDid": f"did:web:wallet:{bpnl}",
-                        "providerDid": f"did:web:wallet:{supplier_bpnl}",
-                    }
-                },
-                headers={"Authorization": f"Bearer {bearer}", "Content-Type": "application/json"},
-            )
-            if not resp2.is_success:
-                logger.warning("STS grantAccess failed: %s %s", resp2.status_code, resp2.text[:200])
-                return None
-            jwt = resp2.json().get("jwt")
-            if not jwt:
-                logger.warning("STS grantAccess returned no jwt: %s", resp2.json())
-                return None
-            return jwt
-    except Exception as exc:
-        logger.warning("IATP token acquisition failed: %s", exc)
-        return None
