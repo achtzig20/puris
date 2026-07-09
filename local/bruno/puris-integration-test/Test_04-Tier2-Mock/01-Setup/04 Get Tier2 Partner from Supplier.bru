@@ -1,0 +1,31 @@
+meta {
+  name: Get Tier2 Partner from Supplier
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{SUPPLIER_PURIS_BACKEND}}/catena/partners?partnerBpnl={{TIER2_BPNL}}
+  body: none
+  auth: none
+}
+
+params:query {
+  partnerBpnl: {{TIER2_BPNL}}
+}
+
+headers {
+  X-Api-Key: {{SUPPLIER_PURIS_BACKEND_API_KEY}}
+}
+
+tests {
+  test("response is ok", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("tier2 partner is registered with correct DSP URL", function() {
+    const partner = res.getBody();
+    expect(partner.bpnl).to.equal(bru.getEnvVar("TIER2_BPNL"));
+    expect(partner.edcUrl).to.equal(bru.getEnvVar("TIER2_MOCK_INT") + "/api/v1/dsp");
+  });
+}

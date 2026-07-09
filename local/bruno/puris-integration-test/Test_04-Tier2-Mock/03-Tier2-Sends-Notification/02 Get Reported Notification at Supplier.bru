@@ -1,0 +1,58 @@
+meta {
+  name: Get Reported Notification at Supplier
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{SUPPLIER_PURIS_BACKEND}}/catena/demand-and-capacity-notification/reported
+  body: none
+  auth: none
+}
+
+headers {
+  X-Api-Key: {{SUPPLIER_PURIS_BACKEND_API_KEY}}
+}
+
+params:query {
+  partnerBpnl: {{TIER2_BPNL}}
+}
+
+script:pre-request {
+  // Allow a few seconds for the supplier's PURIS backend to process the notification.
+  console.log("Waiting 5s for supplier to process notification...");
+  await new Promise(resolve => setTimeout(resolve, 5000));
+}
+
+script:post-response {
+  const notifications = res.getBody();
+  console.log("Reported notifications from tier2:", JSON.stringify(notifications, null, 2));
+  const notifId = bru.getVar("TIER2_SENT_NOTIFICATION_ID");
+  if (notifId) {
+    const match = notifications.find(n => n.notificationId === notifId);
+    if (match) {
+      console.log("Found notification:", JSON.stringify(match, null, 2));
+    } else {
+      console.warn("Notification not found by ID. IDs received:", notifications.map(n => n.notificationId));
+    }
+  }
+}
+
+tests {
+  test("response is ok", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("at least one reported notification from tier2", function() {
+    const notifications = res.getBody();
+    expect(notifications).to.be.an("array");
+    expect(notifications.length).to.be.above(0);
+  });
+
+  test("tier2 notification id matches", function() {
+    const notifications = res.getBody();
+    const notifId = bru.getVar("TIER2_SENT_NOTIFICATION_ID");
+    const match = notifications.find(n => n.notificationId === notifId);
+    expect(match).to.exist;
+  });
+}

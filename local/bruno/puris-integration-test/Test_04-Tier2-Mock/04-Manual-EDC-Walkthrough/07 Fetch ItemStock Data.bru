@@ -1,0 +1,44 @@
+meta {
+  name: Fetch ItemStock Data
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{TIER2_EDR_ENDPOINT}}/{{TIER2_ITEMSTOCK_ASSET_ID}}
+  body: none
+  auth: apikey
+}
+
+headers {
+  Authorization: {{TIER2_EDR_AUTH}}
+}
+
+auth:apikey {
+  key: Authorization
+  value: {{TIER2_EDR_AUTH}}
+  placement: header
+}
+
+tests {
+  test("response is ok", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("positions present", function() {
+    const body = res.getBody();
+    expect(body.positions).to.be.an("array");
+    expect(body.positions.length).to.be.above(0);
+  });
+
+  test("allocated stocks present", function() {
+    const position = res.getBody().positions[0];
+    expect(position.allocatedStocks).to.be.an("array");
+    expect(position.allocatedStocks.length).to.be.above(0);
+  });
+
+  test("stock quantity is positive", function() {
+    const stock = res.getBody().positions[0].allocatedStocks[0];
+    expect(stock.quantityOnAllocatedStock.value).to.be.above(0);
+  });
+}

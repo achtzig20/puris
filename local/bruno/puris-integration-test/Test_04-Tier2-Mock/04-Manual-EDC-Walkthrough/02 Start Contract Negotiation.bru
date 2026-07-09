@@ -1,0 +1,51 @@
+meta {
+  name: Start Contract Negotiation
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{SUPPLIER_EDC}}/{{MANAGEMENT_PATH}}/v3/contractnegotiations
+  body: json
+  auth: apikey
+}
+
+auth:apikey {
+  key: X-API-KEY
+  value: {{SUPPLIER_EDC_API_KEY}}
+  placement: header
+}
+
+body:json {
+  {
+    "@context": {
+      "@vocab": "https://w3id.org/edc/v0.0.1/ns/",
+      "odrl": "http://www.w3.org/ns/odrl/2/",
+      "cx-policy": "https://w3id.org/catenax/2025/9/policy/"
+    },
+    "@type": "ContractRequest",
+    "counterPartyAddress": "{{TIER2_MOCK_INT}}/api/v1/dsp",
+    "protocol": "dataspace-protocol-http",
+    "policy": {{TIER2_ITEMSTOCK_OFFER}}
+  }
+}
+
+script:post-response {
+  const jsonData = res.getBody();
+  const negotiationId = jsonData["@id"];
+  console.log("\n========== CONTRACT NEGOTIATION STARTED ==========");
+  console.log("Negotiation ID:", negotiationId);
+  console.log("Full response:", JSON.stringify(jsonData, null, 2));
+  console.log("===================================================\n");
+  bru.setVar("TIER2_NEGOTIATION_ID", negotiationId);
+}
+
+tests {
+  test("response is ok", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("negotiation ID returned", function() {
+    expect(res.getBody()["@id"]).to.exist;
+  });
+}

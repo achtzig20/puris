@@ -1,0 +1,31 @@
+meta {
+  name: Create MPR Supplier buys from Tier2
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{SUPPLIER_PURIS_BACKEND}}/catena/materialpartnerrelations
+  body: json
+  auth: none
+}
+
+headers {
+  X-Api-Key: {{SUPPLIER_PURIS_BACKEND_API_KEY}}
+}
+
+body:json {
+  {
+    "partnerBpnl": "{{TIER2_BPNL}}",
+    "ownMaterialNumber": "{{RAW_MATERIAL_MATERIAL_NUMBER_SUPPLIER}}",
+    "partnerMaterialNumber": "{{TIER2_MATERIAL_NUMBER}}",
+    "partnerSuppliesMaterial": true,
+    "partnerBuysMaterial": false
+  }
+}
+
+tests {
+  test("response is ok", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

@@ -1,0 +1,43 @@
+meta {
+  name: Get Reported Material Item Stocks from Tier2
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{SUPPLIER_PURIS_BACKEND}}/catena/stockView/reported-material-stocks?ownMaterialNumber={{B64_MNR_SUPPLIER}}
+  body: none
+  auth: none
+}
+
+params:query {
+  ownMaterialNumber: {{B64_MNR_SUPPLIER}}
+}
+
+headers {
+  X-Api-Key: {{SUPPLIER_PURIS_BACKEND_API_KEY}}
+}
+
+script:pre-request {
+  var plain = bru.getEnvVar("RAW_MATERIAL_MATERIAL_NUMBER_SUPPLIER")
+  var encoded = Buffer.from(plain).toString("base64")
+  bru.setVar("B64_MNR_SUPPLIER", encoded)
+
+  // The update was only just triggered and is processed asynchronously
+  // (EDC catalog/negotiation/transfer with the tier2 mock); allow it time to complete.
+  console.log("Waiting 20s for the async reported-stock update to complete...");
+  await new Promise(resolve => setTimeout(resolve, 20000));
+}
+
+tests {
+  test("response is ok", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("contains tier2 reported stock", function() {
+    const stocks = res.getBody();
+    const tier2Stock = stocks.find(s => s.partner && s.partner.bpnl === bru.getEnvVar("TIER2_BPNL"));
+    expect(tier2Stock).to.exist;
+    expect(tier2Stock.quantity).to.be.above(0);
+  });
+}

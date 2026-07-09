@@ -1,0 +1,46 @@
+meta {
+  name: Register Tier2 Partner
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{SUPPLIER_PURIS_BACKEND}}/catena/partners
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Api-Key: {{SUPPLIER_PURIS_BACKEND_API_KEY}}
+}
+
+body:json {
+  {
+    "name": "Tier2 Supplier Inc.",
+    "edcUrl": "{{TIER2_MOCK_INT}}/api/v1/dsp",
+    "bpnl": "{{TIER2_BPNL}}",
+    "policyProfileVersion": "{{SUPPLIER_POLICY_PROFILE_VERSION}}",
+    "addresses": [],
+    "sites": [
+      {
+        "bpns": "{{TIER2_BPNS}}",
+        "name": "Tier2 Supplier Inc. Production Site",
+        "addresses": [
+          {
+            "bpna": "{{TIER2_BPNA}}",
+            "streetAndNumber": "Main Street 1",
+            "zipCodeAndCity": "20001 Hamburg",
+            "country": "Germany"
+          }
+        ]
+      }
+    ]
+  }
+}
+
+tests {
+  test("response is ok", function() {
+      expect(res.getStatus()).to.equal(200);
+  })
+}
