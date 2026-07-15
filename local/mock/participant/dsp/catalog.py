@@ -20,7 +20,7 @@
 
 import uuid
 
-from data import PART_TYPE_INFO_ASSET, PART_TYPE_INFO_SEMANTIC_ID, SUBMODELS
+from data import CATALOG_ASSETS, PART_TYPE_INFO_ASSET, PART_TYPE_INFO_SEMANTIC_ID
 from dsp.common import CX_POLICY_NS, DSPACE_NS, ODRL_NS, build_permission
 
 CONTEXT = {
@@ -85,7 +85,7 @@ def build(bpnl: str, base_url: str) -> dict:
     })
 
     # Submodel assets
-    for prefix, semantic_id, version in SUBMODELS:
+    for prefix, semantic_id, version in CATALOG_ASSETS:
         asset_id = f"{prefix}@{bpnl}"
         datasets.append({
             "@id": asset_id,
