@@ -34,7 +34,6 @@ ITEM_STOCK_ASSET = "itemstocksubmodel-api-asset"
 PLANNED_PRODUCTION_ASSET = "productionsubmodel-api-asset"
 DELIVERY_ASSET = "deliverysubmodel-api-asset"
 DAYS_OF_SUPPLY_ASSET = "daysofsupplysubmodel-api-asset"
-NOTIFICATION_ASSET = "notification-api-asset"
 PART_TYPE_INFO_ASSET = "PartTypeInformationSubmodelApi"
 PART_TYPE_INFO_SEMANTIC_ID = "urn:samm:io.catenax.part_type_information:1.0.0#PartTypeInformation"
 
