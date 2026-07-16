@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2026 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 Volkswagen AG
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -20,23 +20,19 @@
 
 import uuid
 
-from data import PART_TYPE_INFO_ASSET, PART_TYPE_INFO_SEMANTIC_ID, SUBMODELS
-from dsp.common import CX_POLICY_NS, DSPACE_NS, ODRL_NS, build_permission
+from data import PART_TYPE_INFO_ASSET, PART_TYPE_INFO_SEMANTIC_ID, CATALOG_ASSETS
+from dsp.common import build_permission
 
 CONTEXT = {
-    "@vocab": "https://w3id.org/edc/v0.0.1/ns/",
-    "edc": "https://w3id.org/edc/v0.0.1/ns/",
-    "cx-policy": CX_POLICY_NS,
+    "cx-policy": "https://w3id.org/catenax/2025/9/policy/",
     "dcat": "http://www.w3.org/ns/dcat#",
     "dct": "http://purl.org/dc/terms/",
-    "odrl": ODRL_NS,
-    "dspace": DSPACE_NS,
+    "odrl": "http://www.w3.org/ns/odrl/2/",
+    "dspace": "https://w3id.org/dspace/v0.8/",
     "cx-common": "https://w3id.org/catenax/ontology/common#",
     "cx-taxo": "https://w3id.org/catenax/taxonomy#",
     "aas-semantics": "https://admin-shell.io/aas/3/0/HasSemantics/",
 }
-
-DTR_ASSET_PREFIX = "DigitalTwinRegistryId"
 
 
 def _offer_policy(offer_id: str) -> dict:
@@ -49,27 +45,32 @@ def _offer_policy(offer_id: str) -> dict:
     }
 
 
-def _distribution(service_id: str) -> dict:
+def _distribution(service: dict) -> dict:
     return {
         "@type": "dcat:Distribution",
         "dct:format": {"@id": "HttpData-PULL"},
-        "dcat:accessService": {"@id": service_id},
+        "dcat:accessService": service,
     }
 
 
 def build(bpnl: str, base_url: str) -> dict:
-    service_id = f"urn:uuid:{uuid.uuid4()}"
+    service = {
+        "@id": f"urn:uuid:{uuid.uuid4()}",
+        "@type": "dcat:DataService",
+        "dcat:endpointDescription": "dspace:connector",
+        "dcat:endpointURL": f"{base_url}/api/v1/dsp",
+    }
     datasets = []
 
     # DTR asset
-    dtr_asset_id = f"{DTR_ASSET_PREFIX}@{bpnl}"
+    dtr_asset_id = f"DigitalTwinRegistryId@{bpnl}"
     datasets.append({
         "@id": dtr_asset_id,
         "@type": "dcat:Dataset",
         "dct:type": {"@id": "cx-taxo:DigitalTwinRegistry"},
         "cx-common:version": "3.0",
         "odrl:hasPolicy": _offer_policy(f"offer-dtr-{uuid.uuid4()}"),
-        "dcat:distribution": [_distribution(service_id)],
+        "dcat:distribution": [_distribution(service)],
     })
 
     # PartTypeInformation asset
@@ -81,11 +82,11 @@ def build(bpnl: str, base_url: str) -> dict:
         "cx-common:version": "3.0",
         "aas-semantics:semanticId": {"@id": PART_TYPE_INFO_SEMANTIC_ID},
         "odrl:hasPolicy": _offer_policy(f"offer-pti-{uuid.uuid4()}"),
-        "dcat:distribution": [_distribution(service_id)],
+        "dcat:distribution": [_distribution(service)],
     })
 
-    # Submodel assets
-    for prefix, semantic_id, version in SUBMODELS:
+
+    for prefix, semantic_id, version in CATALOG_ASSETS:
         asset_id = f"{prefix}@{bpnl}"
         datasets.append({
             "@id": asset_id,
@@ -94,7 +95,7 @@ def build(bpnl: str, base_url: str) -> dict:
             "cx-common:version": version,
             "aas-semantics:semanticId": {"@id": semantic_id},
             "odrl:hasPolicy": _offer_policy(f"offer-{prefix}-{uuid.uuid4()}"),
-            "dcat:distribution": [_distribution(service_id)],
+            "dcat:distribution": [_distribution(service)],
         })
 
     return {
@@ -103,10 +104,7 @@ def build(bpnl: str, base_url: str) -> dict:
         "@id": f"urn:uuid:{uuid.uuid4()}",
         "dspace:participantId": bpnl,
         "dcat:dataset": datasets,
-        "dcat:service": {
-            "@id": service_id,
-            "@type": "dcat:DataService",
-            "dct:terms": "connector",
-            "dcat:endpointURL": f"{base_url}/api/v1/dsp",
-        },
+        "dcat:catalog": [],
+        "dcat:distribution": [],
+        "dcat:service": service,
     }
