@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2026 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 Volkswagen AG
 #
 # See the NOTICE file(s) distributed with this work for additional
 # information regarding copyright ownership.
@@ -16,7 +16,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-"""Provider-side contract negotiation state machine (tier2 acting as DSP provider)."""
+"""Provider-side contract negotiation state machine (mock participant acting as DSP provider)."""
 
 import asyncio
 import logging
@@ -26,7 +26,7 @@ from typing import Optional
 
 from dsp.common import CONTEXT_DSPACE, CONTEXT_DSPACE_ODRL_POLICY, build_permission, push_dsp_message
 
-logger = logging.getLogger("tier2-mock")
+logger = logging.getLogger("mock participant dsp negotiations")
 
 _store: dict[str, dict] = {}
 

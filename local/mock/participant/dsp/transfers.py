@@ -22,7 +22,7 @@ import asyncio
 import uuid
 from typing import Optional
 
-from dsp.common import CONTEXT_DSPACE, DSPACE_NS, push_dsp_message
+from dsp.common import CONTEXT_DSPACE, push_dsp_message
 
 _store: dict[str, dict] = {}
 
@@ -73,7 +73,7 @@ def _data_address(endpoint: str, token: str) -> dict:
     bearer = f"Bearer {token}"
     return {
         "@context": {
-            "dspace": DSPACE_NS,
+            "dspace": "https://w3id.org/dspace/v0.8/",
             "edc": "https://w3id.org/edc/v0.0.1/ns/",
             "tx-auth": "https://w3id.org/tractusx/auth/",
         },
