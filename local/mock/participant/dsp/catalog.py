@@ -20,7 +20,7 @@
 
 import uuid
 
-from data import PART_TYPE_INFO_ASSET, PART_TYPE_INFO_SEMANTIC_ID, CATALOG_ASSETS
+from data import SUBMODELS
 from dsp.common import build_permission
 
 CONTEXT = {
@@ -73,19 +73,7 @@ def build(bpnl: str, base_url: str) -> dict:
         "dcat:distribution": [_distribution(service)],
     })
 
-    # PartTypeInformation asset
-    part_type_asset_id = f"{PART_TYPE_INFO_ASSET}@{bpnl}"
-    datasets.append({
-        "@id": part_type_asset_id,
-        "@type": "dcat:Dataset",
-        "dct:type": {"@id": "cx-taxo:Submodel"},
-        "cx-common:version": "3.0",
-        "aas-semantics:semanticId": {"@id": PART_TYPE_INFO_SEMANTIC_ID},
-        "odrl:hasPolicy": _offer_policy(f"offer-pti-{uuid.uuid4()}"),
-        "dcat:distribution": [_distribution(service)],
-    })
-
-    for prefix, semantic_id, version in CATALOG_ASSETS:
+    for prefix, semantic_id, version in SUBMODELS:
         asset_id = f"{prefix}@{bpnl}"
         datasets.append({
             "@id": asset_id,
@@ -96,6 +84,17 @@ def build(bpnl: str, base_url: str) -> dict:
             "odrl:hasPolicy": _offer_policy(f"offer-{prefix}-{uuid.uuid4()}"),
             "dcat:distribution": [_distribution(service)],
         })
+
+
+    notification_asset_id = f"notification-api-asset@{bpnl}"
+    datasets.append({
+        "@id": notification_asset_id,
+        "@type": "dcat:Dataset",
+        "dct:type": {"@id": "cx-taxo:DemandAndCapacityNotificationApi"},
+        "cx-common:version": "1.0",
+        "odrl:hasPolicy": _offer_policy(f"offer-notification-{uuid.uuid4()}"),
+        "dcat:distribution": [_distribution(service)],
+    })
 
     return {
         "@context": CONTEXT,
