@@ -32,6 +32,7 @@ CONTEXT = {
     "cx-common": "https://w3id.org/catenax/ontology/common#",
     "cx-taxo": "https://w3id.org/catenax/taxonomy#",
     "aas-semantics": "https://admin-shell.io/aas/3/0/HasSemantics/",
+    "edc": "https://w3id.org/edc/v0.0.1/ns/",
 }
 
 
@@ -73,13 +74,13 @@ def build(bpnl: str, base_url: str) -> dict:
         "dcat:distribution": [_distribution(service)],
     })
 
-    for prefix, semantic_id, version in SUBMODELS:
+    for prefix, semantic_id in SUBMODELS:
         asset_id = f"{prefix}@{bpnl}"
         datasets.append({
             "@id": asset_id,
             "@type": "dcat:Dataset",
             "dct:type": {"@id": "cx-taxo:Submodel"},
-            "cx-common:version": version,
+            "cx-common:version": "3.0",
             "aas-semantics:semanticId": {"@id": semantic_id},
             "odrl:hasPolicy": _offer_policy(f"offer-{prefix}-{uuid.uuid4()}"),
             "dcat:distribution": [_distribution(service)],
