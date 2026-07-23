@@ -24,7 +24,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-from dsp.common import CONTEXT_DSPACE, CONTEXT_DSPACE_ODRL_POLICY, build_permission, push_dsp_message
+from dsp.common import CONTEXT_DSPACE, CONTEXT_DSPACE_ODRL_POLICY, build_permission, push_dsp_message, versioned_callback_base
 
 logger = logging.getLogger("mock participant dsp negotiations")
 
@@ -35,8 +35,8 @@ def create(body: dict) -> tuple[dict, str, str]:
     """Returns (response_body, neg_id, callback_address)."""
     neg_id = f"urn:uuid:{uuid.uuid4()}"
     agreement_id = f"urn:uuid:{uuid.uuid4()}"
-    consumer_pid = body.get("dspace:consumerPid", f"urn:uuid:{uuid.uuid4()}")
-    callback = body.get("dspace:callbackAddress", "")
+    consumer_pid = body.get("consumerPid", f"urn:uuid:{uuid.uuid4()}")
+    callback = body.get("callbackAddress", "")
     asset_id = _extract_asset_id(body)
 
     entry = {
@@ -61,8 +61,8 @@ def get_callback_address(neg_id: str) -> str:
 
 
 def _extract_asset_id(body: dict) -> str:
-    offer = body.get("dspace:offer") or body.get("offer") or {}
-    target = offer.get("odrl:target", offer.get("target", {}))
+    offer = body.get("offer") or {}
+    target = offer.get("target", {})
     if isinstance(target, dict):
         return target.get("@id", "")
     return str(target)
@@ -71,23 +71,23 @@ def _extract_asset_id(body: dict) -> str:
 def _requested(neg_id: str, consumer_pid: str) -> dict:
     return {
         "@context": CONTEXT_DSPACE,
-        "@type": "dspace:ContractNegotiation",
+        "@type": "ContractNegotiation",
         "@id": neg_id,
-        "dspace:providerPid": neg_id,
-        "dspace:consumerPid": consumer_pid,
-        "dspace:state": "dspace:REQUESTED",
+        "providerPid": neg_id,
+        "consumerPid": consumer_pid,
+        "state": "REQUESTED",
     }
 
 
 def _finalized(neg_id: str, agreement_id: str, consumer_pid: str) -> dict:
     return {
         "@context": CONTEXT_DSPACE,
-        "@type": "dspace:ContractNegotiation",
+        "@type": "ContractNegotiation",
         "@id": neg_id,
-        "dspace:providerPid": neg_id,
-        "dspace:consumerPid": consumer_pid,
-        "dspace:state": "dspace:FINALIZED",
-        "dspace:contractAgreementId": agreement_id,
+        "providerPid": neg_id,
+        "consumerPid": consumer_pid,
+        "state": "FINALIZED",
+        "contractAgreementId": agreement_id,
     }
 
 
@@ -109,23 +109,23 @@ async def push_agreement_message(
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     message = {
         "@context": CONTEXT_DSPACE_ODRL_POLICY,
-        "@type": "dspace:ContractAgreementMessage",
-        "dspace:providerPid": neg_id,
-        "dspace:consumerPid": entry["consumerPid"],
-        "dspace:agreement": {
+        "@type": "ContractAgreementMessage",
+        "providerPid": neg_id,
+        "consumerPid": entry["consumerPid"],
+        "agreement": {
             "@id": entry["agreementId"],
-            "@type": "odrl:Agreement",
-            "odrl:target": {"@id": entry["assetId"]},
-            "dspace:timestamp": now,
-            "odrl:assigner": bpnl,
-            "odrl:assignee": supplier_bpnl,
-            "odrl:permission": build_permission(),
-            "odrl:prohibition": [],
-            "odrl:obligation": [],
+            "@type": "Agreement",
+            "target": {"@id": entry["assetId"]},
+            "timestamp": now,
+            "assigner": f"did:web:wallet:{bpnl}",
+            "assignee": f"did:web:wallet:{supplier_bpnl}",
+            "permission": [build_permission()],
+            "prohibition": [],
+            "obligation": [],
         },
     }
 
-    callback_url = f"{callback_address.rstrip('/')}/negotiations/{entry['consumerPid']}/agreement"
+    callback_url = f"{versioned_callback_base(callback_address)}/negotiations/{entry['consumerPid']}/agreement"
     await push_dsp_message("ContractAgreementMessage", callback_url, message, bpnl, supplier_bpnl, wallet_url, wallet_secret)
 
 
@@ -146,11 +146,11 @@ async def push_finalized_message(
 
     message = {
         "@context": CONTEXT_DSPACE,
-        "@type": "dspace:ContractNegotiationEventMessage",
-        "dspace:providerPid": neg_id,
-        "dspace:consumerPid": entry["consumerPid"],
-        "dspace:eventType": {"@id": "dspace:FINALIZED"},
+        "@type": "ContractNegotiationEventMessage",
+        "providerPid": neg_id,
+        "consumerPid": entry["consumerPid"],
+        "eventType": "FINALIZED",
     }
 
-    callback_url = f"{callback_address.rstrip('/')}/negotiations/{entry['consumerPid']}/events"
+    callback_url = f"{versioned_callback_base(callback_address)}/negotiations/{entry['consumerPid']}/events"
     await push_dsp_message("ContractNegotiationEventMessage", callback_url, message, bpnl, supplier_bpnl, wallet_url, wallet_secret)

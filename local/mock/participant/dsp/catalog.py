@@ -23,42 +23,48 @@ import uuid
 from data import SUBMODELS
 from dsp.common import build_permission
 
-CONTEXT = {
-    "cx-policy": "https://w3id.org/catenax/2025/9/policy/",
-    "dcat": "http://www.w3.org/ns/dcat#",
-    "dct": "http://purl.org/dc/terms/",
-    "odrl": "http://www.w3.org/ns/odrl/2/",
-    "dspace": "https://w3id.org/dspace/v0.8/",
-    "cx-common": "https://w3id.org/catenax/ontology/common#",
-    "cx-taxo": "https://w3id.org/catenax/taxonomy#",
-    "aas-semantics": "https://admin-shell.io/aas/3/0/HasSemantics/",
-}
+CONTEXT = [
+    "https://w3id.org/dspace/2025/1/context.jsonld",
+    {
+        "cx-policy": "https://w3id.org/catenax/2025/9/policy/",
+        "cx-common": "https://w3id.org/catenax/ontology/common#",
+        "cx-taxo": "https://w3id.org/catenax/taxonomy#",
+        "aas-semantics": "https://admin-shell.io/aas/3/0/HasSemantics/",
+    },
+]
 
 
-def _offer_policy(offer_id: str) -> dict:
+def _offer_policy(offer_id: str, bpnl: str) -> dict:
     return {
         "@id": offer_id,
-        "@type": "odrl:Offer",
-        "odrl:permission": build_permission(),
-        "odrl:prohibition": [],
-        "odrl:obligation": [],
+        "@type": "Offer",
+        # Must match the "assigner" the eventual ContractAgreementMessage carries (see
+        # negotiations.py's push_agreement_message) — the receiving EDC's PolicyEquality
+        # compares the agreement's policy against this stored offer policy field-for-field
+        # (only "@type"/"assignee"/"target" are excluded from that comparison), so a mismatched
+        # or missing "assigner" here fails with "Policy in the contract agreement is not equal
+        # to the one in the contract offer" once identity validation passes.
+        "assigner": f"did:web:wallet:{bpnl}",
+        "permission": [build_permission()],
+        "prohibition": [],
+        "obligation": [],
     }
 
 
 def _distribution(service: dict) -> dict:
     return {
-        "@type": "dcat:Distribution",
-        "dct:format": {"@id": "HttpData-PULL"},
-        "dcat:accessService": service,
+        "@type": "Distribution",
+        "format": "HttpData-PULL",
+        "accessService": service,
     }
 
 
 def build(bpnl: str, base_url: str) -> dict:
     service = {
         "@id": f"urn:uuid:{uuid.uuid4()}",
-        "@type": "dcat:DataService",
-        "dcat:endpointDescription": "dspace:connector",
-        "dcat:endpointURL": f"{base_url}/api/v1/dsp",
+        "@type": "DataService",
+        "endpointDescription": "dspace:connector",
+        "endpointURL": f"{base_url}/api/v1/dsp/2025-1",
     }
     datasets = []
 
@@ -66,43 +72,44 @@ def build(bpnl: str, base_url: str) -> dict:
     dtr_asset_id = f"DigitalTwinRegistryId@{bpnl}"
     datasets.append({
         "@id": dtr_asset_id,
-        "@type": "dcat:Dataset",
+        "@type": "Dataset",
         "dct:type": {"@id": "cx-taxo:DigitalTwinRegistry"},
         "cx-common:version": "3.0",
-        "odrl:hasPolicy": _offer_policy(f"offer-dtr-{uuid.uuid4()}"),
-        "dcat:distribution": [_distribution(service)],
+        "hasPolicy": [_offer_policy(f"offer-dtr-{uuid.uuid4()}", bpnl)],
+        "distribution": [_distribution(service)],
     })
 
     for prefix, semantic_id, version in SUBMODELS:
         asset_id = f"{prefix}@{bpnl}"
         datasets.append({
             "@id": asset_id,
-            "@type": "dcat:Dataset",
+            "@type": "Dataset",
             "dct:type": {"@id": "cx-taxo:Submodel"},
             "cx-common:version": version,
             "aas-semantics:semanticId": {"@id": semantic_id},
-            "odrl:hasPolicy": _offer_policy(f"offer-{prefix}-{uuid.uuid4()}"),
-            "dcat:distribution": [_distribution(service)],
+            "hasPolicy": [_offer_policy(f"offer-{prefix}-{uuid.uuid4()}", bpnl)],
+            "distribution": [_distribution(service)],
         })
 
 
     notification_asset_id = f"notification-api-asset@{bpnl}"
     datasets.append({
         "@id": notification_asset_id,
-        "@type": "dcat:Dataset",
+        "@type": "Dataset",
         "dct:type": {"@id": "cx-taxo:DemandAndCapacityNotificationApi"},
         "cx-common:version": "1.0",
-        "odrl:hasPolicy": _offer_policy(f"offer-notification-{uuid.uuid4()}"),
-        "dcat:distribution": [_distribution(service)],
+        "aas-semantics:semanticId": {"@id": "urn:samm:io.catenax.demand_and_capacity_notification:3.0.0#DemandAndCapacityNotification"},
+        "hasPolicy": [_offer_policy(f"offer-notification-{uuid.uuid4()}", bpnl)],
+        "distribution": [_distribution(service)],
     })
 
     return {
         "@context": CONTEXT,
-        "@type": "dcat:Catalog",
+        "@type": "Catalog",
         "@id": f"urn:uuid:{uuid.uuid4()}",
-        "dspace:participantId": bpnl,
-        "dcat:dataset": datasets,
-        "dcat:catalog": [],
-        "dcat:distribution": [],
-        "dcat:service": service,
+        "participantId": bpnl,
+        "dataset": datasets,
+        "catalog": [],
+        "distribution": [],
+        "service": [service],
     }

@@ -5,13 +5,16 @@ meta {
 }
 
 post {
-  url: {{TIER2_MOCK}}/api/v1/dsp/catalog/request
+  url: {{TIER2_MOCK}}/api/v1/dsp/2025-1/catalog/request
   body: json
   auth: none
 }
 
 body:json {
-  {}
+  {
+    "@context": "https://w3id.org/dspace/2025/1/context.jsonld",
+    "@type": "CatalogRequestMessage"
+  }
 }
 
 tests {
@@ -19,7 +22,7 @@ tests {
     expect(res.getStatus()).to.equal(200);
   });
 
-  const datasets = res.getBody()["dcat:dataset"];
+  const datasets = res.getBody()["dataset"];
 
   test("catalog contains 7 assets", function() {
     expect(datasets).to.be.an("array");

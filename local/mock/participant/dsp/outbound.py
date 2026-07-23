@@ -27,7 +27,7 @@ from typing import Optional
 
 import httpx
 
-from dsp.common import CONTEXT_DSPACE, CONTEXT_DSPACE_ODRL_POLICY, auth_headers
+from dsp.common import CONTEXT_DSPACE, CONTEXT_DSPACE_ODRL_POLICY, DSP_VERSION_PATH, auth_headers
 from dsp.common import get_iatp_token as _common_get_iatp_token
 
 logger = logging.getLogger("tier2-mock")
@@ -155,7 +155,7 @@ async def negotiate_and_send_notification(
 def handle_agreement(consumer_pid: str, body: dict) -> Optional[str]:
     """Record ContractAgreementMessage fields. Returns providerPid (possibly ""), or None if
     consumer_pid is unknown — callers must use `is not None` to check for that case, since a
-    known consumer_pid with a missing dspace:providerPid still returns a (falsy) empty string.
+    known consumer_pid with a missing providerPid still returns a (falsy) empty string.
 
     This must run synchronously (not as a background task) before the request handler
     returns 200 — the supplier EDC may send the FINALIZED event immediately afterwards,
@@ -167,9 +167,9 @@ def handle_agreement(consumer_pid: str, body: dict) -> Optional[str]:
         logger.warning("outbound: agreement callback for unknown consumer_pid=%s", consumer_pid)
         return None
 
-    agreement = body.get("dspace:agreement", {})
-    agreement_id = agreement.get("@id") or body.get("dspace:agreementId")
-    provider_pid = body.get("dspace:providerPid") or ""
+    agreement = body.get("agreement", {})
+    agreement_id = agreement.get("@id") or body.get("agreementId")
+    provider_pid = body.get("providerPid") or ""
 
     entry["agreementId"] = agreement_id
     entry["providerPid"] = provider_pid
@@ -198,7 +198,7 @@ def handle_negotiation_event(consumer_pid: str, body: dict) -> bool:
         logger.warning("outbound: negotiation event for unknown consumer_pid=%s", consumer_pid)
         return False
 
-    event_type = body.get("dspace:eventType", {})
+    event_type = body.get("eventType", {})
     if isinstance(event_type, dict):
         event_type = event_type.get("@id", "")
 
@@ -216,7 +216,7 @@ def handle_transfer_start(consumer_pid: str, body: dict) -> bool:
         logger.warning("outbound: transfer start for unknown consumer_pid=%s", consumer_pid)
         return False
 
-    data_address = body.get("dspace:dataAddress", {})
+    data_address = body.get("dataAddress", {})
     logger.info("outbound: TransferStart dataAddress: %s", data_address)
     entry["data_address"] = data_address
     entry["state"] = "STARTED"
@@ -236,10 +236,10 @@ async def fetch_notification_asset(
     token = await get_iatp_token(bpnl, supplier_bpnl, wallet_url, wallet_secret)
     headers = auth_headers(token)
 
-    catalog_url = f"{supplier_dsp_url.rstrip('/')}/catalog/request"
+    catalog_url = f"{supplier_dsp_url.rstrip('/')}{DSP_VERSION_PATH}/catalog/request"
     body = {
         "@context": CONTEXT_DSPACE,
-        "@type": "dspace:CatalogRequestMessage",
+        "@type": "CatalogRequestMessage",
     }
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
@@ -248,13 +248,15 @@ async def fetch_notification_asset(
                 logger.error("outbound: catalog request to %s failed: %s %s", catalog_url, resp.status_code, resp.text[:200])
                 return None, None
             catalog = resp.json()
-            datasets = catalog.get("dcat:dataset", [])
+            datasets = catalog.get("dataset", [])
             if isinstance(datasets, dict):
                 datasets = [datasets]
             for ds in datasets:
                 asset_id = ds.get("@id", "")
                 if "notification-api-asset" in asset_id:
-                    offer = ds.get("odrl:hasPolicy")
+                    offer = ds.get("hasPolicy")
+                    if isinstance(offer, list):
+                        offer = offer[0] if offer else None
                     logger.info("outbound: found notification asset %s", asset_id)
                     return asset_id, offer
             logger.error("outbound: notification-api-asset not found in supplier catalog")
@@ -278,29 +280,29 @@ async def _start_negotiation(
 
     # Build the offer body including the policy constraints from the catalog entry.
     offer_body: dict = {
-        "@type": "odrl:Offer",
+        "@type": "Offer",
         "@id": offer_id,
-        "odrl:target": {"@id": asset_id},
+        "target": {"@id": asset_id},
     }
-    for key in ("odrl:permission", "odrl:prohibition", "odrl:obligation"):
+    for key in ("permission", "prohibition", "obligation"):
         if key in offer:
             offer_body[key] = offer[key]
 
     body = {
         "@context": CONTEXT_DSPACE_ODRL_POLICY,
-        "@type": "dspace:ContractRequestMessage",
-        "dspace:consumerPid": consumer_pid,
-        "dspace:callbackAddress": f"{base_url.rstrip('/')}/api/v1/dsp",
-        "dspace:offer": offer_body,
+        "@type": "ContractRequestMessage",
+        "consumerPid": consumer_pid,
+        "callbackAddress": f"{base_url.rstrip('/')}/api/v1/dsp{DSP_VERSION_PATH}",
+        "offer": offer_body,
     }
 
-    neg_url = f"{supplier_dsp_url.rstrip('/')}/negotiations/request"
+    neg_url = f"{supplier_dsp_url.rstrip('/')}{DSP_VERSION_PATH}/negotiations/request"
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
             resp = await client.post(neg_url, json=body, headers=headers)
             if resp.is_success:
                 data = resp.json()
-                provider_pid = data.get("dspace:providerPid") or data.get("@id")
+                provider_pid = data.get("providerPid") or data.get("@id")
                 logger.info("outbound: negotiation requested consumer_pid=%s provider_pid=%s", consumer_pid, provider_pid)
                 if provider_pid:
                     _consumer_negotiations[consumer_pid]["providerPid"] = provider_pid
@@ -325,12 +327,12 @@ async def _send_verification(
 
     message = {
         "@context": CONTEXT_DSPACE,
-        "@type": "dspace:ContractAgreementVerificationMessage",
-        "dspace:providerPid": provider_pid,
-        "dspace:consumerPid": consumer_pid,
+        "@type": "ContractAgreementVerificationMessage",
+        "providerPid": provider_pid,
+        "consumerPid": consumer_pid,
     }
 
-    url = f"{supplier_dsp_url.rstrip('/')}/negotiations/{provider_pid}/agreement/verification"
+    url = f"{supplier_dsp_url.rstrip('/')}{DSP_VERSION_PATH}/negotiations/{provider_pid}/agreement/verification"
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.post(url, json=message, headers=headers)
@@ -352,18 +354,15 @@ async def _start_transfer(
     headers = auth_headers(token)
 
     body = {
-        "@context": {
-            "dspace": "https://w3id.org/dspace/v0.8/",
-            "dct": "http://purl.org/dc/terms/",
-        },
-        "@type": "dspace:TransferRequestMessage",
-        "dspace:consumerPid": consumer_pid,
-        "dspace:callbackAddress": f"{base_url.rstrip('/')}/api/v1/dsp",
-        "dspace:agreementId": agreement_id,
-        "dct:format": "HttpData-PULL",
+        "@context": CONTEXT_DSPACE,
+        "@type": "TransferRequestMessage",
+        "consumerPid": consumer_pid,
+        "callbackAddress": f"{base_url.rstrip('/')}/api/v1/dsp{DSP_VERSION_PATH}",
+        "agreementId": agreement_id,
+        "format": "HttpData-PULL",
     }
 
-    transfer_url = f"{supplier_dsp_url.rstrip('/')}/transfers/request"
+    transfer_url = f"{supplier_dsp_url.rstrip('/')}{DSP_VERSION_PATH}/transfers/request"
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
             resp = await client.post(transfer_url, json=body, headers=headers)
@@ -429,9 +428,9 @@ def _extract_edr(data_address: dict) -> dict:
     The auth_token may be expired; use refresh_token + refresh_endpoint to get a fresh one.
     """
     result = {"endpoint": "", "auth_token": "", "refresh_endpoint": "", "refresh_token": ""}
-    for prop in data_address.get("dspace:endpointProperties", []):
-        name = prop.get("dspace:name", "")
-        value = prop.get("dspace:value", "")
+    for prop in data_address.get("endpointProperties", []):
+        name = prop.get("name", "")
+        value = prop.get("value", "")
         if name == "https://w3id.org/edc/v0.0.1/ns/endpoint":
             result["endpoint"] = value
         elif name == "https://w3id.org/edc/v0.0.1/ns/authorization":

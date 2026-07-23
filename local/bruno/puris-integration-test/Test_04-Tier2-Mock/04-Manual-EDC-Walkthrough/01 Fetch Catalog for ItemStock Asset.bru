@@ -22,8 +22,8 @@ body:json {
       "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
     },
     "@type": "CatalogRequest",
-    "protocol": "dataspace-protocol-http",
-    "counterPartyAddress": "{{TIER2_MOCK_INT}}/api/v1/dsp",
+    "protocol": "dataspace-protocol-http:2025-1",
+    "counterPartyAddress": "{{TIER2_MOCK_INT}}/api/v1/dsp/2025-1",
     "counterPartyId": "{{TIER2_BPNL}}",
     "querySpec": {
       "offset": 0,
@@ -35,16 +35,16 @@ body:json {
 
 script:post-response {
   const jsonData = res.getBody();
-  let datasets = jsonData['dcat:dataset'];
+  let datasets = jsonData['dataset'];
 
-  // dcat:dataset may be a single object or an array
+  // dataset may be a single object or an array
   if (!Array.isArray(datasets)) {
     datasets = [datasets];
   }
 
   console.log("\n========== CATALOG FETCH ==========");
   console.log("Datasets found:", datasets.length);
-  
+
   const dataset = datasets.find(d => d["@id"] && d["@id"].includes("itemstocksubmodel-api-asset"));
   if (!dataset) {
     console.error("❌ itemstocksubmodel-api-asset asset not found in catalog");
@@ -53,24 +53,45 @@ script:post-response {
   }
 
   const assetId = dataset["@id"];
-  const offer = dataset["odrl:hasPolicy"];
+  let offer = dataset["hasPolicy"];
+  if (Array.isArray(offer)) offer = offer[0];
   const offerId = offer["@id"];
 
   console.log("✓ Found Asset ID:", assetId);
   console.log("✓ Found Policy ID:", offerId);
 
+  // Our mock's catalog (DSP 1.0 / 2025-1) returns bare terms (permission/action/constraint/...).
+  // This offer gets embedded via {{TIER2_ITEMSTOCK_OFFER}} into "02 Start Contract Negotiation"'s
+  // Management API request body, whose own @context maps bare keys to the edc: vocab (only
+  // "odrl:" is declared as an explicit prefix there) — a nested "@context" here does NOT override
+  // that. So every ODRL-domain key below must be written "odrl:"-prefixed, translating our bare
+  // catalog shape into it, or EDC resolves them as edc:assigner/edc:target/etc and rejects the
+  // policy as missing its mandatory odrl:assigner/odrl:target/odrl:Offer @type.
+  const toOdrlConstraint = (c) => ({
+    "odrl:leftOperand": { "@id": c.leftOperand },
+    "odrl:operator": { "@id": `odrl:${c.operator}` },
+    "odrl:rightOperand": c.rightOperand,
+  });
+  const toOdrlPermission = (p) => ({
+    "odrl:action": { "@id": `odrl:${p.action}` },
+    "odrl:constraint": {
+      "odrl:and": (p.constraint.and || []).map(toOdrlConstraint),
+    },
+  });
+
   const negotiationOffer = {
-    "@context": "http://www.w3.org/ns/odrl.jsonld",
+    "@context": {
+      "@vocab": "https://w3id.org/edc/v0.0.1/ns/",
+      "odrl": "http://www.w3.org/ns/odrl/2/",
+      "cx-policy": "https://w3id.org/catenax/2025/9/policy/",
+    },
     "@type": "odrl:Offer",
     "@id": offerId,
-    "assigner": jsonData["dspace:participantId"],
-    "odrl:permission": {
-      "odrl:target": assetId,
-      "odrl:action": {
-        "odrl:type": "http://www.w3.org/ns/odrl/2/use"
-      },
-      "odrl:constraint": offer["odrl:permission"]["odrl:constraint"]
-    },
+    // Must be the same DID the eventual ContractAgreementMessage's "assigner" carries (mock's
+    // negotiations.py) — the offer catalog's own "assigner" is already in that DID form, so use
+    // it directly rather than re-deriving from the bare BPN in "participantId".
+    "odrl:assigner": { "@id": offer["assigner"] },
+    "odrl:permission": (offer["permission"] || []).map(toOdrlPermission),
     "odrl:prohibition": [],
     "odrl:obligation": [],
     "odrl:target": {
@@ -89,17 +110,16 @@ tests {
   });
 
   test("itemstock asset found", function() {
-    let datasets = res.getBody()["dcat:dataset"];
+    let datasets = res.getBody()["dataset"];
     if (!Array.isArray(datasets)) datasets = [datasets];
     const asset = datasets.find(d => d["@id"] && d["@id"].includes("itemstocksubmodel-api-asset"));
     expect(asset).to.exist;
   });
 
   test("offer policy present", function() {
-    let datasets = res.getBody()["dcat:dataset"];
+    let datasets = res.getBody()["dataset"];
     if (!Array.isArray(datasets)) datasets = [datasets];
     const asset = datasets.find(d => d["@id"] && d["@id"].includes("itemstocksubmodel-api-asset"));
-    expect(asset["odrl:hasPolicy"]).to.exist;
-    expect(asset["odrl:hasPolicy"]["@id"]).to.exist;
+    expect(asset["hasPolicy"]).to.exist;
   });
 }

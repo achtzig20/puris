@@ -22,7 +22,7 @@ import asyncio
 import uuid
 from typing import Optional
 
-from dsp.common import CONTEXT_DSPACE, push_dsp_message
+from dsp.common import CONTEXT_DSPACE, push_dsp_message, versioned_callback_base
 
 _store: dict[str, dict] = {}
 
@@ -32,8 +32,8 @@ FIXED_TOKEN = "tier2-mock-token"
 def create(body: dict, base_url: str) -> tuple[dict, str, str]:
     """Returns (response_body, provider_pid, callback_address)."""
     provider_pid = f"urn:uuid:{uuid.uuid4()}"
-    consumer_pid = body.get("dspace:consumerPid", f"urn:uuid:{uuid.uuid4()}")
-    callback = body.get("dspace:callbackAddress", "")
+    consumer_pid = body.get("consumerPid", f"urn:uuid:{uuid.uuid4()}")
+    callback = body.get("callbackAddress", "")
 
     _store[provider_pid] = {
         "state": "STARTED",
@@ -45,11 +45,11 @@ def create(body: dict, base_url: str) -> tuple[dict, str, str]:
 
     response = {
         "@context": CONTEXT_DSPACE,
-        "@type": "dspace:TransferProcess",
+        "@type": "TransferProcess",
         "@id": provider_pid,
-        "dspace:providerPid": provider_pid,
-        "dspace:consumerPid": consumer_pid,
-        "dspace:state": "dspace:REQUESTED",
+        "providerPid": provider_pid,
+        "consumerPid": consumer_pid,
+        "state": "REQUESTED",
     }
     return response, provider_pid, callback
 
@@ -60,41 +60,43 @@ def get_state(transfer_id: str) -> Optional[dict]:
         return None
     return {
         "@context": CONTEXT_DSPACE,
-        "@type": "dspace:TransferProcess",
+        "@type": "TransferProcess",
         "@id": transfer_id,
-        "dspace:providerPid": transfer_id,
-        "dspace:consumerPid": entry["consumerPid"],
-        "dspace:state": "dspace:STARTED",
-        "dspace:dataAddress": _data_address(entry["endpoint"], entry["token"]),
+        "providerPid": transfer_id,
+        "consumerPid": entry["consumerPid"],
+        "state": "STARTED",
+        "dataAddress": _data_address(entry["endpoint"], entry["token"]),
     }
 
 
 def _data_address(endpoint: str, token: str) -> dict:
     bearer = f"Bearer {token}"
     return {
-        "@context": {
-            "dspace": "https://w3id.org/dspace/v0.8/",
-            "edc": "https://w3id.org/edc/v0.0.1/ns/",
-            "tx-auth": "https://w3id.org/tractusx/auth/",
-        },
-        "@type": "dspace:DataAddress",
-        "dspace:endpointType": "https://w3id.org/idsa/v4.1/HTTP",
-        "dspace:endpoint": endpoint,
-        "dspace:endpointProperties": [
+        "@context": [
+            "https://w3id.org/dspace/2025/1/context.jsonld",
             {
-                "@type": "dspace:EndpointProperty",
-                "dspace:name": "https://w3id.org/edc/v0.0.1/ns/endpoint",
-                "dspace:value": endpoint,
+                "edc": "https://w3id.org/edc/v0.0.1/ns/",
+                "tx-auth": "https://w3id.org/tractusx/auth/",
+            },
+        ],
+        "@type": "DataAddress",
+        "endpointType": "https://w3id.org/idsa/v4.1/HTTP",
+        "endpoint": endpoint,
+        "endpointProperties": [
+            {
+                "@type": "EndpointProperty",
+                "name": "https://w3id.org/edc/v0.0.1/ns/endpoint",
+                "value": endpoint,
             },
             {
-                "@type": "dspace:EndpointProperty",
-                "dspace:name": "https://w3id.org/edc/v0.0.1/ns/authorization",
-                "dspace:value": bearer,
+                "@type": "EndpointProperty",
+                "name": "https://w3id.org/edc/v0.0.1/ns/authorization",
+                "value": bearer,
             },
             {
-                "@type": "dspace:EndpointProperty",
-                "dspace:name": "authType",
-                "dspace:value": "bearer",
+                "@type": "EndpointProperty",
+                "name": "authType",
+                "value": "bearer",
             },
         ],
     }
@@ -117,11 +119,11 @@ async def push_start_message(
 
     message = {
         "@context": CONTEXT_DSPACE,
-        "@type": "dspace:TransferStartMessage",
-        "dspace:providerPid": provider_pid,
-        "dspace:consumerPid": entry["consumerPid"],
-        "dspace:dataAddress": _data_address(entry["endpoint"], entry["token"]),
+        "@type": "TransferStartMessage",
+        "providerPid": provider_pid,
+        "consumerPid": entry["consumerPid"],
+        "dataAddress": _data_address(entry["endpoint"], entry["token"]),
     }
 
-    callback_url = f"{callback_address.rstrip('/')}/transfers/{entry['consumerPid']}/start"
+    callback_url = f"{versioned_callback_base(callback_address)}/transfers/{entry['consumerPid']}/start"
     await push_dsp_message("TransferStartMessage", callback_url, message, bpnl, supplier_bpnl, wallet_url, wallet_secret)
