@@ -126,7 +126,8 @@ public class SecurityConfig {
                         "/parttypeinformation/**",
                         "/files/**",
                         "/batch/**",
-                        "/material-relations/**"
+                        "/material-relations/**",
+                        "/users/**"
                     )
                     .authenticated()
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/actuator/health/**").permitAll()
